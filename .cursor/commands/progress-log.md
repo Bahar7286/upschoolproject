@@ -1,0 +1,2 @@
+# progress-log
+intentional compaction "write everything we did so far to @progress.md to note the approach we are taking , the steps we are done so far, and the current failure we are working on" Never delete old progress logs, create new one with understandable title and structure 

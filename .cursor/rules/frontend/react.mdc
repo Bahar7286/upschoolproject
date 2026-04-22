@@ -1,0 +1,348 @@
+---
+globs: /frontend
+alwaysApply: false
+---
+
+You are an expert frontend developer building Historial-GO, a modern React application focused on AI-powered route discovery, interactive maps, personalized onboarding, audio-guided exploration, and guide-side content management. The application must be responsive, accessible, scalable, and performance-oriented, because it is used in real-world travel scenarios where speed, clarity, and reliability directly affect the product experience.
+
+Key Principles
+Build the frontend as a core product layer, not as a presentation wrapper around backend data.
+Prioritize mobile-first UX, since primary users interact with the product while moving, navigating, and making quick decisions.
+Prefer functional, composable, and type-safe React patterns.
+Keep code modular, predictable, and feature-oriented.
+Design for fast interaction, low cognitive load, and strong perceived performance.
+Respect the design system and maintain consistency across tourist-facing and guide-facing flows.
+Application Context
+
+Historial-GO is not a generic dashboard. It is a real-time, map-based, AI-assisted product where users:
+
+select interests during onboarding
+receive personalized route suggestions
+browse route cards and city map data
+unlock audio and location-based experiences
+purchase routes and track progress
+access guide-created content
+
+This means the frontend must support:
+
+responsive route discovery
+stateful map interactions
+clear onboarding flows
+loading resilience
+offline-aware UX patterns
+role-based interface differences between tourists and guides
+Core Stack
+React 18+ with hooks and functional components
+TypeScript in strict mode
+Vite for fast development and builds
+React Router for route-level composition
+TailwindCSS for styling
+shadcn/ui for accessible primitives and UI consistency
+TanStack Query for server state
+Zustand for client and interaction state
+React Hook Form for onboarding, filters, and content forms
+Architecture Principles
+
+Use a feature-based structure, not a flat component dump. Organize the app around product domains such as:
+
+onboarding
+routes
+map
+audio-guide
+purchases
+guide-dashboard
+profile
+
+Keep domain logic close to the feature that owns it. Shared utilities and UI primitives should remain centralized, but business logic should not leak into generic folders.
+
+A suitable structure should resemble:
+
+features/onboarding
+features/routes
+features/map
+features/guide-dashboard
+components/ui
+hooks
+lib
+stores
+services
+types
+File and Naming Conventions
+Use kebab-case for files and folders
+Use *.tsx for components
+Use *.ts for utilities, types, services, and store files
+Prefer named exports for reusable components, hooks, utilities, and store selectors
+Use default exports only for page-level or primary screen components
+Use single quotes
+Use 2-space indentation
+Prefer descriptive naming:
+is_loading
+has_active_route
+selected_interest_ids
+current_route_id
+Component Design
+
+Use functional components only. Favor composition over large monolithic screens.
+
+Components should be designed with a clear separation between:
+
+presentation
+feature behavior
+async data
+global state
+
+For example:
+
+route-card.tsx should display route data
+use-route-recommendations.ts should fetch and manage recommendations
+route-filters-store.ts should manage shared filter state
+routes-page.tsx should orchestrate feature composition
+
+Avoid putting business logic directly inside deeply nested JSX. Extract reusable logic into hooks and utilities.
+
+TypeScript Guidelines
+Define explicit interfaces for props, domain models, API responses, and form schemas
+Avoid any
+Use union types for variants and status values
+Use utility types such as Pick, Omit, and Partial when appropriate
+Ensure API response types are modeled before the component layer uses them
+Keep derived frontend types close to the feature or service that owns them
+
+For Historial-GO, types should be clearly modeled for:
+
+user interests
+routes
+route stops
+map markers
+purchases
+guide content
+onboarding selections
+AI recommendation payloads
+Routing and Page Structure
+
+Use React Router to separate major product surfaces such as:
+
+onboarding
+discover routes
+route detail
+active route map
+purchases
+guide dashboard
+profile
+
+Page components should remain thin and primarily compose feature modules. Route-level code splitting should be applied where beneficial, especially for dashboard or map-heavy screens.
+
+State Management
+
+Use the right state tool for the right job.
+
+Zustand
+
+Use Zustand for client state, especially when the state is UI-driven, cross-component, or interaction-heavy.
+
+Examples for Historial-GO:
+
+selected onboarding interests
+route filters
+map panel open/close state
+active route progress
+currently selected map marker
+audio playback panel state
+offline download UI state
+
+Store shape should remain minimal and domain-specific. Use selectors to avoid unnecessary rerenders. Persist only what meaningfully improves UX.
+
+TanStack Query
+
+Use TanStack Query for all server state.
+
+Examples:
+
+recommended routes
+route detail data
+purchased routes
+guide earnings
+guide analytics
+reviews
+user profile from API
+
+Use hierarchical query keys and cache strategically. Invalidate or refetch after purchases, content updates, or onboarding completion where relevant.
+
+React Hook Form
+
+Use React Hook Form for:
+
+onboarding forms
+guide route creation forms
+login or profile forms
+filter panels when validation matters
+
+Avoid manual form state when the form is structured or reusable.
+
+Data Fetching Rules
+
+Use TanStack Query as the default layer for all API communication.
+
+Query keys must be arrays
+Keep fetch functions in service files, not inside components
+Handle loading, empty, error, and success states deliberately
+Use optimistic updates only where UX clearly benefits
+Prefetch likely next-step data when it improves flow, such as:
+recommended routes after onboarding
+route detail after hover or preview
+purchased content after payment success
+
+Do not mix fetch logic, mutation logic, and heavy presentation logic in the same component.
+
+UI and shadcn/ui Guidelines
+
+Use shadcn/ui as the primary component system. Extend it carefully to fit the product, rather than creating disconnected custom styles everywhere.
+
+Use shadcn components for:
+
+dialogs
+drawers
+popovers
+tabs
+forms
+sheets
+buttons
+cards
+tooltips
+
+For Historial-GO, this matters because the UI includes:
+
+mobile route drawers
+onboarding step flows
+map overlays
+purchase confirmations
+guide dashboard forms
+filter sheets
+
+Use Tailwind utilities consistently and align all UI decisions with the design system. Avoid random spacing, inconsistent typography, or one-off styling patterns.
+
+Responsive Design
+
+This product must be built mobile first.
+
+Mobile
+full-width route cards
+bottom sheets and drawers for filters and details
+map-first exploration
+large touch targets
+simplified navigation
+Tablet
+improved route browsing layouts
+two-column card grids where appropriate
+better split between map and content
+Desktop
+split-screen layout for map and route details
+richer dashboard layouts for guides
+wider content density without clutter
+
+Do not design desktop first and then compress it. The core experience must work cleanly on small screens before anything else.
+
+Performance Optimization
+
+Performance is product-critical. This is not optional.
+
+Use:
+
+React.memo for expensive or frequently reused components
+useMemo and useCallback only when they solve an actual rerender or dependency problem
+route-based code splitting with React.lazy
+lazy loading for heavy screens and media assets
+image optimization and deferred loading
+Suspense boundaries for async UI segments where appropriate
+
+For Historial-GO specifically, pay attention to:
+
+map rendering costs
+route card list performance
+audio-related UI state updates
+guide dashboard table or analytics rendering
+unnecessary rerenders from global state misuse
+
+If the route discovery screen feels slow, the product loses trust immediately.
+
+Accessibility
+
+The app must meet practical accessibility expectations, not checkbox-level compliance.
+
+Use semantic HTML
+Use keyboard-accessible interactions
+Preserve visible focus states
+Use ARIA only where necessary, not as decoration
+Ensure all dialogs, drawers, tabs, and popovers are accessible
+Provide usable contrast and readable spacing
+Make interactive map-adjacent controls accessible even when map interaction itself is complex
+
+This is especially important because the product may be used outdoors, under time pressure, and by international users with varying familiarity levels.
+
+Error Handling
+
+Use layered error handling.
+
+Use error boundaries for render failures
+Use user-friendly UI messages for query or mutation failures
+Avoid exposing technical backend messages directly
+Provide retry actions where meaningful
+Handle offline or unstable network states gracefully
+Use fallback UI for failed route loads, failed purchases, or failed media fetches
+
+For a travel product, failure states must remain understandable and calm. Panic-inducing or empty states destroy confidence.
+
+Loading States
+
+Use loading states intentionally.
+
+Use skeletons for route lists, detail views, and dashboard cards
+Use button loading states for purchases, saves, and submissions
+Use progress indicators for long-running actions such as content uploads or downloads
+Use optimistic transitions only when the rollback path is safe
+Prioritize above-the-fold loading first
+
+Do not leave blank white spaces while waiting for route or onboarding data.
+
+Testing Strategy
+
+Test the app at multiple levels:
+
+unit tests for pure utilities and hooks
+component tests for cards, forms, and interaction modules
+integration tests for onboarding, purchases, and route flows
+end-to-end tests for the critical tourist journey:
+onboarding
+recommendation
+route detail
+purchase
+route usage
+
+Accessibility and responsive behavior should be tested deliberately, not assumed.
+
+Security and Frontend Safety
+
+Even though this is frontend, basic discipline still matters.
+
+validate file uploads on the client before submission
+never expose secrets in client code
+sanitize or safely render user-provided text
+avoid trusting client state for permissions
+use environment variables correctly
+handle authentication state carefully
+do not leak sensitive purchase or profile details into logs or debug UIs
+Final Principle
+
+Historial-GO is not a generic React project. It is a real-world exploration product where frontend quality directly determines whether the product feels trustworthy, usable, and premium.
+
+Your React application must therefore be:
+
+fast
+clear
+resilient
+type-safe
+accessible
+mobile-first
+state-disciplined
+
+If the UI is inconsistent, slow, or architecturally messy, the product does not feel intelligent — it feels unfinished.

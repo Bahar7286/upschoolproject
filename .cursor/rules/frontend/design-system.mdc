@@ -1,0 +1,468 @@
+# E-Learning Platform Design System
+
+## Overview
+This design system is derived from analyzing 5 reference e-learning platforms (Skillshare, MasterClass, Duolingo, a course dashboard UI, and LearnXpert). Use these rules consistently across all components and pages.
+
+---
+
+## 1. Color Palette
+
+### Primary Colors
+```
+--color-primary:        #1DB954;   /* Action green — CTAs, active states */
+--color-primary-dark:   #158a3e;   /* Hover state for primary */
+--color-accent-red:     #E53935;   /* Danger, alerts, highlight badges */
+--color-accent-pink:    #D81B60;   /* Secondary accent, course card tints */
+--color-accent-orange:  #E65100;   /* Warm category color */
+--color-accent-purple:  #6A1B9A;   /* Category badge variant */
+--color-accent-blue:    #0288D1;   /* Info, secondary category */
+--color-accent-yellow:  #F9A825;   /* Stars, XP, streak indicators */
+```
+
+### Neutrals
+```
+--color-bg-primary:     #FFFFFF;   /* Main page background */
+--color-bg-secondary:   #F5F5F5;   /* Section backgrounds, cards */
+--color-bg-dark:        #121212;   /* Dark hero sections, video overlays */
+--color-bg-dark-card:   #1E1E1E;   /* Dark mode cards */
+--color-text-primary:   #1A1A1A;   /* Headings */
+--color-text-secondary: #555555;   /* Body, descriptions */
+--color-text-muted:     #999999;   /* Captions, metadata */
+--color-text-inverse:   #FFFFFF;   /* Text on dark backgrounds */
+--color-border:         #E0E0E0;   /* Dividers, card borders */
+```
+
+### Gamification / Status Colors
+```
+--color-streak:         #FF6D00;   /* Duolingo-style streak flame */
+--color-xp:             #FFD600;   /* XP / points */
+--color-league-bronze:  #CD7F32;
+--color-league-silver:  #C0C0C0;
+--color-league-gold:    #FFD700;
+--color-progress:       #1DB954;   /* Progress bars */
+--color-completed:      #43A047;
+```
+
+---
+
+## 2. Typography
+
+### Font Stack
+```css
+/* Display / Hero headings */
+font-family: 'Sora', 'Nunito', sans-serif;
+
+/* Body / UI text */
+font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+
+/* Monospace (code snippets) */
+font-family: 'JetBrains Mono', 'Fira Code', monospace;
+```
+
+### Type Scale
+```
+--text-xs:    11px / line-height: 1.4
+--text-sm:    13px / line-height: 1.5
+--text-base:  15px / line-height: 1.6
+--text-md:    17px / line-height: 1.55
+--text-lg:    20px / line-height: 1.4
+--text-xl:    24px / line-height: 1.3
+--text-2xl:   30px / line-height: 1.25
+--text-3xl:   38px / line-height: 1.2
+--text-4xl:   48px / line-height: 1.1
+--text-hero:  60px / line-height: 1.05
+```
+
+### Font Weights
+```
+--font-regular:    400
+--font-medium:     500
+--font-semibold:   600
+--font-bold:       700
+--font-extrabold:  800
+```
+
+### Rules
+- Hero / section titles: `font-extrabold`, `text-3xl` to `text-hero`, uppercase allowed for impact cards
+- Course card titles: `font-bold`, `text-md` to `text-lg`
+- Body / descriptions: `font-regular`, `text-base`, `color-text-secondary`
+- Metadata (instructor name, duration, lesson count): `font-medium`, `text-sm`, `color-text-muted`
+- CTA button labels: `font-semibold`, `text-sm` to `text-md`, uppercase or sentence case
+
+---
+
+## 3. Spacing System
+
+Use an 8px base grid. All spacing values must be multiples of 4 or 8.
+
+```
+--space-1:   4px
+--space-2:   8px
+--space-3:   12px
+--space-4:   16px
+--space-5:   20px
+--space-6:   24px
+--space-8:   32px
+--space-10:  40px
+--space-12:  48px
+--space-16:  64px
+--space-20:  80px
+--space-24:  96px
+```
+
+- Card internal padding: `--space-5` to `--space-6`
+- Section vertical padding: `--space-16` to `--space-20`
+- Navigation height: `56px` (compact) or `64px` (standard)
+- Gap between course cards in grid: `--space-5` to `--space-6`
+
+---
+
+## 4. Layout & Grid
+
+### Page Layout
+```
+Max content width:  1280px
+Side padding:       clamp(16px, 4vw, 64px)
+```
+
+### Course Card Grids
+```css
+/* Default responsive grid */
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+gap: var(--space-5);
+```
+
+- Mobile (< 640px): 1 column
+- Tablet (640–1024px): 2 columns
+- Desktop (> 1024px): 3–4 columns
+
+### Sidebar Layout (Dashboard / Course Player)
+```
+Sidebar width:       240px (collapsed: 64px)
+Content area:        flex: 1
+```
+
+---
+
+## 5. Components
+
+### 5.1 Navigation Bar
+- Background: `--color-bg-dark` (dark hero mode) OR `--color-bg-primary` with `border-bottom: 1px solid --color-border`
+- Logo: left-aligned, `font-extrabold`, brand color or white on dark
+- Nav links: `font-medium`, `text-sm`, `color-text-secondary`, hover → `color-text-primary`
+- Search bar: pill shape (`border-radius: 9999px`), `background: --color-bg-secondary`, icon left
+- Right side: notification bell icon + user avatar (circular, 32–36px)
+- Active nav item: underline or background pill indicator
+
+### 5.2 Course Card
+```
+border-radius:   10px
+overflow:        hidden
+background:      --color-bg-primary or colored (category-based)
+box-shadow:      0 2px 8px rgba(0,0,0,0.08)
+transition:      transform 0.2s ease, box-shadow 0.2s ease
+hover:           translateY(-4px), box-shadow elevated
+```
+
+**Card structure (top → bottom):**
+1. **Thumbnail** — 16:9 aspect ratio, object-fit: cover; may include overlay badges ("Staff Pick", "Original", "New")
+2. **Category color bar** OR colored background (bold single color: orange, red, black, pink, purple, blue)
+3. **Title** — `font-bold`, 2-line clamp
+4. **Instructor name** — `text-sm`, `color-text-muted`
+5. **Progress indicator** — thin bar (4px height), `--color-progress`, shown only if enrolled
+6. **Lesson count / duration** — icon + text, `text-xs`, `color-text-muted`
+
+**Badge overlays on thumbnail:**
+```css
+position: absolute;
+top: 8px; left: 8px;
+padding: 3px 8px;
+border-radius: 4px;
+font-size: 11px;
+font-weight: 700;
+text-transform: uppercase;
+letter-spacing: 0.05em;
+background: --color-accent-*;
+color: white;
+```
+
+### 5.3 Buttons
+
+**Primary CTA**
+```css
+background:       var(--color-primary);
+color:            white;
+padding:          10px 24px;
+border-radius:    6px;
+font-weight:      600;
+font-size:        14px;
+border:           none;
+cursor:           pointer;
+transition:       background 0.15s ease, transform 0.1s ease;
+hover background: var(--color-primary-dark);
+active transform: scale(0.97);
+```
+
+**Secondary / Outline**
+```css
+background:    transparent;
+border:        2px solid var(--color-border);
+color:         var(--color-text-primary);
+border-radius: 6px;
+padding:       9px 22px;
+font-weight:   600;
+hover border:  var(--color-text-primary);
+```
+
+**Ghost / Text Button**
+```css
+background:  transparent;
+color:       var(--color-primary);
+border:      none;
+font-weight: 600;
+hover:       underline or bg tint
+```
+
+**Icon Button (notification, bookmark)**
+```css
+width:         36px; height: 36px;
+border-radius: 50%;
+background:    transparent;
+hover bg:      rgba(0,0,0,0.06);
+display:       flex; align-items: center; justify-content: center;
+```
+
+### 5.4 Progress Bar
+```css
+height:        4px (thin) or 8px (prominent);
+border-radius: 9999px;
+background:    var(--color-border);      /* track */
+fill:          var(--color-progress);   /* fill */
+```
+
+### 5.5 Avatar
+```css
+border-radius: 50%;
+object-fit:    cover;
+sizes:         24px (xs) | 32px (sm) | 40px (md) | 56px (lg) | 80px (xl)
+border:        2px solid var(--color-border)  /* optional ring */
+```
+
+### 5.6 Accordion / Lesson List (Course Player)
+```css
+border-bottom: 1px solid var(--color-border);
+padding:       14px 0;
+```
+- Collapsed: shows section title + chevron-down icon
+- Expanded: shows lesson items with indent, play icon, duration
+- Active lesson: `background: rgba(29,185,84,0.08)`, left border `3px solid --color-primary`
+- Completed lesson: checkmark icon, title `text-decoration: line-through` optional OR muted color
+
+### 5.7 Stat / Achievement Badge (Gamification)
+```css
+display:        flex;
+align-items:    center;
+gap:            var(--space-2);
+padding:        8px 14px;
+border-radius:  8px;
+background:     var(--color-bg-secondary);
+border:         1px solid var(--color-border);
+```
+- Icon: emoji or SVG, 20–24px
+- Value: `font-bold`, `text-lg`
+- Label: `font-regular`, `text-xs`, `color-text-muted`
+
+### 5.8 Hero / Banner Section
+- Dark or image-backed (`background-size: cover`, `overlay: linear-gradient`)
+- Text: always white on dark backgrounds
+- Max text width: `520px` for readability
+- CTA button: `--color-primary` (green) on dark backgrounds for contrast
+
+### 5.9 Section Heading
+```
+Title:    font-bold, text-2xl, color-text-primary
+Subtitle: font-regular, text-sm, color-text-muted, margin-top: 4px
+Divider:  4px wide, 32px tall left border OR underline accent in --color-primary
+```
+
+### 5.10 Tags / Pill Labels
+```css
+padding:       4px 10px;
+border-radius: 9999px;
+font-size:     12px;
+font-weight:   600;
+background:    tint of category color (10% opacity);
+color:         category color (full);
+```
+
+---
+
+## 6. Iconography
+
+- Style: Outlined icons preferred (Lucide, Heroicons, or Phosphor)
+- Size scale: `16px` (inline), `20px` (UI), `24px` (action), `32px` (feature)
+- Color: inherit from text color OR `--color-primary` for active/highlighted icons
+- Stroke width: `1.5px` to `2px`
+
+---
+
+## 7. Motion & Animation
+
+```css
+/* Standard transition */
+transition: all 0.2s ease;
+
+/* Card hover lift */
+transform: translateY(-4px);
+box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+
+/* Button press */
+transform: scale(0.97);
+
+/* Accordion open */
+transition: max-height 0.3s ease, opacity 0.2s ease;
+
+/* Page load stagger (for card grids) */
+animation: fadeInUp 0.4s ease both;
+animation-delay: calc(var(--card-index) * 0.06s);
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+```
+
+**Rules:**
+- Never animate more than 2 properties simultaneously (performance)
+- `prefers-reduced-motion`: disable all transforms and fade durations → snap to final state
+- Avoid looping animations on core UI elements (use only for loading states or illustrations)
+
+---
+
+## 8. Shadows
+
+```
+--shadow-xs:  0 1px 2px rgba(0,0,0,0.06)
+--shadow-sm:  0 2px 8px rgba(0,0,0,0.08)
+--shadow-md:  0 4px 16px rgba(0,0,0,0.10)
+--shadow-lg:  0 8px 24px rgba(0,0,0,0.12)
+--shadow-xl:  0 16px 48px rgba(0,0,0,0.16)
+```
+
+- Cards (default): `--shadow-sm`
+- Cards (hover): `--shadow-lg`
+- Modals / dropdowns: `--shadow-xl`
+- Navigation bar (scrolled): `--shadow-sm`
+
+---
+
+## 9. Border Radius
+
+```
+--radius-sm:   4px   (badges, tags, small elements)
+--radius-md:   8px   (cards, inputs, stat boxes)
+--radius-lg:   12px  (modals, large cards)
+--radius-xl:   16px  (hero sections, feature cards)
+--radius-full: 9999px (pills, avatars, toggles)
+```
+
+---
+
+## 10. Dark Mode Variants
+
+When a section or page uses a dark background (e.g., course player, hero):
+```
+Background:       #121212 or #1A1A1A
+Card background:  #242424
+Border color:     rgba(255,255,255,0.10)
+Text primary:     #FFFFFF
+Text secondary:   rgba(255,255,255,0.70)
+Text muted:       rgba(255,255,255,0.45)
+Input background: rgba(255,255,255,0.08)
+```
+
+---
+
+## 11. Form Inputs
+
+```css
+height:        44px;
+border:        1.5px solid var(--color-border);
+border-radius: var(--radius-md);
+padding:       0 14px;
+font-size:     14px;
+color:         var(--color-text-primary);
+background:    var(--color-bg-primary);
+outline:       none;
+transition:    border-color 0.15s ease, box-shadow 0.15s ease;
+
+focus:
+  border-color: var(--color-primary);
+  box-shadow:   0 0 0 3px rgba(29,185,84,0.15);
+
+error:
+  border-color: var(--color-accent-red);
+  box-shadow:   0 0 0 3px rgba(229,57,53,0.12);
+```
+
+---
+
+## 12. Gamification Patterns (Duolingo-inspired)
+
+- **Streak counter**: flame icon (`--color-streak`), bold number, top of profile/header
+- **XP counter**: lightning bolt icon (`--color-xp`), shown in nav or profile
+- **League badge**: shield icon with tier color (`bronze`, `silver`, `gold`)
+- **Progress circles**: circular SVG progress rings, stroke = `--color-primary`
+- **Achievement cards**: icon + title + description, subtle border, hover lift
+- **Leaderboard row**: rank number (bold, muted) + avatar + name + XP value right-aligned
+
+---
+
+## 13. Accessibility
+
+- Minimum contrast ratio: **4.5:1** for body text, **3:1** for large text and UI components
+- All interactive elements: visible `:focus-visible` ring (`outline: 2px solid --color-primary; outline-offset: 2px`)
+- Icon-only buttons: must have `aria-label`
+- Images: always include `alt` text
+- Color must never be the sole means of conveying information (pair with icon or text)
+- Touch targets: minimum `44×44px`
+
+---
+
+## 14. Component Naming Conventions (for code)
+
+```
+CourseCard          — browsable/catalog card
+EnrolledCourseCard  — card with progress bar (dashboard)
+LessonItem          — single row in course player sidebar
+SectionAccordion    — collapsible section in course player
+StatBadge           — XP / streak / achievement badge
+ProgressBar         — thin horizontal fill bar
+CategoryTag         — colored pill label
+HeroBanner          — full-width dark/image hero
+SectionHeading      — title + subtitle block
+NavBar              — top navigation
+CourseThumbnail     — 16:9 image with badge overlay
+```
+
+---
+
+## 15. Do's and Don'ts
+
+**Do:**
+- Use bold, saturated category colors for course card backgrounds (like Image 4)
+- Always show lesson/progress metadata on enrolled cards
+- Use dark overlays on video thumbnails for text legibility
+- Apply consistent 8px grid spacing
+- Use pill shapes for tags and search bars
+- Animate card hover with subtle lift
+
+**Don't:**
+- Don't use more than 2 accent colors in a single card
+- Don't use plain gray backgrounds for course cards — color encodes category
+- Don't show progress bars on catalog (un-enrolled) cards
+- Don't use more than 3 font weights on a single page
+- Don't make CTA buttons smaller than 36px height
+- Don't skip hover/focus states on any interactive element
+- Don't use Inter or Roboto as the primary display font — choose something with more character

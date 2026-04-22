@@ -1,0 +1,128 @@
+---
+globs: /frontend
+alwaysApply: false
+---
+
+HTML & CSS Guidelines for Historial-GO (Responsive, Accessible, Production-Ready)
+
+You are an expert frontend developer responsible for building a mobile-first, map-driven, AI-powered tourism application (Historial-GO). Your goal is to create a high-performance, accessible, and scalable UI system that supports both tourists (B2C) and guides (B2B dashboard).
+
+Key Principles
+Build mobile-first interfaces, as the primary users are tourists navigating in real-world environments.
+Treat the frontend as a core product layer, not a visual add-on.
+Ensure clarity, speed, and usability under real-world constraints (low internet, outdoor usage, distractions).
+Prioritize performance, accessibility, and responsiveness at every stage.
+Design interfaces that support map interaction, route discovery, and quick decision-making.
+HTML
+Use semantic HTML elements to structure the application clearly:
+<header> for navigation
+<main> for core content (onboarding, route list, map)
+<section> for logical UI blocks (AI suggestions, route categories)
+<article> for individual routes
+<nav> for navigation menus
+<footer> for global information
+Use <button> for all interactive actions (e.g., “Start Route”, “Buy Route”, “Play Audio”).
+Use <a> only for navigation, always including a valid href.
+Use <form> with proper <label> elements for onboarding and user input flows.
+Use <img> with meaningful alt attributes for all location and route visuals.
+Avoid non-semantic elements (<div>, <span>) unless necessary for layout.
+CSS
+Use external stylesheets only; avoid inline styles.
+Follow BEM (Block Element Modifier) naming conventions:
+Example: .route-card, .route-card__title, .route-card--featured
+Use CSS variables for consistent theming:
+Colors, spacing, typography, border radius
+Prefer class selectors over ID selectors for scalability.
+Use Flexbox and Grid for layout:
+Grid for route listings
+Flexbox for navigation and alignment
+Use rem/em units for typography and spacing to ensure scalability.
+Avoid !important; manage specificity properly.
+Responsive Design
+Follow a strict mobile-first approach.
+Design for one-handed usage and outdoor conditions.
+Layout Strategy
+Mobile (default):
+Single-column layout
+Fullscreen map experience
+Large touch targets
+Tablet (≥768px):
+Two-column grid for route listings
+Desktop (≥1024px):
+Split layout (map + route panel side by side)
+Media Queries
+Use progressive enhancement:
+@media (min-width: 768px)
+@media (min-width: 1024px)
+Interaction & Touch
+Ensure all interactive elements have a minimum height of 44px.
+Avoid hover-only interactions; support touch-first behavior.
+Images
+Use responsive images with srcset and sizes.
+Optimize images for performance and bandwidth constraints.
+Enable loading="lazy" for non-critical assets.
+Accessibility
+Use ARIA roles and attributes where necessary to enhance screen reader support.
+Ensure all interactive elements are keyboard accessible.
+Provide visible focus states for navigation.
+Maintain sufficient color contrast for readability in outdoor lighting conditions.
+Use clear and simple language, considering international users.
+Structure the page using landmarks (<nav>, <main>, <section>) for assistive technologies.
+Performance
+Optimize for real-world usage scenarios (tourists on mobile data or offline).
+Minimize CSS and HTML size through compression and minification.
+Avoid heavy animations; prioritize smooth and efficient interactions.
+Use lazy loading for images, audio, and map assets.
+Cache critical assets for offline usage (routes, audio guides, maps).
+Reduce render-blocking resources and prioritize critical UI.
+Map & Interaction-Specific Considerations
+The map is a core interface element, not a secondary feature.
+On mobile:
+Map should occupy full screen.
+On desktop:
+Use a split layout (map + route details).
+Ensure smooth interaction between:
+Map markers
+Route selection
+Audio playback triggers (geolocation-based)
+Testing
+Test across multiple environments:
+iOS Safari
+Android Chrome
+Desktop browsers
+Validate behavior under:
+Low bandwidth
+Offline mode
+GPS/location usage
+Use tools like:
+Lighthouse (performance & accessibility)
+W3C validators (HTML & CSS)
+Documentation
+Clearly document:
+Component structures
+Responsive breakpoints
+Naming conventions (BEM)
+Comment complex layout or interaction logic.
+Maintain consistency across:
+UI components
+CSS architecture
+Responsive behavior
+Final Principle
+
+This is not a static website.
+
+This is a real-time, location-based product where users:
+
+walk
+interact
+explore
+decide quickly
+
+Your frontend must therefore be:
+
+fast
+clear
+intuitive
+resilient
+
+If the UI slows the user down, the product fails.

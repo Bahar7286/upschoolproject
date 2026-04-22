@@ -1,0 +1,212 @@
+---
+description: 
+globs: backend
+alwaysApply: false
+---
+
+## Docs
+FastAPI: https://fastapi.tiangolo.com/tr/
+
+You are an expert backend developer responsible for building a high-performance, scalable, AI-driven API system for Historial-GO, a map-based tourism platform with route generation, audio guidance, and marketplace features.
+
+Your backend must support:
+
+Real-time route recommendations (AI layer)
+Location-based triggers (geofence logic)
+Content delivery (audio, map data, routes)
+Marketplace operations (payments, guide earnings)
+Key Principles
+Design APIs as product infrastructure, not just data endpoints.
+Prioritize low latency and high availability, especially for mobile users in real-world environments.
+Use functional and modular design, avoiding unnecessary abstraction.
+Ensure clear separation of concerns:
+route logic
+AI recommendation logic
+user management
+payment system
+Optimize for mobile-first consumption patterns (fast responses, minimal payloads).
+Architecture & Project Structure
+
+Use a modular, domain-based structure:
+
+routers/
+  user_routes.py
+  route_routes.py
+  ai_routes.py
+  payment_routes.py
+
+models/
+  user_model.py
+  route_model.py
+  purchase_model.py
+
+schemas/
+  user_schema.py
+  route_schema.py
+  ai_schema.py
+
+services/
+  ai_service.py
+  route_service.py
+  payment_service.py
+
+db/
+  connection.py
+
+utils/
+  geolocation.py
+  caching.py
+Keep routers thin, move logic into services.
+Separate AI logic from business logic.
+Use lowercase with underscores for all files and directories.
+Python / FastAPI Practices
+Use def for pure logic, async def for all I/O-bound operations.
+Use Pydantic v2 models for all request/response validation.
+Always define explicit return types.
+
+Example:
+
+from fastapi import APIRouter
+from schemas.route_schema import RouteRequest, RouteResponse
+
+router = APIRouter()
+
+@router.post("/routes/recommend", response_model=list[RouteResponse])
+async def recommend_routes(payload: RouteRequest) -> list[RouteResponse]:
+    return await generate_recommendations(payload)
+AI Layer (Core to Your Product)
+
+Your system includes an AI-powered route recommendation engine.
+
+Rules:
+AI logic must be isolated in services/ai_service.py
+Do NOT mix AI logic inside route handlers
+Treat AI as a decision engine, not just a helper
+
+Example:
+
+async def generate_recommendations(payload: RouteRequest) -> list[RouteResponse]:
+    if not payload.interests:
+        return []
+
+    return await match_user_to_routes(payload)
+Geolocation & Trigger Logic
+
+Your product includes location-based triggers (geofence).
+
+Rules:
+Handle geolocation in a dedicated utility module
+Keep logic lightweight and fast
+
+Example:
+
+def is_user_near_location(*, user_lat: float, user_lng: float, target_lat: float, target_lng: float) -> bool:
+    distance = calculate_distance(user_lat, user_lng, target_lat, target_lng)
+    return distance <= 20
+Error Handling and Validation
+Use guard clauses and early returns.
+Handle invalid input at the top of the function.
+Avoid nested conditionals.
+
+Example:
+
+from fastapi import HTTPException
+
+async def get_route(route_id: int) -> RouteResponse:
+    if route_id <= 0:
+        raise HTTPException(status_code=400, detail="Invalid route ID")
+
+    route = await fetch_route(route_id)
+    if not route:
+        raise HTTPException(status_code=404, detail="Route not found")
+
+    return route
+Data Handling & Models
+Use Pydantic models for all inputs and outputs.
+Avoid raw dictionaries.
+Follow RORO pattern (Receive Object → Return Object).
+
+Example:
+
+class RouteRequest(BaseModel):
+    interests: list[str]
+    duration: int
+    budget: float
+Performance Optimization
+
+Your system must handle:
+
+mobile users
+map data
+audio content
+AI recommendations
+Rules:
+Use async database calls (asyncpg, SQLAlchemy async)
+Cache frequently accessed data (routes, locations)
+Minimize payload size (return only required fields)
+Use lazy loading for heavy data (audio, media)
+
+Example:
+
+async def get_cached_routes(cache_key: str):
+    cached = await redis.get(cache_key)
+    if cached:
+        return cached
+
+    routes = await fetch_routes()
+    await redis.set(cache_key, routes)
+    return routes
+Payment & Marketplace Logic
+
+Your platform includes:
+
+route purchases
+guide revenue sharing
+Rules:
+Separate payment logic into payment_service
+Never expose sensitive payment data
+Validate all transactions
+Middleware
+
+Use middleware for:
+
+logging
+performance tracking
+error monitoring
+
+Avoid putting logic inside routes.
+
+Dependencies & Injection
+Use FastAPI’s dependency injection system
+Manage database connections and services cleanly
+
+Example:
+
+async def get_db():
+    return db_connection
+Testing
+
+Test for:
+
+API latency (mobile users)
+geolocation accuracy
+AI response consistency
+payment flows
+Final Principle
+
+This is not a simple CRUD API.
+
+This is a real-time, AI-driven, location-aware system where:
+
+users move physically
+decisions are instant
+performance is critical
+
+Your API must therefore be:
+
+fast
+predictable
+scalable
+fault-tolerant
+
+If your API is slow or inconsistent, the product fails.
