@@ -1,9 +1,21 @@
 <!doctype html>
-<html lang="en">
+<html lang="tr">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- viewport-fit=cover: iOS notch / Dynamic Island safe area için zorunlu -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Historial-GO</title>
+    <!-- PWA / App Store meta -->
+    <meta name="application-name" content="Historial-GO" />
+    <meta name="description" content="İstanbul'un tarihi rotalarını AI ile keşfet — sesli rehber ve interaktif harita." />
+    <meta name="theme-color" content="#f4f0e8" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)" />
+    <!-- iOS web-clip (Safari "Ana Ekrana Ekle") -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="apple-mobile-web-app-title" content="Historial-GO" />
+    <!-- Android Chrome standalone -->
+    <meta name="mobile-web-app-capable" content="yes" />
   </head>
   <body>
     <div id="root"></div>

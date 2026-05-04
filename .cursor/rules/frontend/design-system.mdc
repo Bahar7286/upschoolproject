@@ -1,468 +1,339 @@
-# E-Learning Platform Design System
+---
+description: Historial-GO tasarım sistemi — Tailwind token'ları, Capacitor native uyumu, iOS/Android kılavuzları.
+globs: frontend/**/*
+alwaysApply: false
+---
 
-## Overview
-This design system is derived from analyzing 5 reference e-learning platforms (Skillshare, MasterClass, Duolingo, a course dashboard UI, and LearnXpert). Use these rules consistently across all components and pages.
+# Historial-GO Design System
+
+**Ürün:** İstanbul odaklı AI destekli turizm uygulaması — rota keşfi, harita, sesli rehber.  
+**Hedef:** Web (PWA) + iOS App Store + Google Play Store (Capacitor wrapper).  
+**Öncelik sırası:** mobil dokunma → erişilebilirlik → görsel kimlik → masaüstü.
 
 ---
 
-## 1. Color Palette
+## 1. Renk Sistemi (Tailwind token'larına bağlı)
 
-### Primary Colors
-```
---color-primary:        #1DB954;   /* Action green — CTAs, active states */
---color-primary-dark:   #158a3e;   /* Hover state for primary */
---color-accent-red:     #E53935;   /* Danger, alerts, highlight badges */
---color-accent-pink:    #D81B60;   /* Secondary accent, course card tints */
---color-accent-orange:  #E65100;   /* Warm category color */
---color-accent-purple:  #6A1B9A;   /* Category badge variant */
---color-accent-blue:    #0288D1;   /* Info, secondary category */
---color-accent-yellow:  #F9A825;   /* Stars, XP, streak indicators */
-```
+### Marka renkleri (`tailwind.config.js` → `theme.extend.colors`)
 
-### Neutrals
+| Token | Değer | Kullanım |
+|---|---|---|
+| `heritage-ink` | `#0c1222` | Ana metin, logo, başlıklar |
+| `heritage-gold` | `#c9a227` | Altın/amber vurgu, premium rozet |
+| `heritage-paper` | `#f4f0e8` | Açık mod arka plan |
+| `heritage-ember` | `#c45c3e` | Uyarı, tehlikeli durum |
+| `primary` (DEFAULT) | `#1db954` | CTA buton, progress, başarı |
+| `primary-dark` | `#158a3e` | Buton hover/pressed durumu |
+
+### Semantik kullanım
+
 ```
---color-bg-primary:     #FFFFFF;   /* Main page background */
---color-bg-secondary:   #F5F5F5;   /* Section backgrounds, cards */
---color-bg-dark:        #121212;   /* Dark hero sections, video overlays */
---color-bg-dark-card:   #1E1E1E;   /* Dark mode cards */
---color-text-primary:   #1A1A1A;   /* Headings */
---color-text-secondary: #555555;   /* Body, descriptions */
---color-text-muted:     #999999;   /* Captions, metadata */
---color-text-inverse:   #FFFFFF;   /* Text on dark backgrounds */
---color-border:         #E0E0E0;   /* Dividers, card borders */
+CTA / İleri adım      → bg-primary          text-white
+Amber vurgu (premium) → bg-amber-500/20     text-amber-800 dark:text-amber-300
+Hata                  → bg-red-50           text-red-800   dark:bg-red-950/40
+Uyarı / Bilgi         → bg-amber-500/10     text-amber-950 dark:text-amber-100
+Başarı                → bg-primary/10       text-primary-dark
+Gölgeli kart          → shadow-lift (açık)  shadow-lift-dark (koyu)
 ```
 
-### Gamification / Status Colors
+### Koyu mod (dark: prefix)
+
 ```
---color-streak:         #FF6D00;   /* Duolingo-style streak flame */
---color-xp:             #FFD600;   /* XP / points */
---color-league-bronze:  #CD7F32;
---color-league-silver:  #C0C0C0;
---color-league-gold:    #FFD700;
---color-progress:       #1DB954;   /* Progress bars */
---color-completed:      #43A047;
+Arka plan katmanı 1   → dark:bg-zinc-950
+Arka plan katmanı 2   → dark:bg-zinc-900/95
+Sınır                 → dark:border-white/10
+Ana metin             → dark:text-stone-50
+Yardımcı metin        → dark:text-stone-400
+Input arka planı      → dark:bg-zinc-950
 ```
+
+Hiçbir zaman hardcode hex renk kullanma — her zaman Tailwind sınıfı veya CSS değişkeni kullan.
 
 ---
 
-## 2. Typography
+## 2. Tipografi
 
-### Font Stack
-```css
-/* Display / Hero headings */
-font-family: 'Sora', 'Nunito', sans-serif;
+| Rol | Font | Tailwind sınıfı |
+|---|---|---|
+| Başlık / hero | Sora, Nunito | `font-display` |
+| Gövde / UI | DM Sans, Plus Jakarta Sans | `font-sans` |
+| Kod, koordinat | JetBrains Mono | `font-mono` |
 
-/* Body / UI text */
-font-family: 'DM Sans', 'Plus Jakarta Sans', sans-serif;
+### Ölçek kuralları
 
-/* Monospace (code snippets) */
-font-family: 'JetBrains Mono', 'Fira Code', monospace;
-```
+- **Ekran başlıkları:** `text-2xl font-extrabold font-display tracking-tight`
+- **Kart başlığı:** `text-base font-bold`
+- **Gövde:** `text-[15px]` veya `text-sm` leading-relaxed
+- **Meta / etiket:** `text-xs font-semibold uppercase tracking-[0.14em]`
+- **Input:** `text-[15px]` (iOS zoom'unu önlemek için 16px altına inme)
 
-### Type Scale
-```
---text-xs:    11px / line-height: 1.4
---text-sm:    13px / line-height: 1.5
---text-base:  15px / line-height: 1.6
---text-md:    17px / line-height: 1.55
---text-lg:    20px / line-height: 1.4
---text-xl:    24px / line-height: 1.3
---text-2xl:   30px / line-height: 1.25
---text-3xl:   38px / line-height: 1.2
---text-4xl:   48px / line-height: 1.1
---text-hero:  60px / line-height: 1.05
-```
-
-### Font Weights
-```
---font-regular:    400
---font-medium:     500
---font-semibold:   600
---font-bold:       700
---font-extrabold:  800
-```
-
-### Rules
-- Hero / section titles: `font-extrabold`, `text-3xl` to `text-hero`, uppercase allowed for impact cards
-- Course card titles: `font-bold`, `text-md` to `text-lg`
-- Body / descriptions: `font-regular`, `text-base`, `color-text-secondary`
-- Metadata (instructor name, duration, lesson count): `font-medium`, `text-sm`, `color-text-muted`
-- CTA button labels: `font-semibold`, `text-sm` to `text-md`, uppercase or sentence case
+> **iOS kuralı:** `font-size < 16px` olan inputlar iOS Safari'de otomatik zoom yapar. Input font boyutu `text-[15px]` (15px) minimum olmalı; bu zoom eşiğinin altında ama kabul edilebilir.
 
 ---
 
-## 3. Spacing System
+## 3. Spacing (8px grid)
 
-Use an 8px base grid. All spacing values must be multiples of 4 or 8.
+Tüm spacing Tailwind'in 4px bazlı scale'ini kullanır.  
+`p-1=4px  p-2=8px  p-3=12px  p-4=16px  p-5=20px  p-6=24px  p-8=32px  p-10=40px  p-12=48px`
 
-```
---space-1:   4px
---space-2:   8px
---space-3:   12px
---space-4:   16px
---space-5:   20px
---space-6:   24px
---space-8:   32px
---space-10:  40px
---space-12:  48px
---space-16:  64px
---space-20:  80px
---space-24:  96px
-```
-
-- Card internal padding: `--space-5` to `--space-6`
-- Section vertical padding: `--space-16` to `--space-20`
-- Navigation height: `56px` (compact) or `64px` (standard)
-- Gap between course cards in grid: `--space-5` to `--space-6`
+- Kart iç padding: `p-5` veya `p-6`
+- Seksiyon dikey padding: `py-10` veya `py-12`
+- Form elemanları arası: `gap-4`
+- İkon + metin: `gap-2` veya `gap-3`
 
 ---
 
-## 4. Layout & Grid
+## 4. Dokunma Hedefleri (Touch Targets) — iOS & Android
 
-### Page Layout
-```
-Max content width:  1280px
-Side padding:       clamp(16px, 4vw, 64px)
-```
+> **Kural:** Tüm dokunulabilir elementlerin minimum boyutu `44×44px` olmalıdır.  
+> Apple HIG ve Material Design her ikisi de bu eşiği zorunlu kılar.
 
-### Course Card Grids
-```css
-/* Default responsive grid */
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
-gap: var(--space-5);
+```
+Butonlar:          min-h-[48px]   (biraz üstünde, güvenli)
+Alt nav sekmeleri: min-h-[52px]
+İkon butonları:    min-h-[44px] min-w-[44px]
+Input alanları:    min-h-[48px]
+Liste öğeleri:     min-h-[52px]
 ```
 
-- Mobile (< 640px): 1 column
-- Tablet (640–1024px): 2 columns
-- Desktop (> 1024px): 3–4 columns
-
-### Sidebar Layout (Dashboard / Course Player)
-```
-Sidebar width:       240px (collapsed: 64px)
-Content area:        flex: 1
-```
+Hover-only etkileşim kullanma; `active:` ve `focus-visible:` durumları yeterlidir.
 
 ---
 
-## 5. Components
+## 5. Native Güvenli Alan (Safe Area) — Capacitor / iOS / Android
 
-### 5.1 Navigation Bar
-- Background: `--color-bg-dark` (dark hero mode) OR `--color-bg-primary` with `border-bottom: 1px solid --color-border`
-- Logo: left-aligned, `font-extrabold`, brand color or white on dark
-- Nav links: `font-medium`, `text-sm`, `color-text-secondary`, hover → `color-text-primary`
-- Search bar: pill shape (`border-radius: 9999px`), `background: --color-bg-secondary`, icon left
-- Right side: notification bell icon + user avatar (circular, 32–36px)
-- Active nav item: underline or background pill indicator
-
-### 5.2 Course Card
-```
-border-radius:   10px
-overflow:        hidden
-background:      --color-bg-primary or colored (category-based)
-box-shadow:      0 2px 8px rgba(0,0,0,0.08)
-transition:      transform 0.2s ease, box-shadow 0.2s ease
-hover:           translateY(-4px), box-shadow elevated
-```
-
-**Card structure (top → bottom):**
-1. **Thumbnail** — 16:9 aspect ratio, object-fit: cover; may include overlay badges ("Staff Pick", "Original", "New")
-2. **Category color bar** OR colored background (bold single color: orange, red, black, pink, purple, blue)
-3. **Title** — `font-bold`, 2-line clamp
-4. **Instructor name** — `text-sm`, `color-text-muted`
-5. **Progress indicator** — thin bar (4px height), `--color-progress`, shown only if enrolled
-6. **Lesson count / duration** — icon + text, `text-xs`, `color-text-muted`
-
-**Badge overlays on thumbnail:**
-```css
-position: absolute;
-top: 8px; left: 8px;
-padding: 3px 8px;
-border-radius: 4px;
-font-size: 11px;
-font-weight: 700;
-text-transform: uppercase;
-letter-spacing: 0.05em;
-background: --color-accent-*;
-color: white;
-```
-
-### 5.3 Buttons
-
-**Primary CTA**
-```css
-background:       var(--color-primary);
-color:            white;
-padding:          10px 24px;
-border-radius:    6px;
-font-weight:      600;
-font-size:        14px;
-border:           none;
-cursor:           pointer;
-transition:       background 0.15s ease, transform 0.1s ease;
-hover background: var(--color-primary-dark);
-active transform: scale(0.97);
-```
-
-**Secondary / Outline**
-```css
-background:    transparent;
-border:        2px solid var(--color-border);
-color:         var(--color-text-primary);
-border-radius: 6px;
-padding:       9px 22px;
-font-weight:   600;
-hover border:  var(--color-text-primary);
-```
-
-**Ghost / Text Button**
-```css
-background:  transparent;
-color:       var(--color-primary);
-border:      none;
-font-weight: 600;
-hover:       underline or bg tint
-```
-
-**Icon Button (notification, bookmark)**
-```css
-width:         36px; height: 36px;
-border-radius: 50%;
-background:    transparent;
-hover bg:      rgba(0,0,0,0.06);
-display:       flex; align-items: center; justify-content: center;
-```
-
-### 5.4 Progress Bar
-```css
-height:        4px (thin) or 8px (prominent);
-border-radius: 9999px;
-background:    var(--color-border);      /* track */
-fill:          var(--color-progress);   /* fill */
-```
-
-### 5.5 Avatar
-```css
-border-radius: 50%;
-object-fit:    cover;
-sizes:         24px (xs) | 32px (sm) | 40px (md) | 56px (lg) | 80px (xl)
-border:        2px solid var(--color-border)  /* optional ring */
-```
-
-### 5.6 Accordion / Lesson List (Course Player)
-```css
-border-bottom: 1px solid var(--color-border);
-padding:       14px 0;
-```
-- Collapsed: shows section title + chevron-down icon
-- Expanded: shows lesson items with indent, play icon, duration
-- Active lesson: `background: rgba(29,185,84,0.08)`, left border `3px solid --color-primary`
-- Completed lesson: checkmark icon, title `text-decoration: line-through` optional OR muted color
-
-### 5.7 Stat / Achievement Badge (Gamification)
-```css
-display:        flex;
-align-items:    center;
-gap:            var(--space-2);
-padding:        8px 14px;
-border-radius:  8px;
-background:     var(--color-bg-secondary);
-border:         1px solid var(--color-border);
-```
-- Icon: emoji or SVG, 20–24px
-- Value: `font-bold`, `text-lg`
-- Label: `font-regular`, `text-xs`, `color-text-muted`
-
-### 5.8 Hero / Banner Section
-- Dark or image-backed (`background-size: cover`, `overlay: linear-gradient`)
-- Text: always white on dark backgrounds
-- Max text width: `520px` for readability
-- CTA button: `--color-primary` (green) on dark backgrounds for contrast
-
-### 5.9 Section Heading
-```
-Title:    font-bold, text-2xl, color-text-primary
-Subtitle: font-regular, text-sm, color-text-muted, margin-top: 4px
-Divider:  4px wide, 32px tall left border OR underline accent in --color-primary
-```
-
-### 5.10 Tags / Pill Labels
-```css
-padding:       4px 10px;
-border-radius: 9999px;
-font-size:     12px;
-font-weight:   600;
-background:    tint of category color (10% opacity);
-color:         category color (full);
-```
-
----
-
-## 6. Iconography
-
-- Style: Outlined icons preferred (Lucide, Heroicons, or Phosphor)
-- Size scale: `16px` (inline), `20px` (UI), `24px` (action), `32px` (feature)
-- Color: inherit from text color OR `--color-primary` for active/highlighted icons
-- Stroke width: `1.5px` to `2px`
-
----
-
-## 7. Motion & Animation
+iOS notch ve Android sistem çubuklarıyla çakışmayı önlemek için:
 
 ```css
-/* Standard transition */
-transition: all 0.2s ease;
-
-/* Card hover lift */
-transform: translateY(-4px);
-box-shadow: 0 8px 24px rgba(0,0,0,0.12);
-
-/* Button press */
-transform: scale(0.97);
-
-/* Accordion open */
-transition: max-height 0.3s ease, opacity 0.2s ease;
-
-/* Page load stagger (for card grids) */
-animation: fadeInUp 0.4s ease both;
-animation-delay: calc(var(--card-index) * 0.06s);
-
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
+/* index.css içinde */
+:root {
+  --sat: env(safe-area-inset-top);
+  --sab: env(safe-area-inset-bottom);
+  --sal: env(safe-area-inset-left);
+  --sar: env(safe-area-inset-right);
 }
 ```
 
-**Rules:**
-- Never animate more than 2 properties simultaneously (performance)
-- `prefers-reduced-motion`: disable all transforms and fade durations → snap to final state
-- Avoid looping animations on core UI elements (use only for loading states or illustrations)
+Kullanım:
+
+```
+Alt nav bar:          pb-[env(safe-area-inset-bottom)]
+Üst nav / status bar: pt-[env(safe-area-inset-top)]
+İçerik wrapper:       px-[env(safe-area-inset-left)] px-[env(safe-area-inset-right)]
+```
+
+Capacitor `capacitor.config.ts` → `SplashScreen.splashFullScreen: true` ile splash tam ekran açılır; `StatusBar` rengi açık modda `#f4f0e8`, koyu modda `#09090b` olmalı.
 
 ---
 
-## 8. Shadows
+## 6. Bileşenler
+
+### 6.1 Butonlar
+
+**Primary (CTA)**
+```
+bg-primary text-white rounded-xl min-h-[48px] px-4 font-bold text-sm
+shadow-md hover:bg-primary-dark active:scale-[0.98] disabled:opacity-60
+tap-scale (transition-transform duration-150 active:scale-[0.98])
+```
+
+**Secondary / Outline**
+```
+border-2 border-stone-300 dark:border-zinc-600 rounded-full
+bg-transparent text-stone-900 dark:text-stone-100
+hover:border-stone-900 dark:hover:border-white
+```
+
+**İkon buton**
+```
+min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center
+bg-white/80 dark:bg-zinc-900/80 border border-stone-900/10 dark:border-white/10
+shadow-sm backdrop-blur tap-scale
+```
+
+### 6.2 Kartlar
 
 ```
---shadow-xs:  0 1px 2px rgba(0,0,0,0.06)
---shadow-sm:  0 2px 8px rgba(0,0,0,0.08)
---shadow-md:  0 4px 16px rgba(0,0,0,0.10)
---shadow-lg:  0 8px 24px rgba(0,0,0,0.12)
---shadow-xl:  0 16px 48px rgba(0,0,0,0.16)
+rounded-[22px]
+border border-stone-900/10 dark:border-white/10
+bg-white/90 dark:bg-zinc-900/95
+shadow-lift dark:shadow-lift-dark
+backdrop-blur-md
+p-5 veya p-6
 ```
 
-- Cards (default): `--shadow-sm`
-- Cards (hover): `--shadow-lg`
-- Modals / dropdowns: `--shadow-xl`
-- Navigation bar (scrolled): `--shadow-sm`
+Kart hover efekti (web'de):
+```
+transition-transform duration-200
+hover:-translate-y-1 hover:shadow-lg
+```
+
+### 6.3 Form Inputları
+
+```
+min-h-[48px] w-full rounded-xl px-4
+border border-stone-900/15 dark:border-white/15
+bg-white dark:bg-zinc-950
+text-[15px] text-stone-900 dark:text-stone-50
+placeholder:text-stone-400 dark:placeholder:text-stone-500
+shadow-sm outline-none transition
+focus:border-primary (focus-ring utility ile)
+```
+
+`focus-ring` utility:
+```css
+@layer utilities {
+  .focus-ring {
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+}
+```
+
+### 6.4 Alt Navigasyon (Mobil / Native)
+
+```
+fixed bottom-0 left-0 right-0 z-50
+border-t border-stone-900/10 dark:border-white/10
+bg-white/95 dark:bg-zinc-950/98 backdrop-blur-xl
+pb-[env(safe-area-inset-bottom)]
+```
+
+Sekme öğesi:
+```
+flex flex-col items-center justify-center gap-1
+min-h-[52px] rounded-xl px-2 py-1
+text-[11px] font-bold tap-scale
+```
+
+Aktif sekme: `text-primary`, ikon dolgu veya solid varyant.  
+Pasif sekme: `text-stone-500 dark:text-stone-400`.
+
+### 6.5 Üst Navigasyon (Masaüstü)
+
+```
+sticky top-0 z-40
+bg-heritage-paper/95 dark:bg-zinc-950/95
+border-b border-stone-900/10 dark:border-white/10
+backdrop-blur-xl
+pt-[env(safe-area-inset-top)]
+```
+
+### 6.6 Hata / Bilgi Kutusu
+
+```
+Hata:   rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800
+        dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100
+        role="alert"
+
+Bilgi:  rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm font-medium
+        text-amber-950 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100
+        role="status"
+```
 
 ---
 
-## 9. Border Radius
+## 7. İkonografi
 
-```
---radius-sm:   4px   (badges, tags, small elements)
---radius-md:   8px   (cards, inputs, stat boxes)
---radius-lg:   12px  (modals, large cards)
---radius-xl:   16px  (hero sections, feature cards)
---radius-full: 9999px (pills, avatars, toggles)
-```
+- **Kütüphane:** Lucide (`lucide-react`) — outlined stil
+- **Stroke genişliği:** `strokeWidth={2}` (standart), `strokeWidth={2.5}` (küçük ikonlar)
+- **Boyutlar:** `h-4 w-4` (inline), `h-5 w-5` (UI), `h-6 w-6` (aksiyon), `h-7 w-7` (öne çıkan)
+- **Renk:** metin renginden miras; aktif durumda `text-primary`
+- Sadece ikon butonlarda `aria-label` zorunlu; dekoratif ikonlarda `aria-hidden="true"`
 
 ---
 
-## 10. Dark Mode Variants
-
-When a section or page uses a dark background (e.g., course player, hero):
-```
-Background:       #121212 or #1A1A1A
-Card background:  #242424
-Border color:     rgba(255,255,255,0.10)
-Text primary:     #FFFFFF
-Text secondary:   rgba(255,255,255,0.70)
-Text muted:       rgba(255,255,255,0.45)
-Input background: rgba(255,255,255,0.08)
-```
-
----
-
-## 11. Form Inputs
+## 8. Animasyon ve Hareket
 
 ```css
-height:        44px;
-border:        1.5px solid var(--color-border);
-border-radius: var(--radius-md);
-padding:       0 14px;
-font-size:     14px;
-color:         var(--color-text-primary);
-background:    var(--color-bg-primary);
-outline:       none;
-transition:    border-color 0.15s ease, box-shadow 0.15s ease;
+/* Tailwind keyframe'leri (tailwind.config.js) */
+fade-in-up:   opacity 0→1, translateY 10px→0, 0.55s ease-out
+float-soft:   translateY 0→-6px→0, 5.5s ease-in-out infinite (landing deco)
+```
 
-focus:
-  border-color: var(--color-primary);
-  box-shadow:   0 0 0 3px rgba(29,185,84,0.15);
+Uygulama sınıfları: `animate-fade-in-up`, `animate-float-soft`
 
-error:
-  border-color: var(--color-accent-red);
-  box-shadow:   0 0 0 3px rgba(229,57,53,0.12);
+**Kurallar:**
+- `prefers-reduced-motion`: `@media (prefers-reduced-motion: reduce)` ile tüm animasyonları kapat
+- Native Capacitor'da CSS animasyon sorunsuz çalışır ama `transform: translateZ(0)` GPU katmanı açar — dikkatli kullan
+- Sonsuz döngü animasyonu sadece landing dekorasyonu ve loading skeleton'da kullan
+- Kart hover lifti web'de aktif; native'de `active:scale-[0.98]` yeterli
+
+---
+
+## 9. Gölgeler
+
+```
+shadow-lift:      0 8px 24px rgb(0 0 0 / 12%)    → açık mod kart
+shadow-lift-dark: 0 12px 40px rgb(0 0 0 / 45%)   → koyu mod kart
+shadow-md:        Tailwind varsayılan (modal, dropdown)
+shadow-sm:        Tailwind varsayılan (input, küçük kart)
 ```
 
 ---
 
-## 12. Gamification Patterns (Duolingo-inspired)
-
-- **Streak counter**: flame icon (`--color-streak`), bold number, top of profile/header
-- **XP counter**: lightning bolt icon (`--color-xp`), shown in nav or profile
-- **League badge**: shield icon with tier color (`bronze`, `silver`, `gold`)
-- **Progress circles**: circular SVG progress rings, stroke = `--color-primary`
-- **Achievement cards**: icon + title + description, subtle border, hover lift
-- **Leaderboard row**: rank number (bold, muted) + avatar + name + XP value right-aligned
-
----
-
-## 13. Accessibility
-
-- Minimum contrast ratio: **4.5:1** for body text, **3:1** for large text and UI components
-- All interactive elements: visible `:focus-visible` ring (`outline: 2px solid --color-primary; outline-offset: 2px`)
-- Icon-only buttons: must have `aria-label`
-- Images: always include `alt` text
-- Color must never be the sole means of conveying information (pair with icon or text)
-- Touch targets: minimum `44×44px`
-
----
-
-## 14. Component Naming Conventions (for code)
+## 10. Köşe Yarıçapı
 
 ```
-CourseCard          — browsable/catalog card
-EnrolledCourseCard  — card with progress bar (dashboard)
-LessonItem          — single row in course player sidebar
-SectionAccordion    — collapsible section in course player
-StatBadge           — XP / streak / achievement badge
-ProgressBar         — thin horizontal fill bar
-CategoryTag         — colored pill label
-HeroBanner          — full-width dark/image hero
-SectionHeading      — title + subtitle block
-NavBar              — top navigation
-CourseThumbnail     — 16:9 image with badge overlay
+rounded-sm   → 4px  (küçük rozet, etiket)
+rounded-xl   → 12px (input, küçük kart)
+rounded-2xl  → 16px (buton, nav öğesi)
+rounded-[22px] → auth/ana kartlar (özel değer)
+rounded-full → avatar, pill, toggle
 ```
 
 ---
 
-## 15. Do's and Don'ts
+## 11. Erişilebilirlik (WCAG 2.1 AA + Native)
 
-**Do:**
-- Use bold, saturated category colors for course card backgrounds (like Image 4)
-- Always show lesson/progress metadata on enrolled cards
-- Use dark overlays on video thumbnails for text legibility
-- Apply consistent 8px grid spacing
-- Use pill shapes for tags and search bars
-- Animate card hover with subtle lift
+- Kontrast: gövde metni için en az **4.5:1**, büyük metin için **3:1**
+- Dış mekân kullanımı için yüksek kontrast tercih et
+- Tüm interaktif elementlerde `focus-visible` halkası
+- İkon-only butonlarda `aria-label`
+- Hata kutusu: `role="alert"` (ekran okuyucu anında duyurur)
+- Durum kutusu: `role="status"` (nazikçe duyurur)
+- Form: `<label htmlFor>` + `id` eşleştirmesi zorunlu
+- Liste navigasyonu: `aria-current="page"` aktif sekme/link için
 
-**Don't:**
-- Don't use more than 2 accent colors in a single card
-- Don't use plain gray backgrounds for course cards — color encodes category
-- Don't show progress bars on catalog (un-enrolled) cards
-- Don't use more than 3 font weights on a single page
-- Don't make CTA buttons smaller than 36px height
-- Don't skip hover/focus states on any interactive element
-- Don't use Inter or Roboto as the primary display font — choose something with more character
+---
+
+## 12. iOS & Android Özel Kurallar (Capacitor)
+
+### iOS
+- `viewport-fit=cover` meta etiketi `index.html`'de zorunlu (notch safe area için)
+- `-webkit-tap-highlight-color: transparent` → dokunma vurgusu kaldır
+- `-webkit-overflow-scrolling: touch` → smooth scroll
+- `position: fixed` alt nav için; `bottom: env(safe-area-inset-bottom)` ekle
+- SplashScreen: `backgroundColor: #f4f0e8` (açık) / `#09090b` (koyu otomatik değil, JS gerekir)
+- StatusBar style: açık modda `Light`, koyu modda `Dark` — `@capacitor/status-bar` ile yönet
+
+### Android
+- `android:windowSoftInputMode="adjustResize"` — klavye açılınca content kayar
+- `AndroidScheme: 'https'` — CORS ve mixed content sorunlarını önler
+- Material You dinamik renk: Capacitor varsayılan; özelleştirme için `res/values/colors.xml`
+- Back button: `@capacitor/app` → `App.addListener('backButton', ...)` ile yönet
+- `android:configChanges` manifest'te zaten var — rotasyon/klavye değişikliğinde Activity yeniden başlamaz
+
+### Her iki platform
+- Çevrimdışı varlıklar: Leaflet tile cache veya static map PNG → uygulama bağımsız çalışabilmeli
+- API URL: `capacitor.config.ts` → geliştirme `server.url`, üretim boş bırak (native HTTPS)
+- Deep link: `com.historialgo.app://` scheme `capacitor.config.ts`'te tanımlı
+
+---
+
+## 13. Yapma / Yapma
+
+### Yap
+- Her interaktif elementin dokunma hedefini `44px` ve üzeri tut
+- Safe area inset CSS değişkenlerini kullan
+- Koyu mod (`dark:`) karşılığını her bileşende tanımla
+- Hata mesajlarını `formatApiError` ile Türkçeye çevir
+- Lucide ikonları `aria-hidden="true"` ile dekoratif olarak işaretle
+- Loading/disabled durumunda butonu `disabled` yap
+
+### Yapma
+- `hover:` tek etkileşim noktası olarak kullanma — mobilde hover yoktur
+- Font boyutunu inputlarda 16px (iOS göreli) altına indirme (zoom tetiklenir)
+- Hardcode hex renk, inline style veya `!important` kullanma
+- Ağır parallax veya sürekli döngü animasyonu koru (pil ve performans)
+- `position: fixed` elementlerde safe area ihmal etme (notch'ta kaybolur)
+- Haritada koordinat yoksa çökmesine izin verme — demo pin göster ve kullanıcıya bildir

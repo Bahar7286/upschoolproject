@@ -11,7 +11,7 @@ __pycache__/
 
 # Database
 *.db
-
+.cursor/
 # Frontend / Node
 node_modules/
 dist/
@@ -25,3 +25,10 @@ build/
 # OS / Editor
 .DS_Store
 Thumbs.db
+
+# Capacitor — native proje klasörleri (isteğe bağlı, büyük binary içerir)
+# Bunları kayıt altına almak istiyorsanız bu satırları kaldırın.
+# frontend/android/.gradle/
+# frontend/android/build/
+# frontend/ios/App/Pods/
+# frontend/ios/App/App.xcworkspace/xcuserdata/

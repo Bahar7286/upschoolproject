@@ -1,8 +1,12 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.route_model import Route
 from app.models.user_model import User
+
+# Swagger / geliştirme için demo girişi: e-posta + şifre `demo123`
+_DEMO_PASSWORD = 'demo123'
 
 
 async def seed_initial_data(session: AsyncSession) -> None:
@@ -10,9 +14,20 @@ async def seed_initial_data(session: AsyncSession) -> None:
     if existing_users.first():
         return
 
+    demo_hash = hash_password(_DEMO_PASSWORD)
     users = [
-        User(full_name='Demo Tourist', email='tourist@example.com', role='tourist'),
-        User(full_name='Demo Guide', email='guide@example.com', role='guide'),
+        User(
+            full_name='Demo Tourist',
+            email='tourist@example.com',
+            role='tourist',
+            password_hash=demo_hash,
+        ),
+        User(
+            full_name='Demo Guide',
+            email='guide@example.com',
+            role='guide',
+            password_hash=demo_hash,
+        ),
     ]
     routes = [
         Route(

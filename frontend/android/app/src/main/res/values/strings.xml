@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Historial-GO</string>
+    <string name="title_activity_main">Historial-GO</string>
+    <string name="package_name">com.historialgo.app</string>
+    <string name="custom_url_scheme">com.historialgo.app</string>
+</resources>

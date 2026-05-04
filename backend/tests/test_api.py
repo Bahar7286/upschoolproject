@@ -14,6 +14,7 @@ def test_create_and_list_users(client: TestClient) -> None:
             'full_name': 'Test User',
             'email': 'test.user@example.com',
             'role': 'tourist',
+            'password': 'securepass',
         },
     )
     assert create_response.status_code == 200
@@ -26,6 +27,16 @@ def test_create_and_list_users(client: TestClient) -> None:
 
 
 def test_login(client: TestClient) -> None:
+    # Her test yeni DB ile çalışır; kullanıcıyı bu test içinde oluştur.
+    client.post(
+        '/users',
+        json={
+            'full_name': 'Test User',
+            'email': 'test.user@example.com',
+            'role': 'tourist',
+            'password': 'securepass',
+        },
+    )
     response = client.post(
         '/auth/login',
         json={
@@ -35,8 +46,41 @@ def test_login(client: TestClient) -> None:
     )
     assert response.status_code == 200
     payload = response.json()
-    assert list(payload.keys()) == ['access_token']
-    assert payload['access_token'].startswith('mock-token-')
+    assert payload['token_type'] == 'bearer'
+    token = payload['access_token']
+    assert len(token.split('.')) == 3
+
+
+def test_register_login_me(client: TestClient) -> None:
+    reg = client.post(
+        '/auth/register',
+        json={
+            'full_name': 'Register User',
+            'email': 'register.user@example.com',
+            'password': 'securepass',
+            'role': 'tourist',
+        },
+    )
+    assert reg.status_code == 200
+    body = reg.json()
+    assert body['user_id'] >= 1
+    assert body['email'] == 'register.user@example.com'
+    assert body['token_type'] == 'bearer'
+    token = body['access_token']
+
+    dup = client.post(
+        '/auth/register',
+        json={
+            'full_name': 'Other',
+            'email': 'register.user@example.com',
+            'password': 'otherpass12',
+        },
+    )
+    assert dup.status_code == 409
+
+    me = client.get('/auth/me', headers={'Authorization': f'Bearer {token}'})
+    assert me.status_code == 200
+    assert me.json()['email'] == 'register.user@example.com'
 
 
 def test_user_crud(client: TestClient) -> None:
@@ -129,3 +173,55 @@ def test_route_and_payment_crud(client: TestClient) -> None:
     route_delete_response = client.delete(f'/routes/{route_id}')
     assert route_delete_response.status_code == 200
     assert route_delete_response.json()['status'] == 'deleted'
+
+
+def test_stop_crud(client) -> None:
+    route_create = client.post(
+        '/routes',
+        json={
+            'title': 'Stops Test Route',
+            'city': 'Istanbul',
+            'estimated_minutes': 45,
+            'price': 12.0,
+            'tags': ['history'],
+            'guide_id': 1,
+        },
+    )
+    assert route_create.status_code == 200
+    route_id = route_create.json()['route_id']
+
+    create_stop = client.post(
+        f'/routes/{route_id}/stops',
+        json={
+            'title': 'Hagia Sophia',
+            'description': 'Iconic landmark.',
+            'latitude': 41.0086,
+            'longitude': 28.9802,
+            'order_index': 0,
+        },
+    )
+    assert create_stop.status_code == 200
+    stop_id = create_stop.json()['stop_id']
+
+    list_response = client.get(f'/routes/{route_id}/stops')
+    assert list_response.status_code == 200
+    assert len(list_response.json()) == 1
+
+    patch_response = client.patch(
+        f'/routes/{route_id}/stops/{stop_id}',
+        json={'title': 'Hagia Sophia (Updated)'},
+    )
+    assert patch_response.status_code == 200
+    assert patch_response.json()['title'] == 'Hagia Sophia (Updated)'
+
+    delete_stop = client.delete(f'/routes/{route_id}/stops/{stop_id}')
+    assert delete_stop.status_code == 200
+    assert delete_stop.json()['status'] == 'deleted'
+
+    client.delete(f'/routes/{route_id}')
+
+
+def test_list_purchases(client) -> None:
+    list_all = client.get('/payments')
+    assert list_all.status_code == 200
+    assert isinstance(list_all.json(), list)

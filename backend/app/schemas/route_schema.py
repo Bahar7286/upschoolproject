@@ -40,3 +40,4 @@ class RouteResponse(BaseModel):
     estimated_minutes: int
     price: float
     tags: list[str]
+    guide_id: int

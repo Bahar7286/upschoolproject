@@ -1,6 +1,7 @@
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.core.security import hash_password
 from app.models.user_model import User
 from app.schemas.user_schema import UserCreate, UserResponse, UserUpdate
 
@@ -14,10 +15,12 @@ class UserService:
         return [UserResponse.model_validate(user) for user in result.scalars().all()]
 
     async def create_user(self, payload: UserCreate) -> UserResponse:
+        password_hash = hash_password(payload.password) if payload.password else None
         user = User(
             full_name=payload.full_name,
             email=str(payload.email),
             role=payload.role,
+            password_hash=password_hash,
         )
         self.db.add(user)
         await self.db.commit()

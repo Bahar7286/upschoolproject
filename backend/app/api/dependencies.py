@@ -5,6 +5,7 @@ from app.db.connection import get_db
 from app.services.ai_service import AIService
 from app.services.payment_service import PaymentService
 from app.services.route_service import RouteService
+from app.services.stop_service import StopService
 from app.services.user_service import UserService
 
 
@@ -22,3 +23,7 @@ def get_payment_service(db: AsyncSession = Depends(get_db)) -> PaymentService:
 
 def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
     return UserService(db=db)
+
+
+def get_stop_service(db: AsyncSession = Depends(get_db)) -> StopService:
+    return StopService(db=db)

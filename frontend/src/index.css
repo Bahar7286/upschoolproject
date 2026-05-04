@@ -1,0 +1,66 @@
+@import 'leaflet/dist/leaflet.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ─── iOS & Android Safe Area değişkenleri (Capacitor / viewport-fit=cover) ─── */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+/* ─── iOS dokunma ve scroll optimizasyonları ─── */
+html {
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  overscroll-behavior: none;        /* pull-to-refresh ve bouce'u kapat (native'de istenmiyor) */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ─── Leaflet: TileLayer için minimum yükseklik ─── */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  font-family: inherit;
+}
+
+/* ─── Tailwind utility uzantıları ─── */
+@layer utilities {
+  /* Dokunma geri bildirimi */
+  .tap-scale {
+    @apply transition-transform duration-150 active:scale-[0.98];
+  }
+
+  /* Klavye erişilebilirlik focus halkası */
+  .focus-ring {
+    @apply focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary;
+  }
+
+  /* Safe area padding yardımcıları (Tailwind arbitrary value yerine) */
+  .pt-safe {
+    padding-top: var(--sat);
+  }
+  .pb-safe {
+    padding-bottom: var(--sab);
+  }
+  .pl-safe {
+    padding-left: var(--sal);
+  }
+  .pr-safe {
+    padding-right: var(--sar);
+  }
+
+  /* reduced-motion: tüm CSS animasyonları kapat */
+  @media (prefers-reduced-motion: reduce) {
+    .animate-fade-in-up,
+    .animate-float-soft {
+      animation: none !important;
+    }
+  }
+}

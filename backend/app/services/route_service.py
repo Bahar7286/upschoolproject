@@ -18,6 +18,7 @@ class RouteService:
             estimated_minutes=route.estimated_minutes,
             price=route.price,
             tags=tags,
+            guide_id=route.guide_id,
         )
 
     async def list_routes(self) -> list[RouteResponse]:

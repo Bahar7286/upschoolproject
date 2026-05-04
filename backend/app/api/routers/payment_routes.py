@@ -17,6 +17,11 @@ async def create_route_purchase(
     return await service.create_purchase(payload)
 
 
+@router.get('', response_model=list[PurchaseResponse])
+async def get_purchases(service: PaymentService = Depends(get_payment_service)) -> list[PurchaseResponse]:
+    return await service.list_purchases()
+
+
 @router.get('/users/{user_id}', response_model=list[PurchaseResponse])
 async def get_user_purchases(
     user_id: int,

@@ -26,6 +26,10 @@ class PaymentService:
         await self.db.refresh(purchase)
         return self._to_response(purchase)
 
+    async def list_purchases(self) -> list[PurchaseResponse]:
+        result = await self.db.execute(select(Purchase).order_by(Purchase.purchase_id.asc()))
+        return [self._to_response(purchase) for purchase in result.scalars().all()]
+
     async def list_user_purchases(self, user_id: int) -> list[PurchaseResponse]:
         result = await self.db.execute(select(Purchase).where(Purchase.user_id == user_id))
         return [self._to_response(purchase) for purchase in result.scalars().all()]

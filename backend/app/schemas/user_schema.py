@@ -7,6 +7,7 @@ class UserCreate(BaseModel):
     full_name: str = Field(min_length=2, max_length=120)
     email: EmailStr
     role: str = Field(default='tourist', pattern='^(tourist|guide|admin)$')
+    password: str | None = Field(default=None, min_length=6, max_length=128)
 
 
 class UserUpdate(BaseModel):
