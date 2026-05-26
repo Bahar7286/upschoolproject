@@ -26,7 +26,7 @@ describe('useGeofenceWatch', () => {
           }),
           clearWatch,
         },
-      } as Navigator,
+      } as unknown as Navigator,
     );
   });
 
