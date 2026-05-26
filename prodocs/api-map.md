@@ -2,6 +2,18 @@
 
 Base: `http://127.0.0.1:8000` (geliştirme) — Swagger: `/docs`
 
+## Yetkilendirme özeti
+
+| Alan | Kural |
+|------|--------|
+| `GET /routes`, `GET /places`, `GET /ai/status` | Herkese açık |
+| `GET /routes/{id}/stops` | Önizleme herkese; tam içerik satın alma / rehber / admin |
+| `POST /auth/register`, checkout | JWT (kayıt sonrası token) |
+| `POST/PATCH/DELETE /routes` | Rehber (sahip) veya admin |
+| `GET /users`, `GET /payments` | Admin |
+| `GET /payments/users/{id}` | Kendi hesap veya admin |
+| `/quotes/*` | Deprecated — `trip-requests` kullanın |
+
 ## Auth
 
 | Method | Path | Açıklama |

@@ -24,7 +24,7 @@
 
 | Key | Değer |
 |-----|--------|
-| `OPENROUTER_API_KEY` | OpenRouter’dan `sk-or-v1-...` |
+| `OPENROUTER_API_KEY` | OpenRouter panelinden anahtar (ornek format: sk-or-v1-...) |
 | `FRONTEND_URL` | Web URL (https, sondaki `/` yok) |
 | `CORS_ORIGINS` | Aynı web URL |
 
@@ -34,7 +34,7 @@
 
 | Key | Değer |
 |-----|--------|
-| `VITE_API_BASE_URL` | API URL (sondaki `/` yok) |
+| `VITE_API_BASE_URL` | API URL (sondaki `/` yok) | https://historial-go-api.onrender.com
 
 Kaydettikten sonra **Manual Deploy** (web servisi).
 

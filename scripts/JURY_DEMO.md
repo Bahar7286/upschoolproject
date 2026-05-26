@@ -13,7 +13,7 @@
 ## Canlı (deploy sonrası)
 
 ```powershell
-.\scripts\verify-live.ps1 -FrontendUrl "https://<web>" -ApiUrl "https://<api>"
+.\scripts\verify-live.ps1 -FrontendUrl "https://historial-go-web.onrender.com" -ApiUrl "https://historial-go-api.onrender.com"
 ```
 
 | # | Kontrol | Beklenen |

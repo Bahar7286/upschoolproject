@@ -13,6 +13,16 @@ class PurchaseRepository(BaseRepository):
         result = await self.db.execute(select(Purchase).where(Purchase.user_id == user_id))
         return list(result.scalars().all())
 
+    async def has_confirmed_purchase(self, user_id: int, route_id: int) -> bool:
+        result = await self.db.execute(
+            select(Purchase.purchase_id).where(
+                Purchase.user_id == user_id,
+                Purchase.route_id == route_id,
+                Purchase.status == 'confirmed',
+            ).limit(1),
+        )
+        return result.first() is not None
+
     async def get_by_id(self, purchase_id: int) -> Purchase | None:
         return await self.db.get(Purchase, purchase_id)
 

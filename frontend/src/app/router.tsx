@@ -60,6 +60,7 @@ export function AppRouter(): ReactElement {
           <Route path="/talepler" element={<TripRequestsPage />} />
           <Route path="/talepler/yeni" element={<TripRequestNewPage />} />
           <Route path="/teklifler" element={<Navigate to="/talepler" replace />} />
+          <Route path="/quotes" element={<Navigate to="/talepler" replace />} />
           <Route path="/admin" element={<AdminPage />} />
           <Route path="/odeme" element={<CheckoutPage />} />
           <Route path="/odeme/basarili" element={<CheckoutSuccessPage />} />

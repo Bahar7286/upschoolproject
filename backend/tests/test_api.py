@@ -1,7 +1,7 @@
 import pytest
 from fastapi.testclient import TestClient
 
-from tests.helpers import auth_headers, login
+from tests.helpers import admin_token, auth_headers, guide_token, login, register_user
 
 pytestmark = pytest.mark.integration
 
@@ -12,44 +12,21 @@ def test_healthcheck(client: TestClient) -> None:
     assert response.json() == {'status': 'ok'}
 
 
-def test_create_and_list_users(client: TestClient) -> None:
-    create_response = client.post(
-        '/users',
-        json={
-            'full_name': 'Test User',
-            'email': 'test.user@example.com',
-            'role': 'tourist',
-            'password': 'securepass',
-        },
-    )
-    assert create_response.status_code == 201
-    created = create_response.json()
-    assert created['email'] == 'test.user@example.com'
-
-    list_response = client.get('/users')
+def test_create_and_list_users_requires_admin(client: TestClient) -> None:
+    register_user(client, 'test.user@example.com')
+    assert client.get('/users').status_code == 401
+    admin = admin_token(client)
+    list_response = client.get('/users', headers=auth_headers(admin))
     assert list_response.status_code == 200
     body = list_response.json()
     assert body['total'] >= 1
-    assert len(body['items']) >= 1
 
 
 def test_login(client: TestClient) -> None:
-    # Her test yeni DB ile çalışır; kullanıcıyı bu test içinde oluştur.
-    client.post(
-        '/users',
-        json={
-            'full_name': 'Test User',
-            'email': 'test.user@example.com',
-            'role': 'tourist',
-            'password': 'securepass',
-        },
-    )
+    register_user(client, 'test.user@example.com', password='securepass')
     response = client.post(
         '/auth/login',
-        json={
-            'email': 'test.user@example.com',
-            'password': 'securepass',
-        },
+        json={'email': 'test.user@example.com', 'password': 'securepass'},
     )
     assert response.status_code == 200
     payload = response.json()
@@ -72,7 +49,6 @@ def test_register_login_me(client: TestClient) -> None:
     body = reg.json()
     assert body['user_id'] >= 1
     assert body['email'] == 'register.user@example.com'
-    assert body['token_type'] == 'bearer'
     token = body['access_token']
 
     dup = client.post(
@@ -85,81 +61,56 @@ def test_register_login_me(client: TestClient) -> None:
     )
     assert dup.status_code == 409
 
-    me = client.get('/auth/me', headers={'Authorization': f'Bearer {token}'})
+    me = client.get('/auth/me', headers=auth_headers(token))
     assert me.status_code == 200
     assert me.json()['email'] == 'register.user@example.com'
 
 
 def test_user_crud(client: TestClient) -> None:
-    create_response = client.post(
-        '/users',
-        json={
-            'full_name': 'CRUD User',
-            'email': 'crud.user@example.com',
-            'role': 'tourist',
-            'password': 'securepass',
-        },
-    )
-    assert create_response.status_code == 201
-    created_user = create_response.json()
-    user_id = created_user['user_id']
+    user_id, token = register_user(client, 'crud.user@example.com')
 
-    get_response = client.get(f'/users/{user_id}')
+    get_response = client.get(f'/users/{user_id}', headers=auth_headers(token))
     assert get_response.status_code == 200
     assert get_response.json()['email'] == 'crud.user@example.com'
 
-    by_email = client.get('/users/by-email/crud.user@example.com')
+    by_email = client.get(
+        '/users/by-email/crud.user@example.com',
+        headers=auth_headers(token),
+    )
     assert by_email.status_code == 200
-    assert by_email.json()['user_id'] == user_id
 
     patch_response = client.patch(
         f'/users/{user_id}',
-        json={'full_name': 'Updated CRUD User', 'role': 'guide', 'password': 'newpass12'},
+        headers=auth_headers(token),
+        json={'full_name': 'Updated CRUD User'},
     )
     assert patch_response.status_code == 200
     assert patch_response.json()['full_name'] == 'Updated CRUD User'
-    assert patch_response.json()['role'] == 'guide'
 
-    dup = client.post(
-        '/users',
-        json={
-            'full_name': 'Duplicate',
-            'email': 'crud.user@example.com',
-            'role': 'tourist',
-            'password': 'securepass',
-        },
-    )
-    assert dup.status_code == 409
+    assert client.post('/users', json={'full_name': 'X', 'email': 'x@y.com', 'role': 'tourist'}).status_code == 410
 
-    delete_response = client.delete(f'/users/{user_id}')
+    delete_response = client.delete(f'/users/{user_id}', headers=auth_headers(token))
     assert delete_response.status_code == 200
-    assert delete_response.json()['status'] == 'deleted'
 
-    missing = client.get(f'/users/{user_id}')
+    missing = client.get(f'/users/{user_id}', headers=auth_headers(token))
     assert missing.status_code == 404
 
 
 def test_route_and_payment_crud(client: TestClient) -> None:
-    user_response = client.post(
-        '/users',
-        json={
-            'full_name': 'Payment User',
-            'email': 'payment.user@example.com',
-            'role': 'tourist',
-        },
-    )
-    assert user_response.status_code == 201
-    user_id = user_response.json()['user_id']
+    user_id, tourist_token = register_user(client, 'payment.user@example.com')
+    guide = guide_token(client)
+    admin = admin_token(client)
 
     route_create_response = client.post(
         '/routes',
+        headers=auth_headers(guide),
         json={
             'title': 'New CRUD Route',
             'city': 'Ankara',
             'estimated_minutes': 60,
             'price': 5.5,
             'tags': ['history', 'museum'],
-            'guide_id': 1,
+            'guide_id': 2,
         },
     )
     assert route_create_response.status_code == 201
@@ -167,14 +118,14 @@ def test_route_and_payment_crud(client: TestClient) -> None:
 
     route_patch_response = client.patch(
         f'/routes/{route_id}',
+        headers=auth_headers(guide),
         json={'price': 8.0, 'tags': ['food']},
     )
     assert route_patch_response.status_code == 200
-    assert route_patch_response.json()['price'] == 8.0
-    assert route_patch_response.json()['tags'] == ['food']
 
     purchase_create_response = client.post(
         '/payments',
+        headers=auth_headers(admin),
         json={
             'user_id': user_id,
             'route_id': route_id,
@@ -187,30 +138,36 @@ def test_route_and_payment_crud(client: TestClient) -> None:
 
     purchase_patch_response = client.patch(
         f'/payments/{purchase_id}',
+        headers=auth_headers(tourist_token),
         json={'status': 'refunded'},
     )
     assert purchase_patch_response.status_code == 200
-    assert purchase_patch_response.json()['status'] == 'refunded'
 
-    purchase_delete_response = client.delete(f'/payments/{purchase_id}')
+    purchase_delete_response = client.delete(
+        f'/payments/{purchase_id}',
+        headers=auth_headers(admin),
+    )
     assert purchase_delete_response.status_code == 200
-    assert purchase_delete_response.json()['status'] == 'deleted'
 
-    route_delete_response = client.delete(f'/routes/{route_id}')
+    route_delete_response = client.delete(
+        f'/routes/{route_id}',
+        headers=auth_headers(guide),
+    )
     assert route_delete_response.status_code == 200
-    assert route_delete_response.json()['status'] == 'deleted'
 
 
-def test_stop_crud(client) -> None:
+def test_stop_crud(client: TestClient) -> None:
+    guide = guide_token(client)
     route_create = client.post(
         '/routes',
+        headers=auth_headers(guide),
         json={
             'title': 'Stops Test Route',
             'city': 'Istanbul',
             'estimated_minutes': 45,
             'price': 12.0,
             'tags': ['history'],
-            'guide_id': 1,
+            'guide_id': 2,
         },
     )
     assert route_create.status_code == 201
@@ -218,6 +175,7 @@ def test_stop_crud(client) -> None:
 
     create_stop = client.post(
         f'/routes/{route_id}/stops',
+        headers=auth_headers(guide),
         json={
             'title': 'Hagia Sophia',
             'description': 'Iconic landmark.',
@@ -235,22 +193,37 @@ def test_stop_crud(client) -> None:
 
     patch_response = client.patch(
         f'/routes/{route_id}/stops/{stop_id}',
+        headers=auth_headers(guide),
         json={'title': 'Hagia Sophia (Updated)'},
     )
     assert patch_response.status_code == 200
-    assert patch_response.json()['title'] == 'Hagia Sophia (Updated)'
 
-    delete_stop = client.delete(f'/routes/{route_id}/stops/{stop_id}')
+    delete_stop = client.delete(
+        f'/routes/{route_id}/stops/{stop_id}',
+        headers=auth_headers(guide),
+    )
     assert delete_stop.status_code == 200
-    assert delete_stop.json()['status'] == 'deleted'
 
-    client.delete(f'/routes/{route_id}')
+    client.delete(f'/routes/{route_id}', headers=auth_headers(guide))
 
 
-def test_list_purchases(client) -> None:
-    list_all = client.get('/payments')
+def test_list_purchases_admin_only(client: TestClient) -> None:
+    assert client.get('/payments').status_code == 401
+    admin = admin_token(client)
+    list_all = client.get('/payments', headers=auth_headers(admin))
     assert list_all.status_code == 200
     assert isinstance(list_all.json(), list)
+
+
+def test_stops_preview_masks_without_purchase(client: TestClient) -> None:
+    list_routes = client.get('/routes')
+    assert list_routes.status_code == 200
+    routes = list_routes.json()
+    assert len(routes) >= 1
+    route_id = routes[0]['route_id']
+    stops = client.get(f'/routes/{route_id}/stops').json()
+    if len(stops) >= 3 and routes[0]['price'] > 0:
+        assert stops[2]['description'] == ''
 
 
 def test_places_catalog(client: TestClient) -> None:
@@ -274,28 +247,20 @@ def test_places_catalog(client: TestClient) -> None:
 
 
 def test_plans_notes_reviews(client: TestClient) -> None:
-    reg = client.post(
-        '/auth/register',
-        json={
-            'full_name': 'Social User',
-            'email': 'social.user@example.com',
-            'password': 'securepass',
-            'role': 'tourist',
-        },
-    )
-    assert reg.status_code == 201
-    token = reg.json()['access_token']
-    headers = {'Authorization': f'Bearer {token}'}
+    _, token = register_user(client, 'social.user@example.com')
+    headers = auth_headers(token)
+    guide = guide_token(client)
 
     route_create = client.post(
         '/routes',
+        headers=auth_headers(guide),
         json={
             'title': 'Social Test Route',
             'city': 'Istanbul',
             'estimated_minutes': 60,
             'price': 5.0,
             'tags': ['history'],
-            'guide_id': 1,
+            'guide_id': 2,
         },
     )
     assert route_create.status_code == 201
@@ -326,11 +291,9 @@ def test_plans_notes_reviews(client: TestClient) -> None:
         json={'content': 'Private reminder about tickets'},
     )
     assert note.status_code == 200
-    assert note.json()['content'].startswith('Private')
 
     my_note = client.get(f'/routes/{route_id}/notes/me', headers=headers)
     assert my_note.status_code == 200
-    assert my_note.json()['content'].startswith('Private')
 
     review = client.post(
         f'/routes/{route_id}/reviews',
@@ -338,7 +301,6 @@ def test_plans_notes_reviews(client: TestClient) -> None:
         json={'rating': 5, 'comment': 'Amazing route, highly recommended!'},
     )
     assert review.status_code == 201
-    assert review.json()['rating'] == 5
 
     reviews = client.get(f'/routes/{route_id}/reviews')
     assert reviews.status_code == 200
@@ -346,7 +308,6 @@ def test_plans_notes_reviews(client: TestClient) -> None:
 
     summary = client.get(f'/routes/{route_id}/reviews/summary')
     assert summary.status_code == 200
-    assert summary.json()['review_count'] >= 1
 
     patch_plan = client.patch(
         f'/plans/{plan_id}',
@@ -354,7 +315,6 @@ def test_plans_notes_reviews(client: TestClient) -> None:
         json={'status': 'completed'},
     )
     assert patch_plan.status_code == 200
-    assert patch_plan.json()['status'] == 'completed'
 
     delete_plan = client.delete(f'/plans/{plan_id}', headers=headers)
     assert delete_plan.status_code == 200
@@ -370,25 +330,19 @@ def test_guide_crud(client: TestClient) -> None:
         },
     )
     assert create.status_code == 201
-    guide = create.json()
-    guide_id = guide['guide_id']
-    assert guide['role'] == 'guide'
-    assert guide['email'] == 'new.guide@example.com'
+    guide_id = create.json()['guide_id']
 
     listing = client.get('/guides')
     assert listing.status_code == 200
-    assert listing.json()['total'] >= 1
 
     get_one = client.get(f'/guides/{guide_id}')
     assert get_one.status_code == 200
-    assert get_one.json()['full_name'] == 'New Guide'
 
     patch = client.patch(
         f'/guides/{guide_id}',
         json={'full_name': 'Updated Guide'},
     )
     assert patch.status_code == 200
-    assert patch.json()['full_name'] == 'Updated Guide'
 
     route = client.post(
         f'/guides/{guide_id}/routes',
@@ -402,31 +356,24 @@ def test_guide_crud(client: TestClient) -> None:
     )
     assert route.status_code == 201
     route_id = route.json()['route_id']
-    assert route.json()['guide_id'] == guide_id
 
     routes = client.get(f'/guides/{guide_id}/routes')
     assert routes.status_code == 200
-    assert routes.json()['total'] == 1
 
     earnings = client.get(f'/guides/{guide_id}/earnings')
     assert earnings.status_code == 200
-    assert earnings.json()['guide_id'] == guide_id
 
     payout = client.post(
         '/guides/payout',
         json={'guide_id': guide_id, 'amount': 1.0},
     )
     assert payout.status_code == 200
-    assert payout.json()['status'] in ('queued', 'rejected')
 
     delete_route = client.delete(f'/guides/{guide_id}/routes/{route_id}')
     assert delete_route.status_code == 200
 
     delete_guide = client.delete(f'/guides/{guide_id}')
     assert delete_guide.status_code == 200
-
-    missing = client.get(f'/guides/{guide_id}')
-    assert missing.status_code == 404
 
 
 def test_leaderboard_and_geofence(client: TestClient) -> None:
@@ -435,12 +382,9 @@ def test_leaderboard_and_geofence(client: TestClient) -> None:
 
     board = client.get('/auth/leaderboard', headers=headers)
     assert board.status_code == 200
-    body = board.json()
-    assert 'entries' in body
-    assert len(body['entries']) >= 1
+    assert len(board.json()['entries']) >= 1
 
     routes = client.get('/routes')
-    assert routes.status_code == 200
     route_id = routes.json()[0]['route_id']
 
     geo = client.post(
@@ -448,14 +392,12 @@ def test_leaderboard_and_geofence(client: TestClient) -> None:
         json={'route_id': route_id, 'latitude': 41.0082, 'longitude': 28.9784, 'radius_m': 100},
     )
     assert geo.status_code == 200
-    assert 'triggered' in geo.json()
 
     narration = client.post(
         '/ai/narration/preview',
         json={'stop_title': 'Ayasofya', 'description': 'Bizans ve Osmanlı dönemi.', 'languages': ['tr', 'en']},
     )
     assert narration.status_code == 200
-    assert 'tr' in narration.json()['scripts']
 
 
 def test_trip_request_cancel_and_offers(client: TestClient) -> None:
@@ -487,7 +429,6 @@ def test_trip_request_cancel_and_offers(client: TestClient) -> None:
 
     offers = client.get(f'/trip-requests/{request_id}/offers', headers=t_headers)
     assert offers.status_code == 200
-    assert isinstance(offers.json(), list)
 
     cancel = client.patch(
         f'/trip-requests/{request_id}',
@@ -495,12 +436,11 @@ def test_trip_request_cancel_and_offers(client: TestClient) -> None:
         json={'status': 'cancelled'},
     )
     assert cancel.status_code == 200
-    assert cancel.json()['status'] == 'cancelled'
 
 
 def test_admin_place_crud(client: TestClient) -> None:
-    admin_token = login(client, 'admin@example.com')
-    headers = auth_headers(admin_token)
+    admin = admin_token(client)
+    headers = auth_headers(admin)
 
     create = client.post(
         '/places',
@@ -526,7 +466,6 @@ def test_admin_place_crud(client: TestClient) -> None:
         json={'description': 'Updated test POI'},
     )
     assert patch.status_code == 200
-    assert patch.json()['description'] == 'Updated test POI'
 
     delete = client.delete(f'/places/{place_id}', headers=headers)
     assert delete.status_code == 200

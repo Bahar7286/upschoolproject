@@ -8,6 +8,7 @@
 - [x] [DesignSystem.md](DesignSystem.md) — renk, tipografi, bileşenler
 - [x] [Progress.md](Progress.md) — iş / karar / hata kaydı
 - [x] Gizli anahtarlar repoda yok (yalnızca `.env.example`)
+- [x] API güvenliği: kullanıcı/rota/ödeme uçları JWT + rol; duraklar satın alma kilidi
 
 ## Kabul kriterleri
 

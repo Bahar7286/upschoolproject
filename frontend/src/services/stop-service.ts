@@ -1,11 +1,19 @@
-import { requestJson } from '../lib/api';
+import { requestJson, requestJsonWithAuth } from '../lib/api';
 import type {
   StopCreatePayload,
   StopResponse,
   StopUpdatePayload,
 } from '../types/stop';
 
-export async function listStops(routeId: number): Promise<StopResponse[]> {
+export async function listStops(
+  routeId: number,
+  accessToken?: string | null,
+): Promise<StopResponse[]> {
+  if (accessToken) {
+    return requestJsonWithAuth<StopResponse[]>(`/routes/${routeId}/stops`, accessToken, {
+      method: 'GET',
+    });
+  }
   return requestJson<StopResponse[]>(`/routes/${routeId}/stops`, { method: 'GET' });
 }
 

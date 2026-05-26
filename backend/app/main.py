@@ -14,7 +14,6 @@ from app.api.routers import (
     ai_routes,
     auth_routes,
     guide_routes,
-    note_routes,
     payment_routes,
     place_routes,
     plan_routes,
@@ -123,15 +122,20 @@ app.include_router(stop_routes.router)
 app.include_router(ai_routes.router, prefix='/ai', tags=['ai'])
 app.include_router(payment_routes.router, prefix='/payments', tags=['payments'])
 app.include_router(guide_routes.router, prefix='/guides', tags=['guides'])
-app.include_router(quote_routes.router, prefix='/quotes', tags=['quotes'])
+app.include_router(
+    quote_routes.router,
+    prefix='/quotes',
+    tags=['quotes'],
+    deprecated=True,
+)
 app.include_router(plan_routes.router, prefix='/plans', tags=['plans'])
-app.include_router(note_routes.router, prefix='/notes', tags=['notes'])
 app.include_router(place_routes.router, prefix='/places', tags=['places'])
 app.include_router(trip_request_routes.router, prefix='/trip-requests', tags=['trip-requests'])
 app.include_router(admin_routes.router, prefix='/admin', tags=['admin'])
 
-_uploads = Path(__file__).resolve().parent.parent / 'uploads'
+_uploads = settings.upload_dir
 _uploads.mkdir(parents=True, exist_ok=True)
+(_uploads / 'licenses').mkdir(parents=True, exist_ok=True)
 app.mount('/uploads', StaticFiles(directory=str(_uploads)), name='uploads')
 
 

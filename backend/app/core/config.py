@@ -46,6 +46,37 @@ class Settings:
     gemini_model: str = os.getenv('GEMINI_MODEL', 'gemini-2.0-flash')
     llm_timeout_seconds: float = float(os.getenv('LLM_TIMEOUT_SECONDS', '45'))
 
+    environment: str = os.getenv('ENVIRONMENT', 'development').strip().lower()
+    upload_dir: Path = Path(
+        os.getenv(
+            'UPLOAD_DIR',
+            str(Path(__file__).resolve().parents[2] / 'uploads'),
+        ),
+    ).resolve()
+
+    smtp_host: str = os.getenv('SMTP_HOST', '')
+    smtp_port: int = int(os.getenv('SMTP_PORT', '587'))
+    smtp_user: str = os.getenv('SMTP_USER', '')
+    smtp_password: str = os.getenv('SMTP_PASSWORD', '')
+    smtp_from: str = os.getenv('SMTP_FROM', 'noreply@historial-go.local')
+    smtp_use_tls: bool = os.getenv('SMTP_USE_TLS', 'true').strip().lower() in (
+        '1',
+        'true',
+        'yes',
+    )
+
+    @property
+    def is_production(self) -> bool:
+        return self.environment == 'production'
+
+    @property
+    def smtp_enabled(self) -> bool:
+        return bool(self.smtp_host.strip())
+
+    @property
+    def expose_reset_url_in_response(self) -> bool:
+        return not self.is_production and not self.smtp_enabled
+
     @property
     def stripe_enabled(self) -> bool:
         key = self.stripe_secret_key.strip()

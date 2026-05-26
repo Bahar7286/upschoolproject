@@ -51,7 +51,7 @@ export default function RouteDetailPage(): ReactElement {
       setLoading(true);
       setError('');
       try {
-        const [r, s] = await Promise.all([getRoute(id), listStops(id)]);
+        const [r, s] = await Promise.all([getRoute(id), listStops(id, accessToken)]);
         if (!cancelled) {
           setRoute(r);
           setStops(s);

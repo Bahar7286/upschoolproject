@@ -116,6 +116,7 @@
 | 2026-05-26 | `backend/.env` + `frontend/.env` tam şablon; `scripts/` (setup, verify, Render rehberi, URL güncelleme) |
 | 2026-05-26 | Yerel: Docker PG, pytest 127 passed, Vitest 20 passed, `/health` + `/docs` OK |
 | 2026-05-26 | `verify-local.ps1`: LLM anahtarı bekleniyor (OpenRouter key kullanıcı eklemeli) |
+| 2026-05-26 | Production güvenlik: API auth, durak önizleme, SMTP reset, UPLOAD_DIR, testler (131 pytest) |
 
 ---
 

@@ -57,6 +57,27 @@ export interface NarrationAudioResponse {
   fallback_browser_tts: boolean;
 }
 
+export interface NarrationPreviewPayload {
+  stop_title: string;
+  description?: string;
+  language: 'tr' | 'en' | 'de';
+}
+
+export interface NarrationPreviewResponse {
+  script: string;
+  language: string;
+  source?: string;
+}
+
+export async function fetchNarrationPreview(
+  payload: NarrationPreviewPayload,
+): Promise<NarrationPreviewResponse> {
+  return requestJson<NarrationPreviewResponse>('/ai/narration/preview', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}
+
 export async function fetchNarrationAudio(
   payload: NarrationAudioPayload,
 ): Promise<NarrationAudioResponse> {

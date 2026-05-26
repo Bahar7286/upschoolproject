@@ -1,6 +1,12 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
-from app.api.dependencies import get_route_service
+from app.api.dependencies import (
+    get_route_service,
+    get_user_repository,
+    require_guide_or_admin,
+    require_route_owner_or_admin,
+)
+from app.repositories.user_repository import UserRepository
 from app.core.exceptions import RouteNotFoundError
 from app.schemas.route_schema import RouteCreate, RouteRequest, RouteResponse, RouteUpdate
 from app.services.route_service import RouteService
@@ -17,7 +23,15 @@ async def list_routes(service: RouteService = Depends(get_route_service)) -> lis
 async def create_route(
     payload: RouteCreate,
     service: RouteService = Depends(get_route_service),
+    user_id: int = Depends(require_guide_or_admin),
+    user_repo: UserRepository = Depends(get_user_repository),
 ) -> RouteResponse:
+    user = await user_repo.get_by_id(user_id)
+    if user and user.role == 'guide' and payload.guide_id != user_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail='Routes must be created for your own guide account',
+        )
     return await service.create_route(payload)
 
 
@@ -47,6 +61,7 @@ async def update_route(
     route_id: int,
     payload: RouteUpdate,
     service: RouteService = Depends(get_route_service),
+    _: int = Depends(require_route_owner_or_admin),
 ) -> RouteResponse:
     if route_id <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid route id')
@@ -60,6 +75,7 @@ async def update_route(
 async def delete_route(
     route_id: int,
     service: RouteService = Depends(get_route_service),
+    _: int = Depends(require_route_owner_or_admin),
 ) -> dict[str, str]:
     if route_id <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid route id')

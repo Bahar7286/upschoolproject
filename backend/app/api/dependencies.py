@@ -29,6 +29,7 @@ from app.services.route_service import RouteService
 from app.services.trip_request_service import TripRequestService
 from app.services.stop_service import StopService
 from app.services.password_reset_service import PasswordResetService
+from app.services.route_access_service import RouteAccessService
 from app.services.user_service import UserService
 
 
@@ -207,3 +208,57 @@ async def require_admin(
     if not user or user.role != 'admin':
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Admin access required')
     return user_id
+
+
+async def require_self_or_admin(
+    target_user_id: int,
+    user_id: int = Depends(get_current_user_id),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> int:
+    if user_id == target_user_id:
+        return user_id
+    user = await user_repo.get_by_id(user_id)
+    if user and user.role == 'admin':
+        return user_id
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Access denied')
+
+
+def get_route_access_service(
+    purchase_repo: PurchaseRepository = Depends(get_purchase_repository),
+    route_repo: RouteRepository = Depends(get_route_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> RouteAccessService:
+    return RouteAccessService(
+        purchase_repository=purchase_repo,
+        route_repository=route_repo,
+        user_repository=user_repo,
+    )
+
+
+async def require_guide_or_admin(
+    user_id: int = Depends(get_current_user_id),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> int:
+    user = await user_repo.get_by_id(user_id)
+    if not user or user.role not in ('guide', 'admin'):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Guide access required')
+    return user_id
+
+
+async def require_route_owner_or_admin(
+    route_id: int,
+    user_id: int = Depends(get_current_user_id),
+    route_repo: RouteRepository = Depends(get_route_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> int:
+    user = await user_repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Access denied')
+    if user.role == 'admin':
+        return user_id
+    route = await route_repo.get_by_id(route_id)
+    if route is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Route not found')
+    if user.role == 'guide' and route.guide_id == user_id:
+        return user_id
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Guide access required')

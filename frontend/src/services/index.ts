@@ -51,4 +51,32 @@ export { completeRoute, fetchGamification, updatePreferences } from './profile-s
 export { listPlaces, listNearbyPlaces, listPlaceCategories, getPlace } from './place-service';
 export { listPlans, createPlan, updatePlan, deletePlan } from './plan-service';
 export { listMyNotes, getMyRouteNote, saveMyRouteNote, deleteMyRouteNote, listRouteReviews, getRouteReviewSummary, createRouteReview, deleteRouteReview } from './social-service';
-export { recommendWithAi } from './ai-service';
+export {
+  checkGeofence,
+  fetchAiStatus,
+  fetchNarrationAudio,
+  fetchNarrationPreview,
+  recommendWithAi,
+} from './ai-service';
+export {
+  confirmCheckout,
+  fetchPaymentConfig,
+  startCheckout,
+  startStripeCheckout,
+} from './payment-checkout-service';
+export {
+  acceptGuideOffer,
+  createTripRequest,
+  getTripRequest,
+  listMyTripRequests,
+  listOpenTripRequests,
+  submitGuideOffer,
+} from './trip-request-service';
+export { listPendingGuides, moderateGuide } from './admin-service';
+export {
+  getGuidePublicProfile,
+  getMyGuideVerification,
+  listVerifiedGuides,
+  submitGuideVerification,
+  uploadVerificationDocument,
+} from './guide-profile-service';

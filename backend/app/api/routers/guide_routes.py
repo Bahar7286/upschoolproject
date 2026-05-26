@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, 
 
 from app.api.auth_deps import get_current_user_id
 from app.api.dependencies import get_guide_profile_service, get_guide_service
+from app.core.config import settings
 from app.core.exceptions import (
     EmailAlreadyExistsError,
     GuideNotFoundError,
@@ -87,7 +88,7 @@ async def get_my_guide_verification(
     return await service.get_my_profile(user_id)
 
 
-_UPLOAD_ROOT = Path(__file__).resolve().parents[3] / 'uploads' / 'licenses'
+_UPLOAD_ROOT = settings.upload_dir / 'licenses'
 _ALLOWED_DOC_SUFFIX = {'.pdf', '.jpg', '.jpeg', '.png'}
 
 
