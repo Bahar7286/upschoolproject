@@ -7,6 +7,10 @@ Bu klasör, Cursor / Copilot gibi ajanların projeyi hızlı anlaması için **t
 | Konu | Dosya |
 |------|--------|
 | Ürün gereksinimleri | [../PRD.md](../PRD.md) |
+| Tech stack | [../tech-stack.md](../tech-stack.md) |
+| Plan | [../Plan.md](../Plan.md) |
+| Tasarım sistemi | [../DesignSystem.md](../DesignSystem.md) |
+| İlerleme kaydı | [../Progress.md](../Progress.md) |
 | Mimari (FE / API / servis / repo) | [architecture.md](./architecture.md) |
 | REST uç noktaları özeti | [api-map.md](./api-map.md) |
 | LLM (OpenRouter / Gemini) | [llm.md](./llm.md) |

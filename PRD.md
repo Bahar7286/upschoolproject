@@ -1,5 +1,7 @@
-
 # HISTORIAL-GO: ÜRÜN GEREKSİNİMLERİ BELGESİ (PRD)
+
+> **Proje anayasası** — Çözülen problem, hedef kullanıcı ve temel özellikler bu belgede tanımlıdır.  
+> Tamamlayıcı zorunlu dokümanlar: [tech-stack.md](tech-stack.md) · [Plan.md](Plan.md) · [DesignSystem.md](DesignSystem.md) · [Progress.md](Progress.md)
 
 ## 1. STRATEJİK ÖZET
 **Historial-GO**, turizm sektöründe "Deneyim Ekonomisi" üzerine kurulu bir **B2B2C pazaryeridir.** * **Turistler için:** Şehri keşfetme yolculuğunu kişiselleştirilmiş, etkileşimli ve oyunlaştırılmış bir hikayeye dönüştürür.

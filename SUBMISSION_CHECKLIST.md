@@ -1,5 +1,14 @@
 # Proje teslim kontrol listesi (Historial-GO)
 
+## Zorunlu dokümanlar
+
+- [x] [PRD.md](PRD.md) — problem, hedef kullanıcı, temel özellikler
+- [x] [tech-stack.md](tech-stack.md) — teknolojiler, gerekçeler, AI kullanımı
+- [x] [Plan.md](Plan.md) — kullanıcı hikayeleri → teknik adımlar
+- [x] [DesignSystem.md](DesignSystem.md) — renk, tipografi, bileşenler
+- [x] [Progress.md](Progress.md) — iş / karar / hata kaydı
+- [x] Gizli anahtarlar repoda yok (yalnızca `.env.example`)
+
 ## Kabul kriterleri
 
 ### 1. Etkileşimli uygulama (statik site değil)
