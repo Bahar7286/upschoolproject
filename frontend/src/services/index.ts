@@ -33,4 +33,22 @@ export {
   listUsers,
   updateUser,
 } from './user-service';
-export { getGuideEarnings } from './guide-service';
+export {
+  createGuide,
+  createGuideRoute,
+  deleteGuide,
+  deleteGuideRoute,
+  getGuide,
+  getGuideEarnings,
+  getGuideRoute,
+  listGuideRoutes,
+  listGuides,
+  requestGuidePayout,
+  updateGuide,
+  updateGuideRoute,
+} from './guide-service';
+export { completeRoute, fetchGamification, updatePreferences } from './profile-service';
+export { listPlaces, listNearbyPlaces, listPlaceCategories, getPlace } from './place-service';
+export { listPlans, createPlan, updatePlan, deletePlan } from './plan-service';
+export { listMyNotes, getMyRouteNote, saveMyRouteNote, deleteMyRouteNote, listRouteReviews, getRouteReviewSummary, createRouteReview, deleteRouteReview } from './social-service';
+export { recommendWithAi } from './ai-service';

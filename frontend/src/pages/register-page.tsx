@@ -3,22 +3,24 @@ import { useState } from 'react';
 import { ArrowLeft, Compass, UserPlus } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
 import { formatApiError } from '../lib/api';
 import { fetchCurrentUser, registerUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
+import { useOnboardingStore } from '../stores/onboarding-store';
 
 const ROLES = [
   {
     id: 'tourist' as const,
     label: 'Turist',
-    desc: 'Rota keşfet, sesli rehber dinle',
+    desc: 'Rota keşfet, onaylı rehber seç, teklif al',
     icon: '🗺️',
   },
   {
     id: 'guide' as const,
     label: 'Rehber',
-    desc: 'Rota oluştur, ziyaretçi kazan',
+    desc: 'Kokart doğrulama, rota sat, teklif yönet',
     icon: '🧭',
   },
 ] as const;
@@ -44,7 +46,12 @@ export default function RegisterPage(): ReactElement {
       const res = await registerUser({ full_name: fullName, email, password, role });
       const me = await fetchCurrentUser(res.access_token);
       setSession(res.access_token, me);
-      navigate('/onboarding', { replace: true });
+      useOnboardingStore.getState().hydrateFromUser(me);
+      if (role === 'guide') {
+        navigate('/guide/dogrulama', { replace: true });
+      } else {
+        navigate('/onboarding', { replace: true });
+      }
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -65,14 +72,7 @@ export default function RegisterPage(): ReactElement {
 
       <div className="relative mx-auto flex w-full max-w-md flex-col gap-8">
         <header className="flex items-start justify-between gap-4">
-          <Link
-            to="/"
-            className="tap-scale inline-flex items-center gap-3 rounded-2xl font-display text-lg font-extrabold tracking-tight text-heritage-ink dark:text-stone-50"
-            aria-label="Ana sayfa"
-          >
-            <span className="app-brand__mark h-10 w-10 shrink-0 shadow-md" aria-hidden="true" />
-            Historial-GO
-          </Link>
+          <BrandLogo to="/" size="md" />
           <ThemeToggle />
         </header>
 
@@ -227,9 +227,9 @@ export default function RegisterPage(): ReactElement {
 
         <p className="text-center text-[11px] leading-relaxed text-stone-500 dark:text-stone-500">
           Kayıt olarak{' '}
-          <a href="#" className="underline underline-offset-2">Kullanım Koşulları</a>'nı{' '}
+          <a href="/terms" className="underline underline-offset-2">Kullanım Koşulları</a>'nı{' '}
           ve{' '}
-          <a href="#" className="underline underline-offset-2">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
+          <a href="/privacy" className="underline underline-offset-2">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
         </p>
       </div>
     </div>

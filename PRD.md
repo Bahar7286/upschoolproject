@@ -82,3 +82,230 @@ Platformun sürdürülebilirliği çok katmanlı bir gelir yapısına dayanır:
 1.  **Sadelik:** Karmaşık seçenekler yerine, en uygun 3-5 öneriye odaklanmak.
 2.  **Güven:** Onaylı rehber rozetleri ve şeffaf kullanıcı yorumları.
 3.  **Keşif Duygusu:** Harita üzerinde "keşfedilmemiş" alanları vurgulayan sisli (fog of war) görsel efektler.
+
+---
+
+## 10. VERİTABANI ŞEMASI (E-R)
+
+**Motor:** PostgreSQL (`historial_go`, Docker: `historial_go_db`) — geliştirmede SQLite yedek dosyası kullanılabilir.  
+**Kaynak:** `backend/app/models/*.py` (SQLAlchemy). Şema değişiklikleri `backend/app/db/bootstrap.py` ile otomatik kolon ekler.
+
+### 10.1. Notlar
+
+- `routes.guide_id`, `route_plans`, `route_notes`, `route_reviews` alanlarında **mantıksal** ilişki vardır; modelde `ForeignKey` tanımlı değildir.
+- `purchases.offer_id` ve `purchases.trip_request_id` uygulama katmanında bağlanır (DB’de FK yok).
+- `quote_requests` **eski** teklif akışıdır; yeni akış: `trip_requests` + `guide_offers`.
+- `places` bağımsız POI kataloğudur; `trip_requests.planned_stops` JSON içinde `place_id` referansı tutulabilir.
+
+### 10.2. E-R diyagramı (Mermaid)
+
+```mermaid
+erDiagram
+    users ||--o| guide_profiles : "1 rehber profili"
+    users ||--o{ routes : "guide_id (mantıksal)"
+    routes ||--|{ stops : "CASCADE"
+    users ||--o{ purchases : "turist satın alır"
+    routes ||--o{ purchases : "satılan rota"
+    users ||--o{ route_plans : "planlar"
+    routes ||--o{ route_plans : "opsiyonel rota"
+    users ||--o{ route_notes : "not yazar"
+    routes ||--o{ route_notes : "not konusu"
+    users ||--o{ route_reviews : "değerlendirir"
+    routes ||--o{ route_reviews : "değerlendirilen"
+    users ||--o{ trip_requests : "turist talep"
+    routes ||--o{ trip_requests : "opsiyonel rota"
+    trip_requests ||--o{ guide_offers : "teklifler"
+    users ||--o{ guide_offers : "rehber teklif"
+    users ||--o{ quote_requests : "turist (eski)"
+    users ||--o{ quote_requests : "rehber (eski)"
+    routes ||--o{ quote_requests : "opsiyonel rota"
+    guide_offers ||--o{ purchases : "offer_id (mantıksal)"
+    trip_requests ||--o{ purchases : "trip_request_id (mantıksal)"
+
+    users {
+        int user_id PK
+        string full_name
+        string email UK
+        string role "tourist|guide|admin"
+        string password_hash
+        string interests
+        int duration_minutes
+        float budget
+        string theme_preference
+        string preferred_language
+        bool onboarding_completed
+        int xp
+        int streak_days
+        string badges
+        string last_active_date
+        string redeemed_rewards
+        string password_reset_token
+        string password_reset_expires
+    }
+
+    guide_profiles {
+        int profile_id PK
+        int user_id FK_UK
+        string verification_status
+        string license_number
+        string license_type
+        string university
+        string department
+        int graduation_year
+        string languages
+        string regions
+        string document_summary
+        string bio
+        string specialties
+        int min_group_size
+        int max_group_size
+        float base_price_per_person
+        string rejection_reason
+        string document_path
+        datetime verified_at
+        datetime submitted_at
+    }
+
+    routes {
+        int route_id PK
+        string title
+        string city
+        int estimated_minutes
+        float price
+        string tags
+        int guide_id "FK mantıksal → users"
+    }
+
+    stops {
+        int stop_id PK
+        int route_id FK
+        string title
+        text description
+        float latitude
+        float longitude
+        int order_index
+        string audio_url
+    }
+
+    places {
+        int place_id PK
+        string name
+        string category
+        string city
+        string district
+        float latitude
+        float longitude
+        text description
+        string tags
+        int is_partner
+    }
+
+    purchases {
+        int purchase_id PK
+        int user_id FK
+        int route_id FK
+        float amount
+        string currency
+        string status
+        string transaction_ref
+        string payment_method
+        int offer_id "mantıksal → guide_offers"
+        int trip_request_id "mantıksal → trip_requests"
+        string stripe_session_id
+    }
+
+    route_plans {
+        int plan_id PK
+        int user_id "mantıksal → users"
+        int route_id "opsiyonel → routes"
+        string title
+        string planned_date
+        string planned_time
+        int duration_minutes
+        text memo
+        string status
+        datetime created_at
+    }
+
+    route_notes {
+        int note_id PK
+        int user_id "mantıksal → users"
+        int route_id "mantıksal → routes"
+        text content
+        datetime updated_at
+        UK user_id_route_id
+    }
+
+    route_reviews {
+        int review_id PK
+        int user_id "mantıksal → users"
+        int route_id "mantıksal → routes"
+        int rating
+        text comment
+        datetime created_at
+        UK user_id_route_id
+    }
+
+    trip_requests {
+        int request_id PK
+        int tourist_id FK
+        int route_id FK "nullable"
+        string title
+        string city
+        string interests
+        int group_size
+        string preferred_date
+        int duration_minutes
+        float budget
+        string preferred_language
+        text message
+        string route_mode
+        text planned_stops "JSON place_id"
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    guide_offers {
+        int offer_id PK
+        int request_id FK
+        int guide_id FK
+        text message
+        float base_total
+        float discount_rate
+        float offered_total
+        float offered_per_person
+        string status
+        datetime created_at
+        datetime updated_at
+    }
+
+    quote_requests {
+        int quote_id PK
+        int tourist_id FK
+        int guide_id FK
+        int route_id FK "nullable"
+        int group_size
+        string preferred_date
+        string preferred_language
+        text message
+        string status
+        text guide_reply
+        float quoted_total
+        float quoted_per_person
+        datetime created_at
+        datetime updated_at
+    }
+```
+
+### 10.3. İlişki özeti
+
+| İlişki | Kardinalite | Açıklama |
+|--------|-------------|----------|
+| `users` ↔ `guide_profiles` | 1 : 0..1 | Rehber doğrulama profili (6326 / kokart) |
+| `users` → `routes` | 1 : N | Rehberin yayınladığı rotalar (`guide_id`) |
+| `routes` → `stops` | 1 : N | Rota durakları; rota silinince CASCADE |
+| `users` + `routes` → `purchases` | N : M (ara kayıt) | Dijital rota / teklif satın alma |
+| `trip_requests` → `guide_offers` | 1 : N | Yeni talep–teklif akışı |
+| `quote_requests` | Turist + Rehber + ops. rota | Eski teklif akışı (deprecated) |
+| `places` | — | Harita POI kataloğu; doğrudan FK yok |

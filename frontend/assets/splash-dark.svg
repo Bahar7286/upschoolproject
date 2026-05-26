@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="2732" height="2732" viewBox="0 0 2732 2732" fill="none">
+  <defs>
+    <linearGradient id="gold" x1="1066" y1="1066" x2="1666" y2="1666" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#d4b04a"/>
+      <stop offset="0.5" stop-color="#c9a227"/>
+      <stop offset="1" stop-color="#8f6b12"/>
+    </linearGradient>
+  </defs>
+  <rect width="2732" height="2732" fill="#09090b"/>
+  <rect x="1116" y="1116" width="500" height="500" rx="110" fill="url(#gold)"/>
+  <g transform="translate(1366 1366)" stroke="#ffffff" stroke-linecap="round" fill="none">
+    <circle cx="0" cy="0" r="72" stroke-width="36"/>
+    <path d="M0 -168v96M0 72v96M-168 0h96M72 0h96" stroke-width="36"/>
+    <path d="M-119 -119l68 68M51 51l68 68M-119 51l68-68M51 -51l68-68" stroke-width="28"/>
+    <circle cx="0" cy="0" r="20" fill="#ffffff" stroke="none"/>
+  </g>
+  <text x="1366" y="1780" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="120" font-weight="800" fill="#fafaf9" letter-spacing="-2">Historial-GO</text>
+  <text x="1366" y="1880" text-anchor="middle" font-family="system-ui, -apple-system, Segoe UI, sans-serif" font-size="52" font-weight="600" fill="#a8a29e">0stanbul'u ke_fet</text>
+</svg>

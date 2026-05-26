@@ -1,15 +1,30 @@
-import { Monitor, Moon, Sun } from 'lucide-react';
+import { Landmark, Monitor, Moon, Sun } from 'lucide-react';
 import type { ReactElement } from 'react';
 
 import type { ThemePreference } from '../../stores/theme-store';
 import { useThemeStore } from '../../stores/theme-store';
 
-const ORDER: ThemePreference[] = ['system', 'light', 'dark'];
+const ORDER: ThemePreference[] = ['system', 'light', 'dark', 'heritage', 'ocean', 'sunset', 'forest', 'classic'];
 
 function labelFor(pref: ThemePreference): string {
-  if (pref === 'system') return 'Sistem teması';
-  if (pref === 'light') return 'Açık tema';
-  return 'Koyu tema';
+  const labels: Record<string, string> = {
+    system: 'Sistem teması',
+    light: 'Açık tema',
+    dark: 'Koyu tema',
+    heritage: 'Miras teması',
+    ocean: 'Okyanus teması',
+    sunset: 'Gün batımı',
+    forest: 'Orman teması',
+    classic: 'Klasik tema',
+  };
+  return labels[pref] ?? pref;
+}
+
+function iconFor(pref: ThemePreference) {
+  if (pref === 'system') return Monitor;
+  if (pref === 'light') return Sun;
+  if (pref === 'dark') return Moon;
+  return Landmark;
 }
 
 export function ThemeToggle({ className = '' }: { className?: string }): ReactElement {
@@ -21,12 +36,12 @@ export function ThemeToggle({ className = '' }: { className?: string }): ReactEl
     setPreference(ORDER[(idx + 1) % ORDER.length]);
   };
 
-  const Icon = preference === 'system' ? Monitor : preference === 'light' ? Sun : Moon;
+  const Icon = iconFor(preference);
 
   return (
     <button
       type="button"
-      className={`tap-scale inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-stone-900/10 bg-white/80 text-heritage-ink shadow-sm backdrop-blur transition-colors hover:bg-white dark:border-white/10 dark:bg-zinc-900/80 dark:text-stone-100 dark:hover:bg-zinc-800 ${className}`}
+      className={`app-chip tap-scale inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full shadow-sm backdrop-blur transition-colors hover:opacity-90 text-theme ${className}`}
       aria-label={`Tema: ${labelFor(preference)}. Değiştirmek için dokunun.`}
       title={`${labelFor(preference)} · Tıklayınca sırayla değişir`}
       onClick={cycle}

@@ -1,18 +1,33 @@
 import { useEffect } from 'react';
 
-import { getResolvedTheme, useThemeStore } from '../../stores/theme-store';
+import { getResolvedTheme, useThemeStore, type FontPreference } from '../../stores/theme-store';
 
-/** `html.dark` + `data-theme` — Tailwind `dark:` varyantları ve düşük ışık UX için. */
+const FONT_CLASS: Record<FontPreference, string> = {
+  sans: 'font-sans',
+  serif: 'font-serif',
+  rounded: 'font-rounded',
+};
+
+/** `html.dark` + `data-theme` + font sınıfı */
 export function ThemeSync(): null {
   const preference = useThemeStore((s) => s.preference);
+  const font = useThemeStore((s) => s.font);
 
   useEffect(() => {
     const root = document.documentElement;
 
     const apply = () => {
-      const resolved = getResolvedTheme(useThemeStore.getState().preference);
-      root.classList.toggle('dark', resolved === 'dark');
-      root.dataset.theme = resolved;
+      const pref = useThemeStore.getState().preference;
+      const systemDark =
+        typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      const isDark = pref === 'dark' || (pref === 'system' && systemDark);
+      root.classList.toggle('dark', isDark);
+      const themeKey = pref === 'system' ? (isDark ? 'dark' : 'light') : pref;
+      root.dataset.theme = themeKey;
+      root.dataset.mode = isDark ? 'dark' : 'light';
+      root.dataset.font = useThemeStore.getState().font;
+      root.classList.remove('font-sans', 'font-serif', 'font-rounded');
+      root.classList.add(FONT_CLASS[useThemeStore.getState().font]);
     };
 
     apply();
@@ -21,7 +36,7 @@ export function ThemeSync(): null {
     const onChange = () => apply();
     mq.addEventListener('change', onChange);
     return () => mq.removeEventListener('change', onChange);
-  }, [preference]);
+  }, [preference, font]);
 
   return null;
 }

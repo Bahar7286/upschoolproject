@@ -1,19 +1,25 @@
 import os
 
+# Test DB — entegrasyon / test_api (unit testleri test_unit.db kullanır)
+os.environ['DATABASE_URL'] = 'sqlite+aiosqlite:///./test_historial_go.db'
+
+import asyncio
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from app.db.bootstrap import seed_initial_data
 from app.db.connection import Base, get_db
 from app.main import app
 
+TEST_DATABASE_URL = os.environ['DATABASE_URL']
 
-@pytest.fixture
+
+@pytest.fixture(scope='function')
 def client() -> TestClient:
-    test_database_url = 'sqlite+aiosqlite:///./test_historial_go.db'
-    os.environ['DATABASE_URL'] = test_database_url
-
-    test_engine = create_async_engine(test_database_url, echo=False, future=True)
+    """Her test için izole şema + seed."""
+    test_engine = create_async_engine(TEST_DATABASE_URL, echo=False, future=True)
     test_session_local = async_sessionmaker(bind=test_engine, expire_on_commit=False, class_=AsyncSession)
 
     async def override_get_db():
@@ -24,8 +30,8 @@ def client() -> TestClient:
         async with test_engine.begin() as connection:
             await connection.run_sync(Base.metadata.drop_all)
             await connection.run_sync(Base.metadata.create_all)
-
-    import asyncio
+        async with test_session_local() as session:
+            await seed_initial_data(session)
 
     asyncio.run(setup())
 
@@ -33,3 +39,4 @@ def client() -> TestClient:
     with TestClient(app) as test_client:
         yield test_client
     app.dependency_overrides.clear()
+    asyncio.run(test_engine.dispose())

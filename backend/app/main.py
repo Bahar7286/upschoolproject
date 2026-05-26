@@ -1,13 +1,32 @@
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
-from app.api.routers import ai_routes, auth_routes, guide_routes, payment_routes, route_routes, stop_routes, user_routes
+from app.api.routers import (
+    admin_routes,
+    ai_routes,
+    auth_routes,
+    guide_routes,
+    note_routes,
+    payment_routes,
+    place_routes,
+    plan_routes,
+    quote_routes,
+    route_routes,
+    social_routes,
+    stop_routes,
+    trip_request_routes,
+    user_routes,
+)
+
+from app.core.config import settings
 from app.db.bootstrap import seed_initial_data
 from app.db.connection import Base, SessionLocal, engine
 from app import models  # noqa: F401
@@ -34,9 +53,17 @@ OPENAPI_TAGS = [
     {'name': 'users', 'description': 'Kullanıcı CRUD; opsiyonel `password` ile şifre atanır (`user_id` otomatik).'},
     {'name': 'routes', 'description': 'Rota listeleme, oluşturma, güncelleme, öneri (`route_id`, `guide_id`).'},
     {'name': 'stops', 'description': 'Rota durakları; yol ` /routes/{route_id}/stops` (`stop_id` ile tek kayıt).'},
-    {'name': 'ai', 'description': 'AI öneri ve konum skoru.'},
+    {
+        'name': 'ai',
+        'description': 'LLM (OpenRouter/Gemini) rota önerisi, sesli anlatım metni, geofence.',
+    },
     {'name': 'payments', 'description': 'Satın alma kayıtları (`purchase_id`, `user_id`, `route_id`).'},
-    {'name': 'guides', 'description': 'Rehber kazanç ve ödeme talebi.'},
+    {'name': 'guides', 'description': 'Rehber CRUD, rota yönetimi, kazanç ve ödeme talebi.'},
+    {'name': 'plans', 'description': 'Takvim rota planları (auth gerekli).'},
+    {'name': 'social', 'description': 'Rota yorumları (herkese açık) ve kişisel notlar (auth).'},
+    {'name': 'places', 'description': 'Türkiye POI kataloğu — müze, saray, yemek, konaklama (harita).'},
+    {'name': 'trip-requests', 'description': 'Turist gezi talebi; rehber teklifleri ve kabul.'},
+    {'name': 'admin', 'description': 'Rehber doğrulama onay / red (admin).'},
 ]
 
 app = FastAPI(
@@ -82,7 +109,7 @@ app.openapi = custom_openapi
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['http://localhost:5173', 'http://127.0.0.1:5173'],
+    allow_origins=settings.cors_origins,
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
@@ -91,10 +118,21 @@ app.add_middleware(
 app.include_router(auth_routes.router, prefix='/auth', tags=['auth'])
 app.include_router(user_routes.router, prefix='/users', tags=['users'])
 app.include_router(route_routes.router, prefix='/routes', tags=['routes'])
+app.include_router(social_routes.router, prefix='/routes', tags=['social'])
 app.include_router(stop_routes.router)
 app.include_router(ai_routes.router, prefix='/ai', tags=['ai'])
 app.include_router(payment_routes.router, prefix='/payments', tags=['payments'])
 app.include_router(guide_routes.router, prefix='/guides', tags=['guides'])
+app.include_router(quote_routes.router, prefix='/quotes', tags=['quotes'])
+app.include_router(plan_routes.router, prefix='/plans', tags=['plans'])
+app.include_router(note_routes.router, prefix='/notes', tags=['notes'])
+app.include_router(place_routes.router, prefix='/places', tags=['places'])
+app.include_router(trip_request_routes.router, prefix='/trip-requests', tags=['trip-requests'])
+app.include_router(admin_routes.router, prefix='/admin', tags=['admin'])
+
+_uploads = Path(__file__).resolve().parent.parent / 'uploads'
+_uploads.mkdir(parents=True, exist_ok=True)
+app.mount('/uploads', StaticFiles(directory=str(_uploads)), name='uploads')
 
 
 @app.middleware('http')

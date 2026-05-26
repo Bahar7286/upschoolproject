@@ -19,6 +19,8 @@ export default {
       fontFamily: {
         display: ['Sora', 'Nunito', 'system-ui', 'sans-serif'],
         sans: ['DM Sans', 'Plus Jakarta Sans', 'system-ui', 'sans-serif'],
+        serif: ['Georgia', 'Times New Roman', 'serif'],
+        rounded: ['Nunito', 'Varela Round', 'system-ui', 'sans-serif'],
       },
       boxShadow: {
         lift: '0 8px 24px rgb(0 0 0 / 12%)',

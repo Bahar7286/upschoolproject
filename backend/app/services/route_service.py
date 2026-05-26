@@ -1,12 +1,12 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
+from app.core.exceptions import RouteNotFoundError
 from app.models.route_model import Route
+from app.repositories.route_repository import RouteRepository
 from app.schemas.route_schema import RouteCreate, RouteRequest, RouteResponse, RouteUpdate
 
+
 class RouteService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+    def __init__(self, repository: RouteRepository) -> None:
+        self.repository = repository
 
     @staticmethod
     def _to_response(route: Route) -> RouteResponse:
@@ -22,12 +22,18 @@ class RouteService:
         )
 
     async def list_routes(self) -> list[RouteResponse]:
-        result = await self.db.execute(select(Route).order_by(Route.route_id.asc()))
-        return [self._to_response(route) for route in result.scalars().all()]
+        routes = await self.repository.list_all()
+        return [self._to_response(r) for r in routes]
 
-    async def get_route_by_id(self, route_id: int) -> RouteResponse | None:
-        route = await self.db.get(Route, route_id)
-        return self._to_response(route) if route else None
+    async def get_route_by_id(self, route_id: int) -> RouteResponse:
+        route = await self.repository.get_by_id(route_id)
+        if not route:
+            raise RouteNotFoundError(route_id)
+        return self._to_response(route)
+
+    async def route_exists(self, route_id: int) -> bool:
+        route = await self.repository.get_by_id(route_id)
+        return route is not None
 
     async def create_route(self, payload: RouteCreate) -> RouteResponse:
         route = Route(
@@ -38,45 +44,26 @@ class RouteService:
             tags=','.join(payload.tags),
             guide_id=payload.guide_id,
         )
-        self.db.add(route)
-        await self.db.commit()
-        await self.db.refresh(route)
-        return self._to_response(route)
+        created = await self.repository.create(route)
+        return self._to_response(created)
 
-    async def update_route(self, route_id: int, payload: RouteUpdate) -> RouteResponse | None:
-        route = await self.db.get(Route, route_id)
+    async def update_route(self, route_id: int, payload: RouteUpdate) -> RouteResponse:
+        route = await self.repository.get_by_id(route_id)
         if not route:
-            return None
+            raise RouteNotFoundError(route_id)
 
-        update_data = payload.model_dump(exclude_unset=True)
-        if not update_data:
+        data = payload.model_dump(exclude_unset=True)
+        if not data:
             return self._to_response(route)
 
-        if 'title' in update_data:
-            route.title = update_data['title']
-        if 'city' in update_data:
-            route.city = update_data['city']
-        if 'estimated_minutes' in update_data:
-            route.estimated_minutes = update_data['estimated_minutes']
-        if 'price' in update_data:
-            route.price = update_data['price']
-        if 'tags' in update_data:
-            route.tags = ','.join(update_data['tags'])
-        if 'guide_id' in update_data:
-            route.guide_id = update_data['guide_id']
+        updated = await self.repository.update_fields(route, data)
+        return self._to_response(updated)
 
-        await self.db.commit()
-        await self.db.refresh(route)
-        return self._to_response(route)
-
-    async def delete_route(self, route_id: int) -> bool:
-        route = await self.db.get(Route, route_id)
+    async def delete_route(self, route_id: int) -> None:
+        route = await self.repository.get_by_id(route_id)
         if not route:
-            return False
-
-        await self.db.delete(route)
-        await self.db.commit()
-        return True
+            raise RouteNotFoundError(route_id)
+        await self.repository.delete(route)
 
     async def recommend_routes(self, payload: RouteRequest) -> list[RouteResponse]:
         normalized_interests = {interest.lower() for interest in payload.interests}
@@ -89,4 +76,12 @@ class RouteService:
             for route in routes
             if normalized_interests.intersection({tag.lower() for tag in route.tags})
         ]
-        return sorted(matched, key=lambda route: route.price)[:5]
+
+        def score(route) -> float:
+            tag_hits = len(normalized_interests.intersection({tag.lower() for tag in route.tags}))
+            budget_ok = 1.0 if route.price <= payload.budget else 0.3
+            dur_diff = abs(route.estimated_minutes - payload.duration_minutes)
+            duration_ok = 1.0 if dur_diff <= 60 else max(0.2, 1 - dur_diff / 240)
+            return tag_hits * budget_ok * duration_ok
+
+        return sorted(matched, key=score, reverse=True)[:10]

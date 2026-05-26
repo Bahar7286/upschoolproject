@@ -26,7 +26,7 @@ export function GoogleExploreMap({
 
   if (loadError) {
     return (
-      <div className="flex h-[min(70vh,560px)] items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-4 text-center text-sm text-red-800">
+      <div className="flex h-[min(52vh,400px)] sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-4 text-center text-sm text-red-800">
         Google Haritalar yüklenemedi. API anahtarı, faturalandırma ve Maps JavaScript API etkinliğini kontrol edin.
       </div>
     );
@@ -35,7 +35,7 @@ export function GoogleExploreMap({
   if (!isLoaded) {
     return (
       <div
-        className="h-[min(70vh,560px)] animate-pulse rounded-2xl bg-stone-200"
+        className="h-[min(52vh,400px)] sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] animate-pulse rounded-2xl bg-stone-200"
         aria-busy="true"
         aria-label="Harita yükleniyor"
       />
@@ -43,7 +43,7 @@ export function GoogleExploreMap({
   }
 
   return (
-    <div className="relative h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-stone-900/10 shadow-lift">
+    <div className="relative h-[min(52vh,400px)] sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] w-full overflow-hidden rounded-2xl border border-stone-900/10 shadow-lift">
       <GoogleMap mapContainerStyle={containerStyle} center={defaultCenter} zoom={12} mapContainerClassName="rounded-2xl">
         {routes.map((route) => {
           const { lat, lng } = routeMapPosition(route.route_id);

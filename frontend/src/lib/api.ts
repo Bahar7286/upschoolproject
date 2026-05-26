@@ -1,7 +1,11 @@
 const DEFAULT_BASE = 'http://127.0.0.1:8000';
 
 export function getApiBaseUrl(): string {
-  return import.meta.env.VITE_API_BASE_URL ?? DEFAULT_BASE;
+  const raw = import.meta.env.VITE_API_BASE_URL;
+  if (typeof raw === 'string' && raw.trim().length > 0) {
+    return raw.trim().replace(/\/$/, '');
+  }
+  return DEFAULT_BASE;
 }
 
 export class ApiError extends Error {
@@ -63,6 +67,25 @@ export async function requestJsonWithAuth<T>(
   return requestJsonImpl<T>(path, init, accessToken);
 }
 
+export async function requestMultipartWithAuth<T>(
+  path: string,
+  accessToken: string,
+  formData: FormData,
+): Promise<T> {
+  const base = getApiBaseUrl().replace(/\/$/, '');
+  const rel = path.startsWith('/') ? path : `/${path}`;
+  const response = await fetch(`${base}${rel}`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${accessToken}` },
+    body: formData,
+  });
+  const text = await response.text();
+  if (!response.ok) {
+    throw new ApiError(text || `Request failed with status ${response.status}`, response.status, text);
+  }
+  return JSON.parse(text) as T;
+}
+
 /** FastAPI `detail` alanını Türkçe kullanıcı mesajına çevirir. */
 export function formatApiError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -103,6 +126,9 @@ export function formatApiError(error: unknown): string {
   }
 
   if (error instanceof Error) {
+    if (error.message.toLowerCase().includes('failed to fetch')) {
+      return 'Sunucuya bağlanılamadı. Backend çalışıyor mu? (http://127.0.0.1:8000/health) — PostgreSQL şema güncellemesi için backend’i yeniden başlatın.';
+    }
     return error.message;
   }
 

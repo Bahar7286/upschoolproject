@@ -1,36 +1,33 @@
-from sqlalchemy import select
-from sqlalchemy.ext.asyncio import AsyncSession
-
-from app.models.route_model import Route
+from app.core.exceptions import RouteNotFoundError, StopNotFoundError
 from app.models.stop_model import Stop
+from app.repositories.route_repository import RouteRepository
+from app.repositories.stop_repository import StopRepository
 from app.schemas.stop_schema import StopCreate, StopResponse, StopUpdate
 
 
 class StopService:
-    def __init__(self, db: AsyncSession) -> None:
-        self.db = db
+    def __init__(self, stop_repository: StopRepository, route_repository: RouteRepository) -> None:
+        self.stops = stop_repository
+        self.routes = route_repository
 
     async def route_exists(self, route_id: int) -> bool:
-        route = await self.db.get(Route, route_id)
-        return route is not None
+        return await self.routes.get_by_id(route_id) is not None
 
     async def list_stops(self, route_id: int) -> list[StopResponse]:
-        result = await self.db.execute(
-            select(Stop)
-            .where(Stop.route_id == route_id)
-            .order_by(Stop.order_index.asc(), Stop.stop_id.asc()),
-        )
-        return [StopResponse.model_validate(s) for s in result.scalars().all()]
+        if not await self.route_exists(route_id):
+            raise RouteNotFoundError(route_id)
+        stops = await self.stops.list_by_route(route_id)
+        return [StopResponse.model_validate(s) for s in stops]
 
-    async def get_stop(self, route_id: int, stop_id: int) -> StopResponse | None:
-        stop = await self.db.get(Stop, stop_id)
-        if not stop or stop.route_id != route_id:
-            return None
+    async def get_stop(self, route_id: int, stop_id: int) -> StopResponse:
+        stop = await self.stops.get_for_route(route_id, stop_id)
+        if not stop:
+            raise StopNotFoundError(stop_id, route_id)
         return StopResponse.model_validate(stop)
 
-    async def create_stop(self, route_id: int, payload: StopCreate) -> StopResponse | None:
+    async def create_stop(self, route_id: int, payload: StopCreate) -> StopResponse:
         if not await self.route_exists(route_id):
-            return None
+            raise RouteNotFoundError(route_id)
 
         stop = Stop(
             route_id=route_id,
@@ -41,42 +38,23 @@ class StopService:
             order_index=payload.order_index,
             audio_url=payload.audio_url,
         )
-        self.db.add(stop)
-        await self.db.commit()
-        await self.db.refresh(stop)
-        return StopResponse.model_validate(stop)
+        created = await self.stops.create(stop)
+        return StopResponse.model_validate(created)
 
-    async def update_stop(self, route_id: int, stop_id: int, payload: StopUpdate) -> StopResponse | None:
-        stop = await self.db.get(Stop, stop_id)
-        if not stop or stop.route_id != route_id:
-            return None
+    async def update_stop(self, route_id: int, stop_id: int, payload: StopUpdate) -> StopResponse:
+        stop = await self.stops.get_for_route(route_id, stop_id)
+        if not stop:
+            raise StopNotFoundError(stop_id, route_id)
 
-        update_data = payload.model_dump(exclude_unset=True)
-        if not update_data:
+        data = payload.model_dump(exclude_unset=True)
+        if not data:
             return StopResponse.model_validate(stop)
 
-        if 'title' in update_data:
-            stop.title = update_data['title']
-        if 'description' in update_data:
-            stop.description = update_data['description']
-        if 'latitude' in update_data:
-            stop.latitude = update_data['latitude']
-        if 'longitude' in update_data:
-            stop.longitude = update_data['longitude']
-        if 'order_index' in update_data:
-            stop.order_index = update_data['order_index']
-        if 'audio_url' in update_data:
-            stop.audio_url = update_data['audio_url']
+        updated = await self.stops.update_fields(stop, data)
+        return StopResponse.model_validate(updated)
 
-        await self.db.commit()
-        await self.db.refresh(stop)
-        return StopResponse.model_validate(stop)
-
-    async def delete_stop(self, route_id: int, stop_id: int) -> bool:
-        stop = await self.db.get(Stop, stop_id)
-        if not stop or stop.route_id != route_id:
-            return False
-
-        await self.db.delete(stop)
-        await self.db.commit()
-        return True
+    async def delete_stop(self, route_id: int, stop_id: int) -> None:
+        stop = await self.stops.get_for_route(route_id, stop_id)
+        if not stop:
+            raise StopNotFoundError(stop_id, route_id)
+        await self.stops.delete(stop)

@@ -522,8 +522,9 @@ a {
   top: 0;
   z-index: 40;
   backdrop-filter: blur(14px);
-  background: rgb(244 240 232 / 85%);
-  border-bottom: 1px solid rgb(12 18 34 / 8%);
+  background: var(--hg-header);
+  border-bottom: 1px solid var(--hg-border);
+  color: var(--hg-fg);
 }
 
 .app-header__inner {
@@ -643,9 +644,10 @@ a {
   grid-template-columns: repeat(4, 1fr);
   gap: 0;
   padding: var(--space-2) var(--space-3) calc(var(--space-2) + env(safe-area-inset-bottom));
-  background: rgb(244 240 232 / 92%);
-  border-top: 1px solid rgb(12 18 34 / 10%);
+  background: var(--hg-header);
+  border-top: 1px solid var(--hg-border);
   backdrop-filter: blur(14px);
+  color: var(--hg-fg);
 }
 
 .app-bottom-nav__item {

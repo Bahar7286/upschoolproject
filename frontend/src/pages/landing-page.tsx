@@ -1,87 +1,133 @@
 import type { ReactElement } from 'react';
-import { Sparkles } from 'lucide-react';
+import {
+  Award,
+  Compass,
+  Headphones,
+  Map as MapIcon,
+  Sparkles,
+  Wand2,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
+import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
+import { ButtonLink } from '../components/ui/button';
+
+const FEATURES = [
+  {
+    icon: Wand2,
+    title: 'Akıllı onboarding',
+    text: 'Tarih, sanat, gastronomi — ilgi alanlarını seç; profilini saniyeler içinde oluştur.',
+    to: '/onboarding',
+  },
+  {
+    icon: Sparkles,
+    title: 'AI rota sihirbazı',
+    text: 'Süre, bütçe ve etiketlere göre en uygun rotaları öne çıkarır.',
+    to: '/discover?ai=1',
+  },
+  {
+    icon: MapIcon,
+    title: 'İnteraktif harita',
+    text: 'Gerçek durak koordinatları, konum takibi ve rota ilerlemesi.',
+    to: '/map',
+  },
+  {
+    icon: Headphones,
+    title: 'Sesli rehberlik',
+    text: 'TR / EN / DE TTS; durak anlatımları ve offline kayıt.',
+    to: '/audio',
+  },
+  {
+    icon: Award,
+    title: 'Oyunlaştırma',
+    text: 'XP, rozetler, streak ve haftalık sıralama — gezdikçe kazan.',
+    to: '/profile',
+  },
+  {
+    icon: Compass,
+    title: 'Rehber paneli',
+    text: 'Kokart doğrulama, teklif kutusu ve grup fiyatlandırması.',
+    to: '/rehberler',
+  },
+] as const;
 
 export default function LandingPage(): ReactElement {
   return (
-    <div className="landing heritage-bg transition-colors duration-300 dark:bg-zinc-950">
-      <div className="landing__fog" aria-hidden="true" />
-      <header className="landing__top">
-        <div className="landing__logo">
-          <span className="app-brand__mark" aria-hidden="true" />
-          <span className="landing__logo-text dark:text-stone-100">Historial-GO</span>
-        </div>
-        <div className="landing__top-actions flex flex-wrap items-center justify-end gap-3">
-          <ThemeToggle />
-          <Link className="button button--secondary tap-scale dark:border-white/20 dark:bg-zinc-900 dark:text-stone-100" to="/login">
-            Giriş
-          </Link>
-          <Link className="button button--primary tap-scale" to="/register">
-            Kayıt ol
-          </Link>
-        </div>
-      </header>
+    <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
+      <div
+        className="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40"
+        aria-hidden="true"
+        style={{
+          backgroundImage:
+            'radial-gradient(900px 520px at 80% -10%, rgb(201 162 39 / 22%), transparent 55%), radial-gradient(700px 420px at 10% 90%, rgb(29 185 84 / 12%), transparent 50%)',
+        }}
+      />
 
-      <section className="landing__hero relative overflow-hidden">
-        <p className="landing__eyebrow inline-flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-amber-300" aria-hidden="true" strokeWidth={2} />
-          İstanbul · deneyim ekonomisi · B2B2C · AI kişiselleştirme
-        </p>
-        <h1 className="landing__title">Şehri kendi hikayenle keşfet</h1>
-        <p className="landing__lead">
-          İlgi alanlarına, süreye ve bütçene göre yapay zekâ destekli rota önerileri; harita üzerinde duraklar, çok dilli
-          sesli rehberlik ve oyunlaştırılmış kültür puanları—tek bir uygulamada.
-        </p>
-        <div className="landing__cta">
-          <Link className="button button--primary button--lg" to="/register">
-            Hemen başla
-          </Link>
-          <Link className="button button--secondary button--lg" to="/discover">
-            Rotalara göz at
-          </Link>
-        </div>
-        <ul className="landing__trust" aria-label="Güven ve değer">
-          <li>Onaylı rehber içerikleri</li>
-          <li>%15 platform · %85 rehber payı</li>
-          <li>20 m yaklaşımda ses tetikleme (MVP hedefi)</li>
-        </ul>
-      </section>
+      <div className="relative mx-auto max-w-6xl px-4 py-6 md:px-8">
+        <header className="flex items-center justify-between gap-4 pt-safe">
+          <BrandLogo to="/" size="md" />
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <ButtonLink variant="secondary" className="hidden min-h-[44px] sm:inline-flex" to="/login">
+              Giriş
+            </ButtonLink>
+            <ButtonLink className="min-h-[44px]" to="/register">
+              Kayıt ol
+            </ButtonLink>
+          </div>
+        </header>
 
-      <section className="landing__grid" aria-labelledby="mvp-blocks">
-        <h2 className="visually-hidden" id="mvp-blocks">
-          MVP modülleri
-        </h2>
-        <article className="feature-card">
-          <h3 className="feature-card__title">Akıllı onboarding</h3>
-          <p className="feature-card__text">Tarih, sanat, gastronomi—ilgi alanlarını seç; profilini saniyeler içinde oluştur.</p>
-        </article>
-        <article className="feature-card">
-          <h3 className="feature-card__title">AI rota sihirbazı</h3>
-          <p className="feature-card__text">Süre, bütçe ve etiketlere göre en uygun rotaları öne çıkarırız.</p>
-        </article>
-        <article className="feature-card">
-          <h3 className="feature-card__title">İnteraktif harita</h3>
-          <p className="feature-card__text">Duraklar, navigasyon ve keşif odaklı tam ekran harita deneyimi.</p>
-        </article>
-        <article className="feature-card">
-          <h3 className="feature-card__title">Sesli rehberlik</h3>
-          <p className="feature-card__text">TR / EN / DE anlatımlar; lokasyonda otomatik tetikleme için altyapı.</p>
-        </article>
-        <article className="feature-card">
-          <h3 className="feature-card__title">Oyunlaştırma</h3>
-          <p className="feature-card__text">Kültür puanları, rozetler ve haftalık skor tahtası yer tutucuları.</p>
-        </article>
-        <article className="feature-card">
-          <h3 className="feature-card__title">Rehber paneli</h3>
-          <p className="feature-card__text">Rota oluşturma, gelir takibi ve ödeme talebi akışları.</p>
-        </article>
-      </section>
+        <section className="relative mt-12 overflow-hidden rounded-[28px] border border-stone-900/10 bg-gradient-to-br from-heritage-ink via-stone-900 to-stone-800 p-8 text-white shadow-lift dark:border-white/10 md:p-12">
+          <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-300">
+            <Sparkles className="h-4 w-4" aria-hidden="true" />
+            İstanbul · AI · B2B2C
+          </p>
+          <h1 className="mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
+            Şehri kendi hikayenle keşfet
+          </h1>
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-stone-300 md:text-lg">
+            İlgi alanlarına göre AI rotaları, harita üzerinde duraklar, çok dilli sesli rehberlik ve oyunlaştırılmış kültür puanları.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <ButtonLink className="min-h-[52px] px-8" to="/register">
+              Hemen başla
+            </ButtonLink>
+            <ButtonLink variant="secondary" className="min-h-[52px] border-white/30 text-white hover:border-white hover:bg-white/10" to="/discover">
+              Rotalara göz at
+            </ButtonLink>
+          </div>
+        </section>
 
-      <footer className="landing__footer">
-        <p>Historial-GO — turizmde deneyim ekonomisi için MVP web arayüzü.</p>
-      </footer>
+        <section className="mt-12 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-label="Özellikler">
+          {FEATURES.map(({ icon: Icon, title, text, to }) => (
+            <Link
+              key={title}
+              to={to}
+              className="group rounded-[22px] border border-stone-900/10 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift focus-ring dark:border-white/10 dark:bg-zinc-900/95"
+            >
+              <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white">
+                <Icon className="h-5 w-5" aria-hidden="true" strokeWidth={2} />
+              </div>
+              <h2 className="font-display text-lg font-bold text-heritage-ink dark:text-stone-50">{title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">{text}</p>
+              <p className="mt-3 text-xs font-bold text-primary">Keşfet →</p>
+            </Link>
+          ))}
+        </section>
+
+        <footer className="mt-16 border-t border-stone-900/10 py-8 text-center text-sm text-stone-500 dark:border-white/10">
+          <p>Historial-GO — turizmde deneyim ekonomisi</p>
+          <div className="mt-3 flex justify-center gap-4">
+            <Link className="font-semibold hover:text-primary" to="/terms">
+              Kullanım Koşulları
+            </Link>
+            <Link className="font-semibold hover:text-primary" to="/privacy">
+              Gizlilik
+            </Link>
+          </div>
+        </footer>
+      </div>
     </div>
   );
 }

@@ -1,0 +1,26 @@
+# Historial-GO — yerel PostgreSQL
+# Başlat: docker compose up -d
+# Durdur: docker compose down
+# Veriyi sil: docker compose down -v
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: historial_go_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: historial
+      POSTGRES_PASSWORD: historial_dev_password
+      POSTGRES_DB: historial_go
+    ports:
+      - '5432:5432'
+    volumes:
+      - historial_pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U historial -d historial_go']
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  historial_pg_data:

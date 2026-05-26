@@ -1,10 +1,26 @@
 from fastapi import APIRouter, Depends
 
 from app.api.dependencies import get_ai_service
-from app.schemas.ai_schema import AIRecommendationItem, AIRecommendationRequest
+from app.schemas.ai_schema import (
+    AIRecommendationItem,
+    AIRecommendationRequest,
+    AIStatusResponse,
+    GeofenceCheckRequest,
+    GeofenceCheckResponse,
+    NarrationAudioRequest,
+    NarrationAudioResponse,
+    StopNarrationRequest,
+    StopNarrationResponse,
+)
 from app.services.ai_service import AIService
 
 router = APIRouter()
+
+
+@router.get('/status', response_model=AIStatusResponse)
+async def ai_status() -> AIStatusResponse:
+    """LLM (OpenRouter/Gemini) yapılandırması — demo ve deploy doğrulaması için."""
+    return AIService.status()
 
 
 @router.post('/recommend', response_model=list[AIRecommendationItem])
@@ -13,3 +29,29 @@ async def recommend_with_ai(
     service: AIService = Depends(get_ai_service),
 ) -> list[AIRecommendationItem]:
     return await service.generate_recommendations(payload)
+
+
+@router.post('/geofence-check', response_model=GeofenceCheckResponse)
+async def geofence_check(
+    payload: GeofenceCheckRequest,
+    service: AIService = Depends(get_ai_service),
+) -> GeofenceCheckResponse:
+    """MVP: kullanıcı bir durağa 20 m yaklaşınca sesli rehber tetiklenir."""
+    return await service.check_geofence(payload)
+
+
+@router.post('/narration/preview', response_model=StopNarrationResponse)
+async def narration_preview(
+    payload: StopNarrationRequest,
+    service: AIService = Depends(get_ai_service),
+) -> StopNarrationResponse:
+    return await service.preview_narration(payload)
+
+
+@router.post('/narration/audio', response_model=NarrationAudioResponse)
+async def narration_audio(
+    payload: NarrationAudioRequest,
+    service: AIService = Depends(get_ai_service),
+) -> NarrationAudioResponse:
+    """edge-tts ile MP3 (base64); paket yoksa tarayıcı TTS fallback bayrağı."""
+    return await service.narration_audio(payload)

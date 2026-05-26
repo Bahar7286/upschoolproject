@@ -30,3 +30,20 @@ export async function fetchCurrentUser(accessToken: string): Promise<UserRespons
     method: 'GET',
   });
 }
+
+export async function requestPasswordReset(email: string): Promise<{ message: string; reset_url?: string | null }> {
+  return requestJson('/auth/forgot-password', {
+    method: 'POST',
+    body: JSON.stringify({ email }),
+  });
+}
+
+export async function resetPasswordWithToken(
+  token: string,
+  new_password: string,
+): Promise<{ message: string }> {
+  return requestJson('/auth/reset-password', {
+    method: 'POST',
+    body: JSON.stringify({ token, new_password }),
+  });
+}

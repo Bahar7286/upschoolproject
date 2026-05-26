@@ -13,3 +13,8 @@ class Purchase(Base):
     amount: Mapped[float] = mapped_column(Float, nullable=False)
     currency: Mapped[str] = mapped_column(String(3), nullable=False, default='USD')
     status: Mapped[str] = mapped_column(String(20), nullable=False, default='confirmed')
+    transaction_ref: Mapped[str] = mapped_column(String(64), default='', nullable=False)
+    payment_method: Mapped[str] = mapped_column(String(20), default='card', nullable=False)
+    offer_id: Mapped[int | None] = mapped_column(nullable=True)
+    trip_request_id: Mapped[int | None] = mapped_column(nullable=True)
+    stripe_session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)

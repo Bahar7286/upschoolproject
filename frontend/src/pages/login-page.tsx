@@ -3,10 +3,12 @@ import { useState } from 'react';
 import { ArrowLeft, Lock, LogIn } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
+import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
 import { formatApiError } from '../lib/api';
 import { fetchCurrentUser, loginUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
+import { useOnboardingStore } from '../stores/onboarding-store';
 
 export default function LoginPage(): ReactElement {
   const navigate = useNavigate();
@@ -28,7 +30,9 @@ export default function LoginPage(): ReactElement {
       const tokens = await loginUser({ email, password });
       const me = await fetchCurrentUser(tokens.access_token);
       setSession(tokens.access_token, me);
-      const fallback = '/discover';
+      useOnboardingStore.getState().hydrateFromUser(me);
+      const fallback =
+        me.role === 'admin' ? '/admin' : me.role === 'guide' ? '/guide' : '/discover';
       navigate(redirectTarget && redirectTarget !== '/login' ? redirectTarget : fallback, {
         replace: true,
       });
@@ -52,14 +56,7 @@ export default function LoginPage(): ReactElement {
 
       <div className="relative mx-auto flex w-full max-w-md flex-col gap-8">
         <header className="flex items-start justify-between gap-4">
-          <Link
-            to="/"
-            className="tap-scale inline-flex items-center gap-3 rounded-2xl font-display text-lg font-extrabold tracking-tight text-heritage-ink dark:text-stone-50"
-            aria-label="Ana sayfa"
-          >
-            <span className="app-brand__mark h-10 w-10 shrink-0 shadow-md" aria-hidden="true" />
-            Historial-GO
-          </Link>
+          <BrandLogo to="/" size="md" />
           <ThemeToggle />
         </header>
 
@@ -120,9 +117,17 @@ export default function LoginPage(): ReactElement {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="login-password">
-                Şifre
-              </label>
+              <div className="flex items-center justify-between gap-2">
+                <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="login-password">
+                  Şifre
+                </label>
+                <Link
+                  className="text-xs font-bold text-primary hover:underline"
+                  to="/sifremi-unuttum"
+                >
+                  Şifremi unuttum
+                </Link>
+              </div>
               <input
                 id="login-password"
                 className="focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500"

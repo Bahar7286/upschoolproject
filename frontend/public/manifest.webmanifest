@@ -1,0 +1,22 @@
+{
+  "name": "Historial-GO",
+  "short_name": "Historial-GO",
+  "description": "İstanbul'un tarihi rotalarını AI ile keşfet — sesli rehber ve interaktif harita.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f0e8",
+  "theme_color": "#c9a227",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

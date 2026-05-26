@@ -1,34 +1,44 @@
-node_modules/
-.next/
-dist/
-build/
+# Ortam — örnek şablonlar repoda kalır
 .env
+.env.local
+.env.*.local
+!.env.example
+!**/.env.example
+
 # Python
 .venv/
-.pytest_cache/
+venv/
 __pycache__/
-*.pyc
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+*.egg-info/
 
-# Database
+# Test / yerel veritabanı
 *.db
-.cursor/
-# Frontend / Node
+test_*.db
+
+# Node / frontend build
 node_modules/
 dist/
 build/
 *.tsbuildinfo
 
-# Env
-.env
-.env.*
-
-# OS / Editor
+# IDE / OS
+.cursor/
+.idea/
+.vscode/
 .DS_Store
 Thumbs.db
 
-# Capacitor — native proje klasörleri (isteğe bağlı, büyük binary içerir)
-# Bunları kayıt altına almak istiyorsanız bu satırları kaldırın.
+# Uploads (yerel belgeler)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
+# Capacitor — isteğe bağlı (native build çıktıları büyük)
 # frontend/android/.gradle/
 # frontend/android/build/
 # frontend/ios/App/Pods/
-# frontend/ios/App/App.xcworkspace/xcuserdata/
