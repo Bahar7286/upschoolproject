@@ -24,7 +24,22 @@ B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / g
 | Web (frontend) | _Deploy sonrası buraya yazın_ |
 | API (backend) | _Deploy sonrası buraya yazın_ |
 
-Detaylı deploy: [`DEPLOYMENT.md`](DEPLOYMENT.md).
+Deploy adımları: [`scripts/RENDER_BLUEPRINT.md`](scripts/RENDER_BLUEPRINT.md) · özet: [`DEPLOYMENT.md`](DEPLOYMENT.md)
+
+Deploy sonrası URL’leri otomatik yazmak için (PowerShell):
+
+```powershell
+.\scripts\update-live-urls.ps1 -FrontendUrl "https://historial-go-web.onrender.com" -ApiUrl "https://historial-go-api.onrender.com"
+```
+
+## Teslim scriptleri
+
+| Script | Amaç |
+|--------|------|
+| [`scripts/setup-local-env.ps1`](scripts/setup-local-env.ps1) | `.env` dosyalarını şablondan oluşturur |
+| [`scripts/verify-local.ps1`](scripts/verify-local.ps1) | `/health`, `/ai/status`, `/docs` kontrolü |
+| [`scripts/verify-live.ps1`](scripts/verify-live.ps1) | Canlı API + frontend kontrolü |
+| [`scripts/JURY_DEMO.md`](scripts/JURY_DEMO.md) | Jüri demo adımları |
 
 ## Hızlı başlangıç (yerel)
 

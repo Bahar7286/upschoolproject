@@ -38,8 +38,9 @@
 
 ### 4. Canlı deploy
 
-- [ ] **Sizin doldurmanız gereken:** `DEPLOYMENT.md` ve README’deki canlı URL’ler
+- [ ] **Sizin doldurmanız gereken:** Render Blueprint deploy + `scripts/update-live-urls.ps1` ile README/DEPLOYMENT URL
 - [x] `render.yaml` + `backend/Dockerfile` + `frontend/vercel.json` hazır
+- [x] Adım adım: [`scripts/RENDER_BLUEPRINT.md`](scripts/RENDER_BLUEPRINT.md)
 
 ## Hızlı demo (jüri)
 

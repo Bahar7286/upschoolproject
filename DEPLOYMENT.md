@@ -32,7 +32,12 @@ GEMINI_API_KEY=...
 
 Doğrulama: `GET https://<API>/ai/status` → `"llm_enabled": true`
 
-## 2. Backend (Render örneği)
+## 2. Render Blueprint (önerilen — tek panel)
+
+Adım adım: [`scripts/RENDER_BLUEPRINT.md`](scripts/RENDER_BLUEPRINT.md)  
+Repo kökünde [`render.yaml`](render.yaml) → Render Dashboard → New → Blueprint.
+
+## 3. Backend (Render manuel örneği)
 
 1. `render.yaml` ile Blueprint veya manuel **Web Service** → Docker, context: `backend/`
 2. Ortam değişkenleri: `DATABASE_URL`, `JWT_SECRET_KEY`, `FRONTEND_URL`, `CORS_ORIGINS`, `OPENROUTER_API_KEY`
@@ -47,7 +52,7 @@ Health: `https://<api-host>/health`
 2. Build: `npm run build` · Output: `dist`
 3. Env: `VITE_API_BASE_URL=https://<api-host>` (sonunda `/` yok)
 
-## 4. Teslim kontrol listesi
+## 5. Teslim kontrol listesi
 
 | Kriter | Nasıl kanıtlanır |
 |--------|------------------|
@@ -67,15 +72,17 @@ AI durum: https://___________________________/ai/status
 ## Yerel doğrulama
 
 ```powershell
+.\scripts\setup-local-env.ps1
+# backend\.env -> OPENROUTER_API_KEY ekleyin (https://openrouter.ai/keys)
 docker compose up -d
 cd backend
-copy .env.example .env
-# OPENROUTER_API_KEY ekleyin
 uv sync
 uv run uvicorn app.main:app --reload
 
 cd frontend
-copy .env.example .env
 npm install
 npm run dev
+
+# Ayri terminal:
+.\scripts\verify-local.ps1
 ```

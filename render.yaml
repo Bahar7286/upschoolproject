@@ -16,6 +16,7 @@ services:
           property: connectionString
       - key: JWT_SECRET_KEY
         generateValue: true
+      # Deploy sonrasi web URL ile doldurun (scripts/RENDER_BLUEPRINT.md)
       - key: FRONTEND_URL
         sync: false
       - key: CORS_ORIGINS
@@ -33,6 +34,7 @@ services:
     buildCommand: cd frontend && npm ci && npm run build
     staticPublishPath: frontend/dist
     envVars:
+      # API URL (ornek: https://historial-go-api.onrender.com) — sonra Manual Deploy
       - key: VITE_API_BASE_URL
         sync: false
 

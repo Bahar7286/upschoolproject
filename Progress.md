@@ -102,9 +102,20 @@
 
 | Konu | Durum |
 |------|--------|
-| Canlı deploy URL’leri | README tablosu boş — deploy sonrası doldurulacak |
+| Canlı deploy URL’leri | Render Blueprint sonrası `scripts/update-live-urls.ps1` ile doldurulacak |
+| `OPENROUTER_API_KEY` (yerel) | `backend/.env` içine siz ekleyin → `llm_enabled: true` |
 | Alembic migration | PRD yol haritası; henüz yok |
 | AR avatar | v2 |
+
+---
+
+## Teslim hazırlığı (otomasyon)
+
+| Tarih | Yapılan |
+|-------|---------|
+| 2026-05-26 | `backend/.env` + `frontend/.env` tam şablon; `scripts/` (setup, verify, Render rehberi, URL güncelleme) |
+| 2026-05-26 | Yerel: Docker PG, pytest 127 passed, Vitest 20 passed, `/health` + `/docs` OK |
+| 2026-05-26 | `verify-local.ps1`: LLM anahtarı bekleniyor (OpenRouter key kullanıcı eklemeli) |
 
 ---
 
