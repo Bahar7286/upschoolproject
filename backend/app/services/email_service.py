@@ -2,6 +2,8 @@ import logging
 import smtplib
 from email.message import EmailMessage
 
+import httpx
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -9,10 +11,14 @@ logger = logging.getLogger(__name__)
 
 class EmailService:
     def send_password_reset(self, to_email: str, reset_url: str) -> bool:
-        if not settings.smtp_enabled:
-            logger.warning('SMTP disabled: SMTP_HOST not set')
-            return False
+        if settings.smtp_enabled:
+            return self._send_via_smtp(to_email, reset_url)
+        if settings.brevo_enabled:
+            return self._send_via_brevo(to_email, reset_url)
+        logger.warning('Email disabled: neither SMTP nor BREVO_API_KEY configured')
+        return False
 
+    def _send_via_smtp(self, to_email: str, reset_url: str) -> bool:
         message = EmailMessage()
         message['Subject'] = 'Historial-GO — Şifre sıfırlama'
         message['From'] = settings.smtp_from
@@ -38,6 +44,32 @@ class EmailService:
             return True
         except Exception as exc:
             logger.exception('SMTP send failed: %s', exc)
+            return False
+
+    def _send_via_brevo(self, to_email: str, reset_url: str) -> bool:
+        # Brevo Transactional Email API (SMTP yerine HTTP/443) — Render timeout sorunlarını aşar.
+        payload = {
+            'sender': {'email': settings.smtp_from},
+            'to': [{'email': to_email}],
+            'subject': 'Historial-GO — Şifre sıfırlama',
+            'textContent': (
+                'Historial-GO hesabınız için şifre sıfırlama talebi aldık.\n\n'
+                f'Bağlantı (1 saat geçerli):\n{reset_url}\n\n'
+                'Bu talebi siz yapmadıysanız bu e-postayı yok sayın.'
+            ),
+        }
+        headers = {
+            'accept': 'application/json',
+            'content-type': 'application/json',
+            'api-key': settings.brevo_api_key,
+        }
+        url = f'{settings.brevo_base_url}/v3/smtp/email'
+        try:
+            resp = httpx.post(url, json=payload, headers=headers, timeout=30)
+            resp.raise_for_status()
+            return True
+        except Exception as exc:
+            logger.exception('Brevo API send failed: %s', exc)
             return False
 
 

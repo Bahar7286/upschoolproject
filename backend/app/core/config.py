@@ -65,6 +65,10 @@ class Settings:
         'yes',
     )
 
+    # Brevo (Sendinblue) HTTP API — SMTP timeout durumunda alternatif
+    brevo_api_key: str = os.getenv('BREVO_API_KEY', '').strip()
+    brevo_base_url: str = os.getenv('BREVO_BASE_URL', 'https://api.brevo.com').strip().rstrip('/')
+
     @property
     def is_production(self) -> bool:
         return self.environment == 'production'
@@ -72,6 +76,10 @@ class Settings:
     @property
     def smtp_enabled(self) -> bool:
         return bool(self.smtp_host.strip())
+
+    @property
+    def brevo_enabled(self) -> bool:
+        return bool(self.brevo_api_key)
 
     @property
     def expose_reset_url_in_response(self) -> bool:
