@@ -9,10 +9,8 @@ services:
     dockerContext: ./backend
     plan: free
     healthCheckPath: /health
-    disk:
-      name: historial-uploads
-      mountPath: /app/uploads
-      sizeGB: 1
+    # Not: Render free tier persistent disk desteklemez. UPLOAD_DIR geçici (redeploy sonrası silinir).
+    # Kalıcı dosya için paid plan + disk veya S3/Brevo vb. kullanın.
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -30,7 +28,7 @@ services:
       - key: LLM_PROVIDER
         value: openrouter
       - key: OPENROUTER_MODEL
-        value: google/gemini-2.0-flash-001
+        value: google/gemma-4-31b-it:free
       - key: UPLOAD_DIR
         value: /app/uploads
       - key: ENVIRONMENT
