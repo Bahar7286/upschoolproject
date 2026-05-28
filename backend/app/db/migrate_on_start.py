@@ -51,9 +51,14 @@ async def ensure_migrations() -> int:
     print('Running alembic upgrade head…', flush=True)
     code = _run_alembic('upgrade', 'head')
     if code != 0 and has_cities:
-        print('Retry after stamp…', flush=True)
+        print(
+            'Upgrade failed (legacy schema). Stamping and retrying…',
+            flush=True,
+        )
         _run_alembic('stamp', LEGACY_STAMP_REVISION)
         code = _run_alembic('upgrade', 'head')
+    if code != 0:
+        print(f'alembic upgrade head failed with exit code {code}', flush=True)
     return code
 
 

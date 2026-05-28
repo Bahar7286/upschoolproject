@@ -34,6 +34,7 @@ from app.api.routers import (
 )
 
 from app.core.config import settings
+from app.middleware.rate_limit import RateLimitMiddleware
 from app.db.bootstrap import seed_initial_data
 from app.db.connection import Base, SessionLocal, engine
 from app import models  # noqa: F401
