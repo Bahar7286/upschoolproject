@@ -15,6 +15,8 @@ from app.api.routers import (
     auth_routes,
     city_routes,
     favorite_routes,
+    geo_routes,
+    google_routes,
     guide_routes,
     payment_routes,
     place_routes,
@@ -35,11 +37,18 @@ from app import models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    async with engine.begin() as connection:
-        await connection.run_sync(Base.metadata.create_all)
+    import logging
 
-    async with SessionLocal() as session:
-        await seed_initial_data(session)
+    log = logging.getLogger(__name__)
+    try:
+        async with engine.begin() as connection:
+            await connection.run_sync(Base.metadata.create_all)
+
+        async with SessionLocal() as session:
+            await seed_initial_data(session)
+    except Exception as exc:
+        # DB geç bağlansa bile API ayağa kalksın (Render port taraması)
+        log.exception('Startup DB bootstrap failed (API still listening): %s', exc)
 
     yield
 
@@ -64,6 +73,8 @@ OPENAPI_TAGS = [
     {'name': 'social', 'description': 'Rota yorumları (herkese açık) ve kişisel notlar (auth).'},
     {'name': 'places', 'description': 'Türkiye POI kataloğu — müze, saray, yemek, konaklama (harita).'},
     {'name': 'cities', 'description': 'Türkiye il/ilçe referans verisi (81 il, 973 ilçe).'},
+    {'name': 'geo', 'description': 'Şehir/ilçe harita merkezi koordinatları.'},
+    {'name': 'google', 'description': 'Google Places & Routes proxy (anahtar sunucuda).'},
     {'name': 'favorites', 'description': 'Favoriler (mekan/rota) — JWT gerekli.'},
     {'name': 'trip-requests', 'description': 'Turist gezi talebi; rehber teklifleri ve kabul.'},
     {'name': 'admin', 'description': 'Rehber doğrulama onay / red (admin).'},
@@ -135,6 +146,8 @@ app.include_router(
 app.include_router(plan_routes.router, prefix='/plans', tags=['plans'])
 app.include_router(place_routes.router, prefix='/places', tags=['places'])
 app.include_router(city_routes.router, prefix='/cities', tags=['cities'])
+app.include_router(geo_routes.router, prefix='/geo', tags=['geo'])
+app.include_router(google_routes.router, prefix='/google', tags=['google'])
 app.include_router(favorite_routes.router, prefix='/favorites', tags=['favorites'])
 app.include_router(trip_request_routes.router, prefix='/trip-requests', tags=['trip-requests'])
 app.include_router(admin_routes.router, prefix='/admin', tags=['admin'])

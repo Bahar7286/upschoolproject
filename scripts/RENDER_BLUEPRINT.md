@@ -30,11 +30,17 @@
 
 `DATABASE_URL` ve `JWT_SECRET_KEY` Blueprint ile gelir — değiştirmeyin.
 
+| `GOOGLE_PLACES_API_KEY` | Backend Google key |
+| `GOOGLE_ROUTES_API_KEY` | Aynı backend key olabilir |
+
+**Port hatası (`no open ports detected`):** Dockerfile `PORT` ortam değişkenini kullanır; bu düzeltme `docker-entrypoint.sh` ile gelir. Deploy öncesi `git push origin main` şart.
+
 ### historial-go-web → Environment
 
 | Key | Değer |
 |-----|--------|
-| `VITE_API_BASE_URL` | API URL (sondaki `/` yok) | https://historial-go-api.onrender.com
+| `VITE_API_BASE_URL` | API URL (sondaki `/` yok) |
+| `VITE_GOOGLE_MAPS_API_KEY` | Frontend Maps key |
 
 Kaydettikten sonra **Manual Deploy** (web servisi).
 
