@@ -13,8 +13,6 @@ import type { LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { NavLink } from 'react-router-dom';
 
-import { useI18n } from '../../lib/i18n';
-
 type NavItem = { to: string; label: string; icon: LucideIcon };
 
 function bottomClass(isActive: boolean): string {
@@ -72,8 +70,7 @@ export function MobileBottomNav({
   isAdmin: boolean;
   isGuide: boolean;
 }): ReactElement {
-  const touristNav = useTouristNav();
-  const items = isAdmin ? ADMIN_NAV : isGuide ? GUIDE_NAV : touristNav;
+  const items = isAdmin ? ADMIN_NAV : isGuide ? GUIDE_NAV : TOURIST_NAV;
 
   return (
     <nav
