@@ -35,6 +35,10 @@
 
 **Port hatası (`no open ports detected`):** Dockerfile `PORT` ortam değişkenini kullanır; bu düzeltme `docker-entrypoint.sh` ile gelir. Deploy öncesi `git push origin main` şart.
 
+**Alembic `No script_location key`:** Docker imajına `alembic.ini` + `alembic/` kopyalanmalı (`backend/Dockerfile`). Düzeltme push sonrası API’yi yeniden deploy edin.
+
+**`relation cities already exists`:** Render Postgres’te eski şema var, `alembic_version` yok. `app.db.migrate_on_start` otomatik stamp + upgrade yapar; bu kodu push edip redeploy edin.
+
 ### historial-go-web → Environment
 
 | Key | Değer |
