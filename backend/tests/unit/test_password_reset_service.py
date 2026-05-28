@@ -44,6 +44,19 @@ async def test_auth_u03_valid_token_updates_password(db_session: AsyncSession) -
 
 
 @pytest.mark.asyncio
+async def test_auth_u03b_reuse_same_password_rejected(db_session: AsyncSession) -> None:
+    repo = UserRepository(db_session)
+    service = PasswordResetService(repo)
+    user = await repo.get_by_email('tourist@example.com')
+    assert user and user.password_hash
+
+    _, token = await service.request_reset('tourist@example.com')
+    assert token
+    with pytest.raises(ValueError, match='aynı olamaz'):
+        await service.reset_password(token, 'demo123')
+
+
+@pytest.mark.asyncio
 async def test_auth_u04_expired_token_raises(db_session: AsyncSession) -> None:
     repo = UserRepository(db_session)
     service = PasswordResetService(repo)

@@ -1,7 +1,7 @@
 import secrets
 from datetime import datetime, timedelta, timezone
 
-from app.core.security import hash_password
+from app.core.security import hash_password, verify_password
 from app.repositories.user_repository import UserRepository
 
 
@@ -36,6 +36,10 @@ class PasswordResetService:
             raise ValueError('Geçersiz veya süresi dolmuş bağlantı') from exc
         if datetime.now(timezone.utc) > expires.astimezone(timezone.utc):
             raise ValueError('Bağlantının süresi doldu. Yeniden talep edin.')
+
+        # Aynı şifreyi tekrar kabul etmeyelim (güvenlik + UX).
+        if verify_password(new_password, user.password_hash):
+            raise ValueError('Yeni şifre eski şifrenizle aynı olamaz.')
 
         user.password_hash = hash_password(new_password)
         user.password_reset_token = None
