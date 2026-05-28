@@ -3,6 +3,7 @@ from app.models.guide_profile_model import GuideProfile
 from app.models.note_model import RouteNote
 from app.models.city_model import City
 from app.models.district_model import District
+from app.models.favorite_model import Favorite
 from app.models.place_model import Place
 from app.models.plan_model import RoutePlan
 from app.models.purchase_model import Purchase
@@ -23,6 +24,7 @@ __all__ = [
     'RouteReview',
     'City',
     'District',
+    'Favorite',
     'Place',
     'GuideProfile',
     'QuoteRequest',

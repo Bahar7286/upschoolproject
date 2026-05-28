@@ -32,6 +32,7 @@ import PlannerPage from '../pages/planner-page';
 import CitiesPage from '../pages/cities-page';
 import CityDetailPage from '../pages/city-detail-page';
 import DistrictPlacesPage from '../pages/district-places-page';
+import FavoritesPage from '../pages/favorites-page';
 
 export function AppRouter(): ReactElement {
   return (
@@ -50,6 +51,7 @@ export function AppRouter(): ReactElement {
         <Route path="/cities" element={<CitiesPage />} />
         <Route path="/cities/:cityId" element={<CityDetailPage />} />
         <Route path="/cities/:cityId/districts/:districtId" element={<DistrictPlacesPage />} />
+        <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/routes/:routeId" element={<RouteDetailPage />} />
         <Route path="/places/:placeId" element={<PlaceDetailPage />} />
         <Route path="/map" element={<MapPage />} />

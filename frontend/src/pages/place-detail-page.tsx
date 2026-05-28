@@ -1,4 +1,4 @@
-import { ArrowLeft, ExternalLink, Headphones, MapPin, Volume2 } from 'lucide-react';
+import { ArrowLeft, ExternalLink, Headphones, Heart, HeartOff, MapPin, Volume2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
@@ -7,7 +7,9 @@ import { getRichPlaceContent, googleMapsUrl } from '../data/place-rich-content';
 import { useSpeech } from '../hooks/use-speech';
 import { formatApiError } from '../lib/api';
 import { getPlace } from '../services/place-service';
+import { addFavorite, listFavorites, removeFavorite } from '../services/favorite-service';
 import { PLACE_CATEGORY_LABELS, type PlaceResponse } from '../types/place';
+import { useAuthStore } from '../stores/auth-store';
 
 export default function PlaceDetailPage(): ReactElement {
   const { placeId } = useParams();
@@ -15,6 +17,8 @@ export default function PlaceDetailPage(): ReactElement {
   const { speak, stop, speaking, supported } = useSpeech();
   const [place, setPlace] = useState<PlaceResponse | null>(null);
   const [error, setError] = useState('');
+  const accessToken = useAuthStore((s) => s.accessToken);
+  const [fav, setFav] = useState(false);
 
   useEffect(() => {
     if (!id || id <= 0) return;
@@ -23,6 +27,10 @@ export default function PlaceDetailPage(): ReactElement {
       try {
         const data = await getPlace(id);
         if (!cancelled) setPlace(data);
+        if (!cancelled && accessToken) {
+          const favs = await listFavorites(accessToken).catch(() => []);
+          setFav(favs.some((f) => f.entity_type === 'place' && f.entity_id === id));
+        }
       } catch (err) {
         if (!cancelled) setError(formatApiError(err));
       }
@@ -31,7 +39,7 @@ export default function PlaceDetailPage(): ReactElement {
       cancelled = true;
       stop();
     };
-  }, [id, stop]);
+  }, [id, stop, accessToken]);
 
   if (error) {
     return (
@@ -66,10 +74,35 @@ export default function PlaceDetailPage(): ReactElement {
         <h1 className="mt-2 font-display text-3xl font-extrabold text-heritage-ink dark:text-stone-50">
           {place.name}
         </h1>
-        <p className="mt-2 flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400">
-          <MapPin className="h-4 w-4" aria-hidden="true" />
-          {place.district}, {place.city}
-        </p>
+        <div className="mt-2 flex flex-wrap items-center justify-between gap-3">
+          <p className="flex items-center gap-2 text-sm text-stone-600 dark:text-stone-400">
+            <MapPin className="h-4 w-4" aria-hidden="true" />
+            {place.district}, {place.city}
+          </p>
+          {accessToken ? (
+            <button
+              type="button"
+              className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-xl border border-stone-900/10 bg-white px-4 text-sm font-bold text-stone-800 dark:border-white/10 dark:bg-zinc-900 dark:text-stone-100"
+              onClick={async () => {
+                try {
+                  if (!accessToken) return;
+                  if (fav) {
+                    await removeFavorite(accessToken, 'place', id);
+                    setFav(false);
+                  } else {
+                    await addFavorite(accessToken, 'place', id);
+                    setFav(true);
+                  }
+                } catch (err) {
+                  setError(formatApiError(err));
+                }
+              }}
+            >
+              {fav ? <HeartOff className="h-4 w-4" aria-hidden="true" /> : <Heart className="h-4 w-4" aria-hidden="true" />}
+              {fav ? 'Favoriden çıkar' : 'Favoriye ekle'}
+            </button>
+          ) : null}
+        </div>
         {place.tags.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {place.tags.map((t) => (
