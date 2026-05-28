@@ -1,0 +1,17 @@
+[
+  {"id":1757,"name":"Aladağ","slug":"aladag","provinceId":1},
+  {"id":1219,"name":"Ceyhan","slug":"ceyhan","provinceId":1},
+  {"id":2033,"name":"Çukurova","slug":"cukurova","provinceId":1},
+  {"id":1329,"name":"Feke","slug":"feke","provinceId":1},
+  {"id":1580,"name":"İmamoğlu","slug":"imamoglu","provinceId":1},
+  {"id":1104,"name":"Karaisalı","slug":"karaisali","provinceId":1},
+  {"id":1685,"name":"Karataş","slug":"karatas","provinceId":1},
+  {"id":1734,"name":"Kozan","slug":"kozan","provinceId":1},
+  {"id":1142,"name":"Pozantı","slug":"pozanti","provinceId":1},
+  {"id":2054,"name":"Saimbeyli","slug":"saimbeyli","provinceId":1},
+  {"id":1194,"name":"Sarıçam","slug":"saricam","provinceId":1},
+  {"id":1246,"name":"Seyhan","slug":"seyhan","provinceId":1},
+  {"id":1257,"name":"Tufanbeyli","slug":"tufanbeyli","provinceId":1},
+  {"id":1996,"name":"Yumurtalık","slug":"yumurtalik","provinceId":1},
+  {"id":1785,"name":"Yüreğir","slug":"yuregir","provinceId":1}
+]

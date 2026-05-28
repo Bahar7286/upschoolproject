@@ -5,7 +5,11 @@ from datetime import datetime, timezone
 
 from app.core.security import hash_password
 from app.data.istanbul_places import ISTANBUL_PLACES
+from app.data.tr_cities import TR_CITIES
+from app.data.tr_districts import TR_DISTRICTS
 from app.models.guide_profile_model import GuideProfile
+from app.models.city_model import City
+from app.models.district_model import District
 from app.models.place_model import Place
 from app.models.route_model import Route
 from app.models.review_model import RouteReview
@@ -267,4 +271,38 @@ async def seed_initial_data(session: AsyncSession) -> None:
             for item in ISTANBUL_PLACES
         ]
         session.add_all(places)
+        await session.commit()
+
+    existing_cities = await session.execute(select(City.city_id).limit(1))
+    if not existing_cities.first():
+        session.add_all(
+            [
+                City(
+                    city_id=item['id'],
+                    name_tr=item['name'],
+                    slug=item['slug'],
+                    plate_code=item['plate'],
+                    center_lat=item.get('lat', 0.0),
+                    center_lng=item.get('lng', 0.0),
+                )
+                for item in TR_CITIES
+            ]
+        )
+        await session.commit()
+
+    existing_districts = await session.execute(select(District.district_id).limit(1))
+    if not existing_districts.first():
+        session.add_all(
+            [
+                District(
+                    district_id=item['id'],
+                    city_id=item['provinceId'],
+                    name_tr=item['name'],
+                    slug=item['slug'],
+                    center_lat=0.0,
+                    center_lng=0.0,
+                )
+                for item in TR_DISTRICTS
+            ]
+        )
         await session.commit()

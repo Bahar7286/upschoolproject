@@ -10,6 +10,8 @@ from app.repositories.note_repository import NoteRepository
 from app.repositories.purchase_repository import PurchaseRepository
 from app.repositories.plan_repository import PlanRepository
 from app.repositories.place_repository import PlaceRepository
+from app.repositories.city_repository import CityRepository
+from app.repositories.district_repository import DistrictRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.repositories.review_repository import ReviewRepository
 from app.repositories.route_repository import RouteRepository
@@ -22,6 +24,8 @@ from app.services.guide_service import GuideService
 from app.services.note_service import NoteService
 from app.services.payment_service import PaymentService
 from app.services.place_service import PlaceService
+from app.services.city_service import CityService
+from app.services.district_service import DistrictService
 from app.services.plan_service import PlanService
 from app.services.quote_service import QuoteService
 from app.services.review_service import ReviewService
@@ -65,6 +69,14 @@ def get_place_repository(db: AsyncSession = Depends(get_db)) -> PlaceRepository:
     return PlaceRepository(db=db)
 
 
+def get_city_repository(db: AsyncSession = Depends(get_db)) -> CityRepository:
+    return CityRepository(db=db)
+
+
+def get_district_repository(db: AsyncSession = Depends(get_db)) -> DistrictRepository:
+    return DistrictRepository(db=db)
+
+
 def get_route_service(repo: RouteRepository = Depends(get_route_repository)) -> RouteService:
     return RouteService(repository=repo)
 
@@ -105,6 +117,14 @@ def get_review_service(
 
 def get_place_service(repo: PlaceRepository = Depends(get_place_repository)) -> PlaceService:
     return PlaceService(repository=repo)
+
+
+def get_city_service(repo: CityRepository = Depends(get_city_repository)) -> CityService:
+    return CityService(repository=repo)
+
+
+def get_district_service(repo: DistrictRepository = Depends(get_district_repository)) -> DistrictService:
+    return DistrictService(repository=repo)
 
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:

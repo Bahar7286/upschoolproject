@@ -13,6 +13,7 @@ from app.api.routers import (
     admin_routes,
     ai_routes,
     auth_routes,
+    city_routes,
     guide_routes,
     payment_routes,
     place_routes,
@@ -61,6 +62,7 @@ OPENAPI_TAGS = [
     {'name': 'plans', 'description': 'Takvim rota planları (auth gerekli).'},
     {'name': 'social', 'description': 'Rota yorumları (herkese açık) ve kişisel notlar (auth).'},
     {'name': 'places', 'description': 'Türkiye POI kataloğu — müze, saray, yemek, konaklama (harita).'},
+    {'name': 'cities', 'description': 'Türkiye il/ilçe referans verisi (81 il, 973 ilçe).'},
     {'name': 'trip-requests', 'description': 'Turist gezi talebi; rehber teklifleri ve kabul.'},
     {'name': 'admin', 'description': 'Rehber doğrulama onay / red (admin).'},
 ]
@@ -130,6 +132,7 @@ app.include_router(
 )
 app.include_router(plan_routes.router, prefix='/plans', tags=['plans'])
 app.include_router(place_routes.router, prefix='/places', tags=['places'])
+app.include_router(city_routes.router, prefix='/cities', tags=['cities'])
 app.include_router(trip_request_routes.router, prefix='/trip-requests', tags=['trip-requests'])
 app.include_router(admin_routes.router, prefix='/admin', tags=['admin'])
 

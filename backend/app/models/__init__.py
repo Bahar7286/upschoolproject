@@ -1,6 +1,8 @@
 from app.models.guide_offer_model import GuideOffer
 from app.models.guide_profile_model import GuideProfile
 from app.models.note_model import RouteNote
+from app.models.city_model import City
+from app.models.district_model import District
 from app.models.place_model import Place
 from app.models.plan_model import RoutePlan
 from app.models.purchase_model import Purchase
@@ -19,6 +21,8 @@ __all__ = [
     'RoutePlan',
     'RouteNote',
     'RouteReview',
+    'City',
+    'District',
     'Place',
     'GuideProfile',
     'QuoteRequest',
