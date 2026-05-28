@@ -109,6 +109,19 @@
 
 ---
 
+## Faz 8 — 81 il/ilçe keşif + Premium flag
+
+| Yapılan | Karar |
+|---------|--------|
+| `cities` / `districts` tabloları + seed | TurkiyeAPI dataset vendor (81 il, 973 ilçe) |
+| `GET /cities`, `GET /cities/{id}/districts` | Keşfet akışı için deterministik veri |
+| `POST /admin/poi/sync` | Overpass (OSM) tabanlı POI çekme (admin tetiklemeli) |
+| `favorites` tablosu + `/favorites` | Mekan favorileri (JWT) |
+| `users.is_premium` + `/admin/users/{id}/premium` | Ödeme yok; admin flag ile feature gating |
+| FE: `/cities` akışı + `/favorites` + `/premium` | Turist keşfi öne çıkarıldı; rehber sekmesi korunuyor |
+
+---
+
 ## Teslim hazırlığı (otomasyon)
 
 | Tarih | Yapılan |

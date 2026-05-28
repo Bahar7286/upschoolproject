@@ -33,6 +33,14 @@ Base: `http://127.0.0.1:8000` (geliştirme) — Swagger: `/docs`
 | POST | `/ai/recommend` | LLM/kural tabanlı öneri |
 | GET | `/ai/status` | `llm_enabled`, provider |
 | POST | `/ai/narration/preview` | Anlatım önizleme |
+| GET | `/cities` | 81 il |
+| GET | `/cities/{id}/districts` | İlçe listesi |
+| GET | `/places?city=&district=` | İl/ilçe bazlı mekanlar |
+| GET | `/favorites` | Favori listesi (JWT) |
+| POST | `/favorites` | Favoriye ekle (JWT) |
+| DELETE | `/favorites/{type}/{id}` | Favoriden çıkar (JWT) |
+| POST | `/admin/poi/sync` | OSM POI senkron (admin) |
+| PATCH | `/admin/users/{id}/premium` | Premium aç/kapat (admin) |
 
 ## Rehber & trip
 
