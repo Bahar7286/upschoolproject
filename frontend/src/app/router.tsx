@@ -34,6 +34,7 @@ import CityDetailPage from '../pages/city-detail-page';
 import DistrictPlacesPage from '../pages/district-places-page';
 import FavoritesPage from '../pages/favorites-page';
 import PremiumPage from '../pages/premium-page';
+import AssistantPage from '../pages/assistant-page';
 
 export function AppRouter(): ReactElement {
   return (
@@ -54,6 +55,7 @@ export function AppRouter(): ReactElement {
         <Route path="/cities/:cityId/districts/:districtId" element={<DistrictPlacesPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/premium" element={<PremiumPage />} />
+        <Route path="/assistant" element={<AssistantPage />} />
         <Route path="/routes/:routeId" element={<RouteDetailPage />} />
         <Route path="/places/:placeId" element={<PlaceDetailPage />} />
         <Route path="/map" element={<MapPage />} />

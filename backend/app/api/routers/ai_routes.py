@@ -5,6 +5,8 @@ from app.schemas.ai_schema import (
     AIRecommendationItem,
     AIRecommendationRequest,
     AIStatusResponse,
+    AssistantChatRequest,
+    AssistantChatResponse,
     GeofenceCheckRequest,
     GeofenceCheckResponse,
     NarrationAudioRequest,
@@ -55,3 +57,12 @@ async def narration_audio(
 ) -> NarrationAudioResponse:
     """edge-tts ile MP3 (base64); paket yoksa tarayıcı TTS fallback bayrağı."""
     return await service.narration_audio(payload)
+
+
+@router.post('/assistant/chat', response_model=AssistantChatResponse)
+async def assistant_chat(
+    payload: AssistantChatRequest,
+    service: AIService = Depends(get_ai_service),
+) -> AssistantChatResponse:
+    """Turist AI asistanı (chat)."""
+    return await service.chat_assistant(payload)

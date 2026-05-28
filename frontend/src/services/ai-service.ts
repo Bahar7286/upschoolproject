@@ -112,3 +112,27 @@ export async function checkGeofence(payload: GeofenceCheckPayload): Promise<Geof
     }),
   });
 }
+
+export interface AssistantMessage {
+  role: 'user' | 'assistant';
+  content: string;
+}
+
+export interface AssistantChatPayload {
+  city?: string;
+  district?: string;
+  interests?: string[];
+  messages: AssistantMessage[];
+}
+
+export interface AssistantChatResponse {
+  reply: string;
+  source: string;
+}
+
+export async function assistantChat(payload: AssistantChatPayload): Promise<AssistantChatResponse> {
+  return requestJson<AssistantChatResponse>('/ai/assistant/chat', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+}

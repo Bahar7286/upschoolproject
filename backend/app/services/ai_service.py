@@ -6,6 +6,8 @@ from app.schemas.ai_schema import (
     AIRecommendationItem,
     AIRecommendationRequest,
     AIStatusResponse,
+    AssistantChatRequest,
+    AssistantChatResponse,
     GeofenceCheckRequest,
     GeofenceCheckResponse,
     NarrationAudioRequest,
@@ -236,6 +238,41 @@ class AIService:
             except LLMServiceError as exc:
                 logger.warning('LLM narration failed: %s', exc)
         return self._rule_narration(payload)
+
+    async def chat_assistant(self, payload: AssistantChatRequest) -> AssistantChatResponse:
+        # Minimal assistant: only active when LLM is configured; otherwise short fallback.
+        if not settings.llm_enabled:
+            return AssistantChatResponse(
+                reply=(
+                    'AI asistanı için LLM anahtarı yapılandırılmamış. '
+                    'Şimdilik “Keşfet → İller” akışından şehir/ilçe seçip mekanları inceleyebilirsin.'
+                ),
+                source='rules',
+            )
+
+        last_user = ''
+        for msg in reversed(payload.messages):
+            if msg.role == 'user' and msg.content.strip():
+                last_user = msg.content.strip()
+                break
+        if not last_user:
+            last_user = 'Merhaba'
+
+        interests = ', '.join(payload.interests) if payload.interests else 'genel'
+        where = payload.city if not payload.district else f'{payload.district}, {payload.city}'
+
+        system = (
+            'Sen Historial-GO uygulamasının “Turist AI Asistanı”sın. '
+            'Kısa, net ve uygulanabilir öneriler ver. '
+            'Kullanıcıya 5-8 maddelik bir plan çıkar; gerekirse 2-3 soru sor. '
+            'Yanıt dili Türkçe.'
+        )
+        user = (
+            f'Konum: {where}. İlgi alanları: {interests}. '
+            f'Kullanıcının mesajı: {last_user}'
+        )
+        text = await llm_service.complete_text(system=system, user=user, temperature=0.6)
+        return AssistantChatResponse(reply=text.strip()[:2500], source='llm')
 
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']
