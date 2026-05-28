@@ -102,7 +102,7 @@
 
 | Konu | Durum |
 |------|--------|
-| Canlı deploy URL’leri | Render Blueprint sonrası `scripts/update-live-urls.ps1` ile doldurulacak |
+| Canlı deploy URL’leri | ✅ Frontend: https://historial-go-web.onrender.com · API: https://historial-go-api.onrender.com |
 | `OPENROUTER_API_KEY` (yerel) | `backend/.env` içine siz ekleyin → `llm_enabled: true` |
 | Alembic migration | PRD yol haritası; henüz yok |
 | AR avatar | v2 |

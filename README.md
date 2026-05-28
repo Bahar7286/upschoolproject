@@ -21,8 +21,8 @@ B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / g
 
 | Ortam | URL |
 |-------|-----|
-| Web (frontend) | _Deploy sonrası buraya yazın_ |
-| API (backend) | _Deploy sonrası buraya yazın_ |
+| Web (frontend) | https://historial-go-web.onrender.com |
+| API (backend) | https://historial-go-api.onrender.com |
 
 Deploy adımları: [`scripts/RENDER_BLUEPRINT.md`](scripts/RENDER_BLUEPRINT.md) · özet: [`DEPLOYMENT.md`](DEPLOYMENT.md)
 

@@ -39,7 +39,7 @@
 
 ### 4. Canlı deploy
 
-- [ ] **Sizin doldurmanız gereken:** Render Blueprint deploy + `scripts/update-live-urls.ps1` ile README/DEPLOYMENT URL
+- [x] Render deploy + README/DEPLOYMENT canlı URL (Web: https://historial-go-web.onrender.com · API: https://historial-go-api.onrender.com)
 - [x] `render.yaml` + `backend/Dockerfile` + `frontend/vercel.json` hazır
 - [x] Adım adım: [`scripts/RENDER_BLUEPRINT.md`](scripts/RENDER_BLUEPRINT.md)
 

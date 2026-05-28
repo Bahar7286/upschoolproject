@@ -70,7 +70,7 @@
 |----|-------------------|----------------|-------|
 | E7.1 | (Geliştirici) Regresyonu güvenle test etmek | pytest unit/integration, Vitest, coverage ≥90% servis | ✅ |
 | E7.2 | (Eğitmen) Repoyu standart yapıda incelemek | `frontend/`, `backend/`, `prodocs/`, zorunlu `.md` dosyaları | ✅ |
-| E7.3 | (Jüri) Canlı uygulamayı denemek | Render/Vercel deploy, README canlı URL | ⏳ Sizin deploy |
+| E7.3 | (Jüri) Canlı uygulamayı denemek | Render deploy, README canlı URL | ✅ |
 
 ---
 

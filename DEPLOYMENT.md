@@ -64,9 +64,9 @@ Health: `https://<api-host>/health`
 ## Canlı URL (doldurun)
 
 ```
-Frontend: https://___________________________
-Backend:  https://___________________________/docs
-AI durum: https://___________________________/ai/status
+Frontend: https://historial-go-web.onrender.com
+Backend:  https://historial-go-api.onrender.com/docs
+AI durum: https://historial-go-api.onrender.com/ai/status
 ```
 
 ## Yerel doğrulama
