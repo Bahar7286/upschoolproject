@@ -69,11 +69,11 @@ export default function MapPage(): ReactElement {
 
   const [showPlaces, setShowPlaces] = useState(true);
 
-  const { data: places = [] } = usePlacesQuery(categoryFilter);
-
-
-
   const [searchParams] = useSearchParams();
+  const city = searchParams.get('city') ?? 'Istanbul';
+  const district = searchParams.get('district');
+
+  const { data: places = [] } = usePlacesQuery(categoryFilter, city, district);
 
   const routeParam = Number(searchParams.get('route'));
 

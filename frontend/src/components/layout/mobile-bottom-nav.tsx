@@ -4,6 +4,7 @@ import {
   Headphones,
   LayoutDashboard,
   Map as MapIcon,
+  MapPin,
   ShoppingBag,
   UserRound,
   Users,
@@ -37,6 +38,7 @@ function NavItems({ items }: { items: NavItem[] }): ReactElement {
 
 const TOURIST_NAV: NavItem[] = [
   { to: '/discover', label: 'Keşfet', icon: Compass },
+  { to: '/cities', label: 'İller', icon: MapPin },
   { to: '/planner', label: 'Plan', icon: CalendarDays },
   { to: '/talepler', label: 'Talepler', icon: ShoppingBag },
   { to: '/audio', label: 'Ses', icon: Headphones },

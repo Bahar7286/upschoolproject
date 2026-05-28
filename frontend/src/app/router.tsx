@@ -29,6 +29,9 @@ import PrivacyPage from '../pages/privacy-page';
 import RouteDetailPage from '../pages/route-detail-page';
 import PlaceDetailPage from '../pages/place-detail-page';
 import PlannerPage from '../pages/planner-page';
+import CitiesPage from '../pages/cities-page';
+import CityDetailPage from '../pages/city-detail-page';
+import DistrictPlacesPage from '../pages/district-places-page';
 
 export function AppRouter(): ReactElement {
   return (
@@ -44,6 +47,9 @@ export function AppRouter(): ReactElement {
       <Route element={<AppLayout />}>
         <Route path="/home" element={<Navigate to="/discover" replace />} />
         <Route path="/discover" element={<DiscoverPage />} />
+        <Route path="/cities" element={<CitiesPage />} />
+        <Route path="/cities/:cityId" element={<CityDetailPage />} />
+        <Route path="/cities/:cityId/districts/:districtId" element={<DistrictPlacesPage />} />
         <Route path="/routes/:routeId" element={<RouteDetailPage />} />
         <Route path="/places/:placeId" element={<PlaceDetailPage />} />
         <Route path="/map" element={<MapPage />} />

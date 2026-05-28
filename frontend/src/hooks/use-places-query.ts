@@ -3,12 +3,13 @@ import { useQuery } from '@tanstack/react-query';
 import { listPlaceCategories, listPlaces } from '../services/place-service';
 import type { PlaceCategory } from '../types/place';
 
-export function usePlacesQuery(category?: PlaceCategory | null, city = 'Istanbul') {
+export function usePlacesQuery(category?: PlaceCategory | null, city = 'Istanbul', district?: string | null) {
   return useQuery({
-    queryKey: ['places', city, category ?? 'all'],
+    queryKey: ['places', city, district ?? 'all', category ?? 'all'],
     queryFn: () =>
       listPlaces({
         city,
+        district: district ?? undefined,
         category: category ?? undefined,
         limit: 200,
       }),
