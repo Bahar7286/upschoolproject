@@ -5,6 +5,13 @@ export function getApiBaseUrl(): string {
   if (typeof raw === 'string' && raw.trim().length > 0) {
     return raw.trim().replace(/\/$/, '');
   }
+  // Production fallback for Render deployments where env wasn't injected at build time.
+  if (typeof window !== 'undefined') {
+    const host = window.location.hostname;
+    if (host.endsWith('.onrender.com') && host.includes('historial-go-web')) {
+      return 'https://historial-go-api.onrender.com';
+    }
+  }
   return DEFAULT_BASE;
 }
 

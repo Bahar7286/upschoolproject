@@ -31,6 +31,7 @@ import PlaceDetailPage from '../pages/place-detail-page';
 import PlannerPage from '../pages/planner-page';
 import CitiesPage from '../pages/cities-page';
 import CityDetailPage from '../pages/city-detail-page';
+import CityPlacesPage from '../pages/city-places-page';
 import DistrictPlacesPage from '../pages/district-places-page';
 import FavoritesPage from '../pages/favorites-page';
 import PremiumPage from '../pages/premium-page';
@@ -52,6 +53,7 @@ export function AppRouter(): ReactElement {
         <Route path="/discover" element={<DiscoverPage />} />
         <Route path="/cities" element={<CitiesPage />} />
         <Route path="/cities/:cityId" element={<CityDetailPage />} />
+        <Route path="/cities/:cityId/places" element={<CityPlacesPage />} />
         <Route path="/cities/:cityId/districts/:districtId" element={<DistrictPlacesPage />} />
         <Route path="/favorites" element={<FavoritesPage />} />
         <Route path="/premium" element={<PremiumPage />} />

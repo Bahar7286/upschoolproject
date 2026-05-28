@@ -1,21 +1,19 @@
 import { useQuery } from '@tanstack/react-query';
-import { Heart, Map } from 'lucide-react';
+import { Map } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
-import { listCities, listDistrictsByCity } from '../services/city-service';
+import { listCities } from '../services/city-service';
 import { listPlaces } from '../services/place-service';
 import type { PlaceCategory, PlaceResponse } from '../types/place';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
 
-export default function DistrictPlacesPage(): ReactElement {
-  const { cityId, districtId } = useParams();
+export default function CityPlacesPage(): ReactElement {
+  const { cityId } = useParams();
   const city_id = Number(cityId);
-  const district_id = Number(districtId);
   const [searchParams] = useSearchParams();
   const category = (searchParams.get('category') as PlaceCategory | null) ?? null;
-
   const [q, setQ] = useState('');
 
   const { data: cities = [] } = useQuery({
@@ -25,44 +23,28 @@ export default function DistrictPlacesPage(): ReactElement {
   });
   const city = useMemo(() => cities.find((c) => c.city_id === city_id) ?? null, [cities, city_id]);
 
-  const { data: districts = [] } = useQuery({
-    queryKey: ['districts', city_id],
-    queryFn: () => listDistrictsByCity(city_id),
-    enabled: Number.isFinite(city_id) && city_id > 0,
-    staleTime: 60 * 60 * 1000,
-  });
-  const district = useMemo(
-    () => districts.find((d) => d.district_id === district_id) ?? null,
-    [districts, district_id],
-  );
-
   const { data: places = [], isPending, isError } = useQuery({
-    queryKey: ['district-places', city?.name_tr ?? '', district?.name_tr ?? '', category ?? 'all', q],
+    queryKey: ['city-places', city?.name_tr ?? '', category ?? 'all', q],
     queryFn: () =>
       listPlaces({
         city: city?.name_tr ?? undefined,
-        district: district?.name_tr ?? undefined,
         category: category ?? undefined,
         q: q.trim() ? q.trim() : undefined,
         limit: 200,
       }),
-    enabled: Boolean(city && district),
+    enabled: Boolean(city),
     staleTime: 2 * 60 * 1000,
   });
 
-  const title = `${district?.name_tr ?? 'İlçe'} · ${city?.name_tr ?? 'Şehir'}`;
-
-  const mapLink = city && district ? `/map?city=${encodeURIComponent(city.name_tr)}&district=${encodeURIComponent(district.name_tr)}` : '/map';
+  const mapLink = city ? `/map?city=${encodeURIComponent(city.name_tr)}` : '/map';
 
   return (
-    <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="district-title">
+    <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="cityp-title">
       <header className="space-y-2">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="district-title">
-          {title}
+        <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="cityp-title">
+          {city?.name_tr ?? 'Şehir'} {category ? `· ${PLACE_CATEGORY_LABELS[category]}` : ''}
         </h1>
-        <p className="text-sm text-theme-muted">
-          {category ? `${PLACE_CATEGORY_LABELS[category]} mekanları` : 'Tüm mekanlar'}
-        </p>
+        <p className="text-sm text-theme-muted">Şehir genelinde mekanlar</p>
       </header>
 
       <div className="flex flex-wrap gap-2">
@@ -72,13 +54,6 @@ export default function DistrictPlacesPage(): ReactElement {
         >
           <Map className="h-4 w-4" aria-hidden="true" />
           Haritada gör
-        </Link>
-        <Link
-          to="/favorites"
-          className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full border border-stone-900/10 bg-white px-4 text-sm font-semibold text-stone-800 dark:border-white/10 dark:bg-zinc-900 dark:text-stone-100"
-        >
-          <Heart className="h-4 w-4" aria-hidden="true" />
-          Favoriler
         </Link>
       </div>
 

@@ -6,6 +6,41 @@ from app.repositories.base import BaseRepository
 from app.utils.geolocation import calculate_distance_meters
 
 
+def _tr_ascii(value: str) -> str:
+    table = str.maketrans(
+        {
+            'İ': 'I',
+            'I': 'I',
+            'ı': 'i',
+            'Ş': 'S',
+            'ş': 's',
+            'Ğ': 'G',
+            'ğ': 'g',
+            'Ü': 'U',
+            'ü': 'u',
+            'Ö': 'O',
+            'ö': 'o',
+            'Ç': 'C',
+            'ç': 'c',
+        }
+    )
+    return value.translate(table)
+
+
+def _variants(value: str) -> set[str]:
+    raw = value.strip()
+    if not raw:
+        return set()
+    ascii_v = _tr_ascii(raw)
+    # Also handle common Istanbul casing mismatch
+    extra: set[str] = set()
+    if raw.lower() in {'i̇stanbul', 'istanbul', 'İstanbul'.lower()}:
+        extra.add('Istanbul')
+        extra.add('istanbul')
+        extra.add('İstanbul')
+    return {raw, ascii_v, raw.lower(), ascii_v.lower(), *extra}
+
+
 class PlaceRepository(BaseRepository):
     def __init__(self, db: AsyncSession) -> None:
         super().__init__(db)
@@ -25,9 +60,11 @@ class PlaceRepository(BaseRepository):
     ) -> list[Place]:
         stmt = select(Place).order_by(Place.name.asc())
         if city:
-            stmt = stmt.where(func.lower(Place.city) == city.lower())
+            opts = {v.lower() for v in _variants(city)}
+            stmt = stmt.where(func.lower(Place.city).in_(opts))
         if district:
-            stmt = stmt.where(func.lower(Place.district) == district.lower())
+            opts = {v.lower() for v in _variants(district)}
+            stmt = stmt.where(func.lower(Place.district).in_(opts))
         if category:
             stmt = stmt.where(Place.category == category)
         if query:
