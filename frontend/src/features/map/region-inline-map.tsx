@@ -1,0 +1,138 @@
+import type { ReactElement } from 'react';
+import { useMemo } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+
+import { formatApiError } from '../../lib/api';
+import { fetchGeoCenter, fetchGooglePlacesNearby } from '../../services/google-service';
+import type { PlaceCategory } from '../../types/place';
+import { GoogleExploreMap } from './google-explore-map';
+import { LeafletRegionMap } from './leaflet-region-map';
+
+export interface RegionInlineMapProps {
+  cityId: number;
+  districtId?: number;
+  cityName?: string;
+  districtName?: string;
+  category?: PlaceCategory | null;
+  /** district/city tablosundan merkez (geo API yedek) */
+  fallbackCenter?: { lat: number; lng: number };
+}
+
+export function RegionInlineMap({
+  cityId,
+  districtId,
+  cityName,
+  districtName,
+  category,
+  fallbackCenter,
+}: RegionInlineMapProps): ReactElement {
+  const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  const isDistrict = Boolean(districtId && districtId > 0);
+  const zoom = isDistrict ? 14 : 11;
+  const radius_m = isDistrict ? 6000 : 12000;
+
+  const { data: geoCenter, isLoading: geoLoading } = useQuery({
+    queryKey: ['geo-center', cityId, districtId ?? 0],
+    queryFn: () =>
+      fetchGeoCenter({
+        cityId: isDistrict ? undefined : cityId,
+        districtId: isDistrict ? districtId : undefined,
+      }),
+    enabled: cityId > 0,
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  const center = useMemo(() => {
+    if (geoCenter && geoCenter.lat && geoCenter.lng) {
+      return { lat: geoCenter.lat, lng: geoCenter.lng };
+    }
+    if (fallbackCenter && fallbackCenter.lat && fallbackCenter.lng) {
+      return fallbackCenter;
+    }
+    return { lat: 39.0, lng: 35.0 };
+  }, [geoCenter, fallbackCenter]);
+
+  const {
+    data: nearby,
+    isFetching: placesLoading,
+    error: placesError,
+  } = useQuery({
+    queryKey: ['google-nearby-inline', center.lat, center.lng, category, radius_m],
+    queryFn: () =>
+      fetchGooglePlacesNearby({
+        lat: center.lat,
+        lng: center.lng,
+        radius_m,
+        category: category ?? undefined,
+      }),
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  });
+
+  const mapLink = useMemo(() => {
+    const params = new URLSearchParams();
+    params.set('cityId', String(cityId));
+    if (cityName) params.set('city', cityName);
+    if (districtId) params.set('districtId', String(districtId));
+    if (districtName) params.set('district', districtName);
+    if (category) params.set('category', category);
+    return `/map?${params.toString()}`;
+  }, [cityId, cityName, districtId, districtName, category]);
+
+  const regionLabel =
+    geoCenter?.district_name && geoCenter?.city_name
+      ? `${geoCenter.district_name}, ${geoCenter.city_name}`
+      : districtName && cityName
+        ? `${districtName}, ${cityName}`
+        : cityName ?? 'Bölge';
+
+  return (
+    <div className="space-y-2" aria-label={`${regionLabel} haritası`}>
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <p className="text-sm font-semibold text-stone-600 dark:text-stone-400">
+          {geoLoading ? 'Harita yükleniyor…' : regionLabel}
+          {nearby?.places.length != null ? ` · ${nearby.places.length} canlı mekan` : ''}
+        </p>
+        <Link className="text-xs font-bold text-primary hover:underline" to={mapLink}>
+          Tam ekran harita →
+        </Link>
+      </div>
+
+      {placesError ? (
+        <p className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-950 dark:text-amber-100" role="alert">
+          {formatApiError(placesError)}
+          <span className="mt-1 block">Backend çalışıyor mu? GOOGLE_PLACES_API_KEY tanımlı mı?</span>
+        </p>
+      ) : null}
+
+      {placesLoading && !nearby ? (
+        <div className="h-[min(42vh,360px)] animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" aria-busy="true" />
+      ) : null}
+
+      {googleKey ? (
+        <GoogleExploreMap
+          routes={[]}
+          apiKey={googleKey}
+          center={center}
+          zoom={zoom}
+          googlePlaces={nearby?.places ?? []}
+          compact
+        />
+      ) : (
+        <LeafletRegionMap
+          center={center}
+          zoom={zoom}
+          places={nearby?.places ?? []}
+        />
+      )}
+
+      {!googleKey ? (
+        <p className="text-xs text-stone-500">
+          Google harita için <code className="text-xs">VITE_GOOGLE_MAPS_API_KEY</code> tanımlayın; şimdilik OSM
+          gösteriliyor.
+        </p>
+      ) : null}
+    </div>
+  );
+}

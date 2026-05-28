@@ -28,6 +28,7 @@ import TermsPage from '../pages/terms-page';
 import PrivacyPage from '../pages/privacy-page';
 import RouteDetailPage from '../pages/route-detail-page';
 import PlaceDetailPage from '../pages/place-detail-page';
+import GooglePlaceDetailPage from '../pages/google-place-detail-page';
 import PlannerPage from '../pages/planner-page';
 import CitiesPage from '../pages/cities-page';
 import CityDetailPage from '../pages/city-detail-page';
@@ -60,6 +61,7 @@ export function AppRouter(): ReactElement {
         <Route path="/assistant" element={<AssistantPage />} />
         <Route path="/routes/:routeId" element={<RouteDetailPage />} />
         <Route path="/places/:placeId" element={<PlaceDetailPage />} />
+        <Route path="/google-places/:placeId" element={<GooglePlaceDetailPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
         <Route path="/audio" element={<AudioGuidePage />} />

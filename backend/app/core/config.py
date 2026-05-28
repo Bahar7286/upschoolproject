@@ -76,6 +76,18 @@ class Settings:
         'HistorialGO/1.0 (contact: admin@historial-go.local)',
     ).strip()
 
+    # Google Maps / Places (New) / Routes — backend proxy only
+    google_places_api_key: str = os.getenv('GOOGLE_PLACES_API_KEY', '').strip()
+    google_routes_api_key: str = os.getenv('GOOGLE_ROUTES_API_KEY', '').strip()
+
+    @property
+    def google_places_enabled(self) -> bool:
+        return bool(self.google_places_api_key)
+
+    @property
+    def google_routes_enabled(self) -> bool:
+        return bool(self.google_routes_api_key or self.google_places_api_key)
+
     @property
     def is_production(self) -> bool:
         return self.environment == 'production'

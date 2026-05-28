@@ -22,3 +22,7 @@ class CityService:
         cities = await self.repository.list_all()
         return [self._to_response(c) for c in cities]
 
+    async def get_by_id(self, city_id: int) -> CityResponse | None:
+        city = await self.repository.get_by_id(city_id)
+        return self._to_response(city) if city else None
+

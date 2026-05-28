@@ -55,6 +55,7 @@ export interface NarrationAudioResponse {
   content_type: string;
   script: string;
   fallback_browser_tts: boolean;
+  sources?: { title: string; url: string }[];
 }
 
 export interface NarrationPreviewPayload {

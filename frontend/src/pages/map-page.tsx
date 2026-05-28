@@ -6,9 +6,13 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { useQuery } from '@tanstack/react-query';
 
-
+import { BackButton } from '../components/ui/back-button';
 import { ExploreMap } from '../features/map/explore-map';
+import { decodePolyline } from '../utils/polyline';
+import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
+import { listCities } from '../services/city-service';
 
 import { usePlacesQuery } from '../hooks/use-places-query';
 
@@ -69,9 +73,82 @@ export default function MapPage(): ReactElement {
 
   const [showPlaces, setShowPlaces] = useState(true);
 
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const city = searchParams.get('city') ?? 'Istanbul';
   const district = searchParams.get('district');
+  const cityIdParam = Number(searchParams.get('cityId'));
+  const districtIdParam = Number(searchParams.get('districtId'));
+  const categoryParam = (searchParams.get('category') as PlaceCategory | null) ?? null;
+  const polylineParam = searchParams.get('polyline');
+  const [placesRadius, setPlacesRadius] = useState(8000);
+  const [googlePlacesError, setGooglePlacesError] = useState('');
+
+  useEffect(() => {
+    if (categoryParam && ALL_CATEGORIES.includes(categoryParam)) {
+      setCategoryFilter(categoryParam);
+    }
+  }, [categoryParam]);
+
+  const { data: cities = [] } = useQuery({
+    queryKey: ['cities'],
+    queryFn: listCities,
+    staleTime: 60 * 60 * 1000,
+  });
+  const resolvedCityId = useMemo(() => {
+    if (Number.isFinite(cityIdParam) && cityIdParam > 0) return cityIdParam;
+    const found = cities.find(
+      (c) => c.name_tr.toLowerCase() === city.toLowerCase() || c.slug === city.toLowerCase(),
+    );
+    return found?.city_id;
+  }, [cities, city, cityIdParam]);
+
+  const { data: geoCenter } = useQuery({
+    queryKey: ['geo-center', resolvedCityId, districtIdParam],
+    queryFn: () =>
+      fetchGeoCenter({
+        cityId: districtIdParam > 0 ? undefined : resolvedCityId,
+        districtId: districtIdParam > 0 ? districtIdParam : undefined,
+      }),
+    enabled: Boolean((resolvedCityId && resolvedCityId > 0) || (districtIdParam > 0)),
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  const mapCenter = useMemo(() => {
+    if (geoCenter) return { lat: geoCenter.lat, lng: geoCenter.lng };
+    return { lat: 41.015137, lng: 28.97953 };
+  }, [geoCenter]);
+
+  const effectiveCategory = categoryFilter ?? categoryParam;
+
+  const { data: googleNearby, isFetching: googleLoading } = useQuery({
+    queryKey: ['google-nearby', mapCenter.lat, mapCenter.lng, effectiveCategory, placesRadius],
+    queryFn: () =>
+      fetchGooglePlacesNearby({
+        lat: mapCenter.lat,
+        lng: mapCenter.lng,
+        radius_m: placesRadius,
+        category: effectiveCategory,
+      }),
+    enabled: showPlaces,
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  });
+
+  useEffect(() => {
+    if (!googleNearby) return;
+    if (googleNearby.places.length === 0 && placesRadius < 15000) {
+      setPlacesRadius((r) => Math.min(r + 5000, 15000));
+    }
+  }, [googleNearby, placesRadius]);
+
+  const routePolyline = useMemo(() => {
+    if (!polylineParam) return null;
+    try {
+      return decodePolyline(polylineParam);
+    } catch {
+      return null;
+    }
+  }, [polylineParam]);
 
   const { data: places = [] } = usePlacesQuery(categoryFilter, city, district);
 
@@ -225,6 +302,8 @@ export default function MapPage(): ReactElement {
 
     <section className="space-y-6" aria-labelledby="map-title">
 
+      <BackButton label="Geri" className="mb-1" />
+
       <header className="space-y-2">
 
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink md:text-4xl dark:text-stone-50" id="map-title">
@@ -235,7 +314,10 @@ export default function MapPage(): ReactElement {
 
         <p className="max-w-prose text-sm leading-relaxed text-stone-600 md:text-base dark:text-stone-400">
 
-          İstanbul POI kataloğu: müzeler, saraylar, tarihi yapılar, yemek ve konaklama noktaları. Aktif rotada duraklar çizgi ile birleştirilir.
+          {geoCenter?.city_name
+            ? `${geoCenter.district_name ? `${geoCenter.district_name}, ` : ''}${geoCenter.city_name} — `
+            : ''}
+          Google Places ile canlı pinler. Kategori seçin; sonuç yoksa arama yarıçapı otomatik genişler.
 
         </p>
 
@@ -269,7 +351,14 @@ export default function MapPage(): ReactElement {
 
             type="button"
 
-            onClick={() => setCategoryFilter(categoryFilter === cat ? null : cat)}
+            onClick={() => {
+              const next = categoryFilter === cat ? null : cat;
+              setCategoryFilter(next);
+              const params = new URLSearchParams(searchParams);
+              if (next) params.set('category', next);
+              else params.delete('category');
+              setSearchParams(params, { replace: true });
+            }}
 
           >
 
@@ -312,6 +401,18 @@ export default function MapPage(): ReactElement {
       ) : null}
 
 
+
+      {googleLoading ? (
+        <p className="text-sm text-stone-500" role="status">
+          Canlı mekanlar yükleniyor…
+        </p>
+      ) : null}
+
+      {googlePlacesError ? (
+        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm" role="alert">
+          {googlePlacesError}
+        </div>
+      ) : null}
 
       {geoError ? (
 
@@ -365,6 +466,16 @@ export default function MapPage(): ReactElement {
           focusRouteId={focusRouteId ?? undefined}
 
           showPlaces={showPlaces}
+
+          mapCenter={mapCenter}
+
+          mapZoom={districtIdParam > 0 ? 14 : 12}
+
+          googlePlaces={googleNearby?.places ?? []}
+
+          routePolyline={routePolyline}
+
+          preferGoogle
 
         />
 

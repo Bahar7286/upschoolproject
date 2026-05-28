@@ -1,9 +1,10 @@
-import { ArrowLeft, ExternalLink, Headphones, Heart, HeartOff, MapPin, Volume2 } from 'lucide-react';
+import { Headphones, Heart, HeartOff, MapPin, Navigation, Volume2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
-import { getRichPlaceContent, googleMapsUrl } from '../data/place-rich-content';
+import { BackButton } from '../components/ui/back-button';
+import { getRichPlaceContent } from '../data/place-rich-content';
 import { useSpeech } from '../hooks/use-speech';
 import { formatApiError } from '../lib/api';
 import { getPlace } from '../services/place-service';
@@ -58,13 +59,7 @@ export default function PlaceDetailPage(): ReactElement {
 
   return (
     <article className="mx-auto max-w-2xl space-y-6">
-      <Link
-        className="inline-flex items-center gap-2 text-sm font-bold text-primary hover:underline"
-        to="/map"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-        Haritaya dön
-      </Link>
+      <BackButton to="/map" label="Haritaya dön" />
 
       <header className="rounded-[22px] border border-stone-900/10 bg-white/90 p-6 dark:border-white/10 dark:bg-zinc-900/95">
         <p className="text-xs font-bold uppercase tracking-wide text-stone-500">
@@ -149,15 +144,13 @@ export default function PlaceDetailPage(): ReactElement {
         </ul>
       </section>
 
-      <a
-        className="tap-scale flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl border-2 border-stone-300 font-bold hover:border-primary dark:border-zinc-600"
-        href={googleMapsUrl(place.latitude, place.longitude, place.name)}
-        rel="noopener noreferrer"
-        target="_blank"
+      <Link
+        className="tap-scale flex min-h-[52px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white"
+        to={`/map?destLat=${place.latitude}&destLng=${place.longitude}&city=${encodeURIComponent(place.city)}`}
       >
-        <ExternalLink className="h-4 w-4" aria-hidden="true" />
-        Google Haritalar’da aç
-      </a>
+        <Navigation className="h-4 w-4" aria-hidden="true" />
+        Haritada rota çiz
+      </Link>
     </article>
   );
 }

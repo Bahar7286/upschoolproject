@@ -4,6 +4,8 @@ import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { BackButton } from '../components/ui/back-button';
+
 import { listCities, listDistrictsByCity } from '../services/city-service';
 import type { PlaceCategory } from '../types/place';
 
@@ -42,6 +44,7 @@ export default function CityDetailPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="city-title">
+      <BackButton to="/cities" />
       <header className="space-y-2">
         <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-muted">
           {city ? `Plaka ${city.plate_code}` : 'Şehir'}
@@ -64,7 +67,7 @@ export default function CityDetailPage(): ReactElement {
           </Link>
         ))}
         <Link
-          to={`/map?city=${encodeURIComponent(city?.name_tr ?? 'Istanbul')}`}
+          to={`/map?cityId=${id}&city=${encodeURIComponent(city?.name_tr ?? 'Istanbul')}`}
           className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white"
         >
           <Map className="h-4 w-4" aria-hidden="true" />

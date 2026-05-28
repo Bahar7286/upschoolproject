@@ -54,10 +54,16 @@ class StopNarrationRequest(BaseModel):
     languages: list[str] = Field(default_factory=lambda: ['tr', 'en', 'de'], max_length=3)
 
 
+class NarrationSource(BaseModel):
+    title: str
+    url: str = ''
+
+
 class StopNarrationResponse(BaseModel):
     stop_title: str
     scripts: dict[str, str]
     note: str = ''
+    sources: list[NarrationSource] = Field(default_factory=list)
 
 
 class NarrationAudioRequest(BaseModel):
@@ -73,6 +79,7 @@ class NarrationAudioResponse(BaseModel):
     content_type: str = 'audio/mpeg'
     script: str
     fallback_browser_tts: bool = False
+    sources: list[NarrationSource] = Field(default_factory=list)
 
 
 class AssistantMessage(BaseModel):
@@ -87,6 +94,8 @@ class AssistantChatRequest(BaseModel):
     district: str = Field(default='', max_length=120)
     interests: list[str] = Field(default_factory=list, max_length=12)
     messages: list[AssistantMessage] = Field(default_factory=list, max_length=20)
+    location_lat: float | None = Field(default=None, ge=-90, le=90)
+    location_lng: float | None = Field(default=None, ge=-180, le=180)
 
 
 class AssistantChatResponse(BaseModel):

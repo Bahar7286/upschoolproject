@@ -35,6 +35,10 @@ services:
         value: /app/uploads
       - key: ENVIRONMENT
         value: production
+      - key: GOOGLE_PLACES_API_KEY
+        sync: false
+      - key: GOOGLE_ROUTES_API_KEY
+        sync: false
 
   - type: web
     name: historial-go-web
@@ -44,6 +48,8 @@ services:
     envVars:
       # API URL (ornek: https://historial-go-api.onrender.com) — sonra Manual Deploy
       - key: VITE_API_BASE_URL
+        sync: false
+      - key: VITE_GOOGLE_MAPS_API_KEY
         sync: false
 
 databases:

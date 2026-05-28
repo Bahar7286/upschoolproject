@@ -126,7 +126,13 @@ export function formatApiError(error: unknown): string {
       return 'Girdi doğrulanamadı. Alanları kontrol edin.';
     }
     if (error.status === 0 || error.message.toLowerCase().includes('failed to fetch')) {
-      return 'Sunucuya bağlanılamadı. API adresini kontrol edin (varsayılan: http://127.0.0.1:8000).';
+      if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+        return 'Sunucuya bağlanılamadı. Birkaç dakika sonra tekrar deneyin veya sayfayı yenileyin.';
+      }
+      return 'Sunucuya bağlanılamadı. API adresini kontrol edin.';
+    }
+    if (error.status === 503) {
+      return 'Bu özellik şu an kullanılamıyor. Yönetici Google API anahtarlarını yapılandırmalı.';
     }
 
     return error.message || `İstek başarısız (${error.status}).`;
@@ -134,7 +140,10 @@ export function formatApiError(error: unknown): string {
 
   if (error instanceof Error) {
     if (error.message.toLowerCase().includes('failed to fetch')) {
-      return 'Sunucuya bağlanılamadı. Backend çalışıyor mu? (http://127.0.0.1:8000/health) — PostgreSQL şema güncellemesi için backend’i yeniden başlatın.';
+      if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
+        return 'Sunucuya bağlanılamadı. Bağlantınızı kontrol edip tekrar deneyin.';
+      }
+      return 'Sunucuya bağlanılamadı. Backend çalışıyor mu?';
     }
     return error.message;
   }

@@ -4,6 +4,8 @@ import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
+import { BackButton } from '../components/ui/back-button';
+import { RegionInlineMap } from '../features/map/region-inline-map';
 import { listCities } from '../services/city-service';
 import { listPlaces } from '../services/place-service';
 import type { PlaceCategory, PlaceResponse } from '../types/place';
@@ -36,10 +38,9 @@ export default function CityPlacesPage(): ReactElement {
     staleTime: 2 * 60 * 1000,
   });
 
-  const mapLink = city ? `/map?city=${encodeURIComponent(city.name_tr)}` : '/map';
-
   return (
     <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="cityp-title">
+      <BackButton to={city ? `/cities/${city.city_id}` : '/cities'} />
       <header className="space-y-2">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="cityp-title">
           {city?.name_tr ?? 'Şehir'} {category ? `· ${PLACE_CATEGORY_LABELS[category]}` : ''}
@@ -47,15 +48,14 @@ export default function CityPlacesPage(): ReactElement {
         <p className="text-sm text-theme-muted">Şehir genelinde mekanlar</p>
       </header>
 
-      <div className="flex flex-wrap gap-2">
-        <Link
-          to={mapLink}
-          className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white"
-        >
-          <Map className="h-4 w-4" aria-hidden="true" />
-          Haritada gör
-        </Link>
-      </div>
+      {city ? (
+        <RegionInlineMap
+          cityId={city.city_id}
+          cityName={city.name_tr}
+          category={category}
+          fallbackCenter={{ lat: city.center_lat, lng: city.center_lng }}
+        />
+      ) : null}
 
       <div className="theme-card flex items-center gap-2 rounded-2xl p-3">
         <input

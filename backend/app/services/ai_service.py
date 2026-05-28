@@ -15,8 +15,11 @@ from app.schemas.ai_schema import (
     StopNarrationRequest,
     StopNarrationResponse,
 )
+from app.services.google_places_service import google_places_service
 from app.services.llm_service import LLMServiceError, llm_service
 from app.services.tts_service import synthesize_mp3_base64
+from app.services.wikipedia_service import fetch_wikipedia_summary
+from app.schemas.ai_schema import NarrationSource
 from app.services.route_service import RouteService
 from app.services.stop_service import StopService
 from app.utils.geolocation import calculate_distance_meters, is_user_near_location
@@ -232,20 +235,33 @@ class AIService:
         )
 
     async def preview_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
+        wiki_text, wiki_sources = await fetch_wikipedia_summary(payload.stop_title)
+        enriched = payload
+        if wiki_text:
+            desc = f'{payload.description}\n\nKaynak özeti: {wiki_text}'.strip()
+            enriched = StopNarrationRequest(
+                stop_title=payload.stop_title,
+                description=desc[:4000],
+                languages=payload.languages,
+            )
+        sources = [NarrationSource(title=s['title'], url=s.get('url', '')) for s in wiki_sources]
         if settings.llm_enabled:
             try:
-                return await self._llm_narration(payload)
+                result = await self._llm_narration(enriched)
+                result.sources = sources
+                return result
             except LLMServiceError as exc:
                 logger.warning('LLM narration failed: %s', exc)
-        return self._rule_narration(payload)
+        result = self._rule_narration(enriched)
+        result.sources = sources
+        return result
 
     async def chat_assistant(self, payload: AssistantChatRequest) -> AssistantChatResponse:
-        # Minimal assistant: only active when LLM is configured; otherwise short fallback.
         if not settings.llm_enabled:
             return AssistantChatResponse(
                 reply=(
-                    'AI asistanı için LLM anahtarı yapılandırılmamış. '
-                    'Şimdilik “Keşfet → İller” akışından şehir/ilçe seçip mekanları inceleyebilirsin.'
+                    'AI asistanı şu an yapılandırılmamış. '
+                    'Keşfet → İller üzerinden şehir seçip haritada canlı mekanları görebilirsin.'
                 ),
                 source='rules',
             )
@@ -261,14 +277,39 @@ class AIService:
         interests = ', '.join(payload.interests) if payload.interests else 'genel'
         where = payload.city if not payload.district else f'{payload.district}, {payload.city}'
 
+        places_hint = ''
+        if settings.google_places_enabled:
+            lat = payload.location_lat
+            lng = payload.location_lng
+            if lat is None or lng is None:
+                key = payload.city.strip().lower()
+                for name, coords in _CITY_POI.items():
+                    if name.lower() in key or key in name.lower():
+                        lat, lng = coords
+                        break
+                if lat is None:
+                    lat, lng = 41.0082, 28.9784
+            cat = _interest_to_category(payload.interests)
+            try:
+                nearby, _ = await google_places_service.search_nearby(
+                    lat=float(lat),
+                    lng=float(lng),
+                    radius_m=8000,
+                    category=cat,
+                )
+                if nearby:
+                    names = ', '.join(p.name for p in nearby[:12])
+                    places_hint = f' Yakındaki gerçek mekanlar (Google): {names}.'
+            except Exception as exc:
+                logger.debug('Assistant places lookup: %s', exc)
+
         system = (
             'Sen Historial-GO uygulamasının “Turist AI Asistanı”sın. '
-            'Kısa, net ve uygulanabilir öneriler ver. '
-            'Kullanıcıya 5-8 maddelik bir plan çıkar; gerekirse 2-3 soru sor. '
-            'Yanıt dili Türkçe.'
+            'Kısa, net ve uygulanabilir öneriler ver; mümkünse verilen gerçek mekan isimlerini kullan. '
+            'Kullanıcıya 5-8 maddelik bir plan çıkar. Yanıt dili Türkçe.'
         )
         user = (
-            f'Konum: {where}. İlgi alanları: {interests}. '
+            f'Konum: {where}. İlgi alanları: {interests}.{places_hint} '
             f'Kullanıcının mesajı: {last_user}'
         )
         text = await llm_service.complete_text(system=system, user=user, temperature=0.6)
@@ -277,13 +318,14 @@ class AIService:
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']
         system = (
-            'Sen tarihî sesli rehbersin. Kısa, sıcak, doğru anlatımlar yaz. '
-            'Yalnızca JSON: {"scripts":{"tr":"...","en":"...","de":"..."}} '
+            'Sen tarihî sesli rehbersin. Doğru, kaynaklı ve detaylı anlatımlar yaz; '
+            'uydurma tarih verme. Yalnızca JSON: {"scripts":{"tr":"...","en":"...","de":"..."}} '
             'İstenen diller için anahtarları doldur.'
         )
         user = (
-            f'Durak: {payload.stop_title}. Bağlam: {payload.description or "Genel tarihî bilgi"}. '
-            f'Diller: {langs}. Her dilde 2-4 cümle.'
+            f'Mekan: {payload.stop_title}. Bağlam ve kaynak özeti: '
+            f'{payload.description or "Genel tarihî bilgi"}. '
+            f'Diller: {langs}. Her dilde 4-6 cümle, tarihî önem vurgula.'
         )
         data = await llm_service.complete_json(system=system, user=user)
         scripts_raw = data.get('scripts', data) if isinstance(data, dict) else {}
@@ -335,4 +377,20 @@ class AIService:
             audio_base64=audio_b64,
             script=script,
             fallback_browser_tts=audio_b64 is None,
+            sources=preview.sources,
         )
+
+
+def _interest_to_category(interests: list[str]) -> str | None:
+    joined = ' '.join(interests).lower()
+    if any(w in joined for w in ('food', 'yemek', 'restaurant', 'cafe')):
+        return 'restaurant'
+    if any(w in joined for w in ('hotel', 'konak', 'lodging', 'stay')):
+        return 'accommodation'
+    if any(w in joined for w in ('museum', 'müze', 'art')):
+        return 'museum'
+    if any(w in joined for w in ('mosque', 'cami')):
+        return 'mosque'
+    if any(w in joined for w in ('palace', 'saray')):
+        return 'palace'
+    return 'historical'

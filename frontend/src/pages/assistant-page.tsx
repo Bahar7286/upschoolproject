@@ -3,6 +3,7 @@ import { Send } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 
+import { BackButton } from '../components/ui/back-button';
 import { assistantChat, type AssistantMessage } from '../services/ai-service';
 import { formatApiError } from '../lib/api';
 import { useAuthStore } from '../stores/auth-store';
@@ -55,6 +56,7 @@ export default function AssistantPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-3xl space-y-4" aria-labelledby="asst-title">
+      <BackButton to="/discover" />
       <header className="space-y-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="asst-title">
           AI Asistan

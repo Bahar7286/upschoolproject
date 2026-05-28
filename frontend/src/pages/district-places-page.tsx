@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { Heart, Map } from 'lucide-react';
+import { Heart } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
+import { BackButton } from '../components/ui/back-button';
+import { RegionInlineMap } from '../features/map/region-inline-map';
 import { listCities, listDistrictsByCity } from '../services/city-service';
 import { listPlaces } from '../services/place-service';
 import type { PlaceCategory, PlaceResponse } from '../types/place';
@@ -52,10 +54,9 @@ export default function DistrictPlacesPage(): ReactElement {
 
   const title = `${district?.name_tr ?? 'İlçe'} · ${city?.name_tr ?? 'Şehir'}`;
 
-  const mapLink = city && district ? `/map?city=${encodeURIComponent(city.name_tr)}&district=${encodeURIComponent(district.name_tr)}` : '/map';
-
   return (
     <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="district-title">
+      <BackButton to={city ? `/cities/${city.city_id}` : '/cities'} />
       <header className="space-y-2">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="district-title">
           {title}
@@ -67,13 +68,6 @@ export default function DistrictPlacesPage(): ReactElement {
 
       <div className="flex flex-wrap gap-2">
         <Link
-          to={mapLink}
-          className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white"
-        >
-          <Map className="h-4 w-4" aria-hidden="true" />
-          Haritada gör
-        </Link>
-        <Link
           to="/favorites"
           className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full border border-stone-900/10 bg-white px-4 text-sm font-semibold text-stone-800 dark:border-white/10 dark:bg-zinc-900 dark:text-stone-100"
         >
@@ -81,6 +75,17 @@ export default function DistrictPlacesPage(): ReactElement {
           Favoriler
         </Link>
       </div>
+
+      {city && district ? (
+        <RegionInlineMap
+          cityId={city.city_id}
+          districtId={district.district_id}
+          cityName={city.name_tr}
+          districtName={district.name_tr}
+          category={category}
+          fallbackCenter={{ lat: district.center_lat, lng: district.center_lng }}
+        />
+      ) : null}
 
       <div className="theme-card flex items-center gap-2 rounded-2xl p-3">
         <input

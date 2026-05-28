@@ -22,3 +22,7 @@ class DistrictService:
         districts = await self.repository.list_by_city_id(city_id)
         return [self._to_response(d) for d in districts]
 
+    async def get_by_id(self, district_id: int) -> DistrictResponse | None:
+        d = await self.repository.get_by_id(district_id)
+        return self._to_response(d) if d else None
+
