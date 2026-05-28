@@ -53,6 +53,8 @@ const TOURIST_NAV: NavItem[] = [
 
 const GUIDE_NAV: NavItem[] = [
   { to: '/guide', label: 'Panel', icon: LayoutDashboard },
+  { to: '/cities', label: 'İller', icon: MapPin },
+  { to: '/assistant', label: 'Asistan', icon: MessageCircle },
   { to: '/talepler', label: 'Talepler', icon: ShoppingBag },
   { to: '/guide/dogrulama', label: 'Doğrulama', icon: UserRound },
   { to: '/profile', label: 'Profil', icon: UserRound },
@@ -61,6 +63,9 @@ const GUIDE_NAV: NavItem[] = [
 const ADMIN_NAV: NavItem[] = [
   { to: '/admin', label: 'Admin', icon: LayoutDashboard },
   { to: '/discover', label: 'Keşfet', icon: Compass },
+  { to: '/cities', label: 'İller', icon: MapPin },
+  { to: '/assistant', label: 'Asistan', icon: MessageCircle },
+  { to: '/favorites', label: 'Favori', icon: Heart },
   { to: '/rehberler', label: 'Rehberler', icon: Users },
   { to: '/profile', label: 'Profil', icon: UserRound },
 ];
