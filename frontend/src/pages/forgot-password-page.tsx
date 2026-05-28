@@ -43,7 +43,7 @@ export default function ForgotPasswordPage(): ReactElement {
         <section className="theme-card rounded-[22px] p-6">
           <h1 className="font-display text-2xl font-extrabold text-theme">Şifremi unuttum</h1>
           <p className="mt-2 text-sm text-theme-muted">
-            Kayıtlı e-postanıza sıfırlama bağlantısı gönderilir (geliştirme ortamında bağlantı aşağıda görünür).
+            E-posta kayıtlıysa sıfırlama bağlantısı gönderilir. Birkaç dakika sürebilir; spam/önemsiz klasörünü kontrol edin.
           </p>
 
           <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>

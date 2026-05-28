@@ -10,6 +10,7 @@ logger = logging.getLogger(__name__)
 class EmailService:
     def send_password_reset(self, to_email: str, reset_url: str) -> bool:
         if not settings.smtp_enabled:
+            logger.warning('SMTP disabled: SMTP_HOST not set')
             return False
 
         message = EmailMessage()
@@ -35,7 +36,7 @@ class EmailService:
                         smtp.login(settings.smtp_user, settings.smtp_password)
                     smtp.send_message(message)
             return True
-        except OSError as exc:
+        except Exception as exc:
             logger.exception('SMTP send failed: %s', exc)
             return False
 

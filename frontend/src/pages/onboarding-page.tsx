@@ -4,10 +4,12 @@ import { ArrowLeft, ArrowRight, Landmark, Monitor, Moon, Sun } from 'lucide-reac
 import { useNavigate } from 'react-router-dom';
 
 import { formatApiError } from '../lib/api';
+import { THEME_META } from '../lib/theme-meta';
 import { updatePreferences } from '../services/profile-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 import type { ThemePreference } from '../stores/theme-store';
+import { THEME_LABELS } from '../stores/theme-store';
 import { useThemeStore } from '../stores/theme-store';
 
 const INTERESTS = [
@@ -33,12 +35,19 @@ const BUDGETS = [
   { value: 150, label: '₺100+' },
 ];
 
-const THEMES: { id: ThemePreference; label: string; desc: string; Icon: typeof Sun }[] = [
-  { id: 'light', label: 'Gündüz', desc: 'Açık, ferah, doğal', Icon: Sun },
-  { id: 'dark', label: 'Gece', desc: 'Koyu, gözleri korur', Icon: Moon },
-  { id: 'system', label: 'Sistem', desc: 'Cihaz tercihine uyar', Icon: Monitor },
-  { id: 'heritage', label: 'Miras', desc: 'Sıcak sepia · vintage doku', Icon: Landmark },
-];
+function iconForTheme(id: ThemePreference): typeof Sun {
+  if (id === 'light') return Sun;
+  if (id === 'dark') return Moon;
+  if (id === 'system') return Monitor;
+  return Landmark;
+}
+
+const THEMES: { id: ThemePreference; label: string; desc: string; Icon: typeof Sun }[] = THEME_META.map((t) => ({
+  id: t.id,
+  label: THEME_LABELS[t.id],
+  desc: `${t.tagline} · ${t.mood}`,
+  Icon: iconForTheme(t.id),
+}));
 
 export default function OnboardingPage(): ReactElement {
   const navigate = useNavigate();

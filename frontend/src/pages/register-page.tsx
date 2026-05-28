@@ -6,9 +6,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
 import { formatApiError } from '../lib/api';
+import { THEME_META } from '../lib/theme-meta';
 import { fetchCurrentUser, registerUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import type { ThemePreference } from '../stores/theme-store';
+import { THEME_LABELS, useThemeStore } from '../stores/theme-store';
 
 const ROLES = [
   {
@@ -30,6 +33,8 @@ type Role = 'tourist' | 'guide' | 'admin';
 export default function RegisterPage(): ReactElement {
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
+  const themePreference = useThemeStore((s) => s.preference);
+  const setThemePreference = useThemeStore((s) => s.setPreference);
 
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
@@ -183,6 +188,36 @@ export default function RegisterPage(): ReactElement {
                     )}
                   </label>
                 ))}
+              </div>
+            </fieldset>
+
+            <fieldset className="flex flex-col gap-3">
+              <legend className="text-sm font-semibold text-stone-800 dark:text-stone-200">
+                Görünüm
+                <span className="ml-1.5 text-xs font-normal text-stone-500 dark:text-stone-400">(sonra değiştirebilirsin)</span>
+              </legend>
+              <div className="grid grid-cols-2 gap-2">
+                {THEME_META.map((t) => {
+                  const id = t.id as ThemePreference;
+                  const active = themePreference === id;
+                  return (
+                    <button
+                      key={id}
+                      type="button"
+                      className={`tap-scale focus-ring rounded-xl border-2 px-3 py-2 text-left text-sm font-semibold transition ${
+                        active
+                          ? 'border-primary bg-primary/8 dark:bg-primary/10'
+                          : 'border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-950'
+                      }`}
+                      onClick={() => setThemePreference(id)}
+                    >
+                      <span className="block text-stone-900 dark:text-stone-50">{THEME_LABELS[id]}</span>
+                      <span className="mt-0.5 block text-[11px] font-normal leading-snug text-stone-500 dark:text-stone-400">
+                        {t.tagline}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </fieldset>
 

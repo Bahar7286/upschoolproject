@@ -1,3 +1,4 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -35,6 +36,7 @@ from app.services.password_reset_service import PasswordResetService
 from app.services.user_service import UserService
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 
 @router.post(
@@ -86,7 +88,9 @@ async def forgot_password(
     reset_url = None
     if token:
         reset_url = f'{settings.frontend_url}/sifre-sifirla?token={token}'
-        email_service.send_password_reset(payload.email, reset_url)
+        sent = email_service.send_password_reset(payload.email, reset_url)
+        if not sent:
+            logger.warning('Password reset email not sent (smtp_enabled=%s)', settings.smtp_enabled)
         if settings.expose_reset_url_in_response:
             pass
         else:
