@@ -18,6 +18,8 @@ class GooglePlaceSummary(BaseModel):
     user_rating_count: int | None = None
     types: list[str] = Field(default_factory=list)
     google_maps_uri: str = ''
+    photo_url: str = ''
+    category: str = ''
 
 
 class GooglePlacesNearbyResponse(BaseModel):
@@ -40,6 +42,13 @@ class GooglePlaceDetailResponse(BaseModel):
     opening_hours: str = ''
     types: list[str] = Field(default_factory=list)
     sources: list[dict[str, str]] = Field(default_factory=list)
+    photo_url: str = ''
+    category: str = ''
+
+
+class RouteWaypoint(BaseModel):
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
 
 
 class ComputeRouteRequest(BaseModel):
@@ -48,6 +57,7 @@ class ComputeRouteRequest(BaseModel):
     dest_lat: float = Field(ge=-90, le=90)
     dest_lng: float = Field(ge=-180, le=180)
     travel_mode: str = Field(default='WALK', pattern='^(WALK|DRIVE|BICYCLE|TRANSIT)$')
+    waypoints: list[RouteWaypoint] = Field(default_factory=list, max_length=8)
 
 
 class RouteStep(BaseModel):

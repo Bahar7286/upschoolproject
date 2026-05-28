@@ -49,7 +49,7 @@
 
 | Yapılan | Karar |
 |---------|--------|
-| `llm_service.py` (OpenRouter + Gemini) | Tek HTTP katmanı |
+| `llm_service.py` (OpenRouter + isteğe bağlı Gemini API) | Tek HTTP katmanı |
 | `ai_service` LLM + kural fallback | `source: llm \| rules` |
 | `GET /ai/status` | Jüri doğrulama |
 | FE Discover’da LLM durumu | `fetchAiStatus()` |

@@ -13,7 +13,7 @@ Bu klasör, Cursor / Copilot gibi ajanların projeyi hızlı anlaması için **t
 | İlerleme kaydı | [../Progress.md](../Progress.md) |
 | Mimari (FE / API / servis / repo) | [architecture.md](./architecture.md) |
 | REST uç noktaları özeti | [api-map.md](./api-map.md) |
-| LLM (OpenRouter / Gemini) | [llm.md](./llm.md) |
+| LLM (OpenRouter) | [llm.md](./llm.md) |
 | Test komutları | [testing.md](./testing.md) |
 | Deploy | [../DEPLOYMENT.md](../DEPLOYMENT.md) |
 | Teslim kontrol listesi | [../SUBMISSION_CHECKLIST.md](../SUBMISSION_CHECKLIST.md) |

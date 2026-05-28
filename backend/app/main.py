@@ -29,6 +29,7 @@ from app.api.routers import (
     route_routes,
     social_routes,
     stop_routes,
+    trip_extra_stop_routes,
     trip_request_routes,
     user_routes,
 )
@@ -70,7 +71,7 @@ OPENAPI_TAGS = [
     {'name': 'stops', 'description': 'Rota durakları; yol ` /routes/{route_id}/stops` (`stop_id` ile tek kayıt).'},
     {
         'name': 'ai',
-        'description': 'LLM (OpenRouter/Gemini) rota önerisi, sesli anlatım metni, geofence.',
+        'description': 'LLM (OpenRouter) rota önerisi, sesli anlatım metni, geofence.',
     },
     {'name': 'payments', 'description': 'Satın alma kayıtları (`purchase_id`, `user_id`, `route_id`).'},
     {'name': 'guides', 'description': 'Rehber CRUD, rota yönetimi, kazanç ve ödeme talebi.'},
@@ -158,6 +159,7 @@ app.include_router(user_routes.router, prefix='/users', tags=['users'])
 app.include_router(route_routes.router, prefix='/routes', tags=['routes'])
 app.include_router(social_routes.router, prefix='/routes', tags=['social'])
 app.include_router(stop_routes.router)
+app.include_router(trip_extra_stop_routes.router)
 app.include_router(ai_routes.router, prefix='/ai', tags=['ai'])
 app.include_router(payment_routes.router, prefix='/payments', tags=['payments'])
 app.include_router(guide_routes.router, prefix='/guides', tags=['guides'])

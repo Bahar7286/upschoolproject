@@ -5,6 +5,7 @@ import { AppLayout } from '../components/layout/app-layout';
 import { ProtectedRoute } from '../components/layout/protected-route';
 import AudioGuidePage from '../pages/audio-guide-page';
 import DiscoverPage from '../pages/discover-page';
+import GuideCreateRoutePage from '../pages/guide-create-route-page';
 import GuideDashboardPage from '../pages/guide-dashboard-page';
 import GuideVerificationPage from '../pages/guide-verification-page';
 import GuidePublicPage from '../pages/guide-public-page';
@@ -97,6 +98,7 @@ export function AppRouter(): ReactElement {
           <Route path="/odeme" element={<CheckoutPage />} />
           <Route path="/odeme/basarili" element={<CheckoutSuccessPage />} />
           <Route path="/guide" element={<GuideDashboardPage />} />
+          <Route path="/guide/rotalar/yeni" element={<GuideCreateRoutePage />} />
           <Route path="/guide/dogrulama" element={<GuideVerificationPage />} />
         </Route>
       </Route>

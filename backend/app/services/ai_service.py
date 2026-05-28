@@ -340,7 +340,7 @@ class AIService:
         return StopNarrationResponse(
             stop_title=payload.stop_title,
             scripts=scripts,
-            note='Anlatım OpenRouter/Gemini LLM ile üretildi.',
+            note='Anlatım OpenRouter LLM ile üretildi.',
         )
 
     @staticmethod

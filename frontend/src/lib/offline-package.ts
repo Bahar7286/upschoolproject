@@ -1,4 +1,5 @@
 import type { StopResponse } from '../types/stop';
+import type { TripExtraStop } from '../types/trip-extra-stop';
 
 export const OFFLINE_STORAGE_KEY = 'historial_go_offline_route';
 
@@ -7,6 +8,7 @@ export type OfflineRoutePackage = {
   routeTitle: string;
   city?: string;
   stops: StopResponse[];
+  extraStops?: TripExtraStop[];
   savedAt: string;
 };
 

@@ -132,7 +132,7 @@ export function GoogleExploreMap({
       </GoogleMap>
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 rounded-xl bg-white/90 px-3 py-2 text-xs text-stone-700 shadow-md backdrop-blur dark:bg-zinc-900/90 dark:text-stone-300">
         {googlePlaces.length
-          ? `${googlePlaces.length} canlı mekan (Google Places). Pin’e dokunun → detay ve rota.`
+          ? `${googlePlaces.length} canlı pin (Google; istek başına en fazla 20, tümü seçilince birleştirilmiş arama). Pin’e dokunun → detay ve rota.`
           : 'Bu bölgede sonuç yok; yarıçapı artırmayı deneyin veya kategori değiştirin.'}
         {onRequestRoute && routingPlaceId ? ' · Rota hesaplanıyor…' : ''}
       </div>

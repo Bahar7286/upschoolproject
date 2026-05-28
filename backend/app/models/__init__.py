@@ -13,6 +13,7 @@ from app.models.review_model import RouteReview
 from app.models.moderation_model import ContentReport, ModerationDecision
 from app.models.route_model import Route
 from app.models.stop_model import Stop
+from app.models.trip_extra_stop_model import TripExtraStop
 from app.models.user_model import User
 
 __all__ = [
@@ -20,6 +21,7 @@ __all__ = [
     'Route',
     'Purchase',
     'Stop',
+    'TripExtraStop',
     'RoutePlan',
     'RouteNote',
     'RouteReview',

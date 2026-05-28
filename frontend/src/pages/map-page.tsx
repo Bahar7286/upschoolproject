@@ -27,6 +27,8 @@ import { completeRoute } from '../services/profile-service';
 import { fetchCurrentUser } from '../services/auth-service';
 import { useOnboardingStore } from '../stores/onboarding-store';
 
+import { ActiveRoutePlanner } from '../features/active-route/active-route-planner';
+import { listTripExtraStops } from '../services/trip-extra-stop-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 
 import { useAuthStore } from '../stores/auth-store';
@@ -179,13 +181,12 @@ export default function MapPage(): ReactElement {
 
   const routeTitle = useActiveRouteStore((s) => s.routeTitle);
 
-  const stops = useActiveRouteStore((s) => s.stops);
+  const mergedStopsFn = useActiveRouteStore((s) => s.mergedStops);
+  const setExtraStops = useActiveRouteStore((s) => s.setExtraStops);
 
   const currentStopIndex = useActiveRouteStore((s) => s.currentStopIndex);
 
   const setCurrentStopIndex = useActiveRouteStore((s) => s.setCurrentStopIndex);
-
-
 
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
@@ -197,9 +198,20 @@ export default function MapPage(): ReactElement {
 
   const focusRouteId = activeParam && Number.isFinite(routeParam) ? routeParam : activeRouteId;
 
-  const activeStops = focusRouteId === activeRouteId ? stops : [];
+  const mergedStops = focusRouteId === activeRouteId ? mergedStopsFn() : [];
 
-  const currentStop = activeStops[currentStopIndex] ?? null;
+  const currentStop = mergedStops[currentStopIndex] ?? null;
+
+  useEffect(() => {
+    if (!accessToken || !activeRouteId) return;
+    let cancelled = false;
+    void listTripExtraStops(activeRouteId, accessToken).then((extras) => {
+      if (!cancelled) setExtraStops(extras);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken, activeRouteId, setExtraStops]);
 
   const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
   const { speak } = useSpeechSynthesis();
@@ -207,7 +219,7 @@ export default function MapPage(): ReactElement {
 
   const handleGeofenceTriggered = useCallback(
     async (stopIndex: number, message: string) => {
-      const stop = activeStops[stopIndex];
+      const stop = mergedStops[stopIndex];
       if (!stop) return;
       if (lastTriggeredStopRef.current === stop.stop_id) return;
       lastTriggeredStopRef.current = stop.stop_id;
@@ -228,12 +240,12 @@ export default function MapPage(): ReactElement {
         speak(stop.description || stop.title, langToSpeechCode(preferredLanguage));
       }
     },
-    [activeStops, preferredLanguage, setCurrentStopIndex, speak],
+    [mergedStops, preferredLanguage, setCurrentStopIndex, speak],
   );
 
   const { geofenceMessage, watching } = useGeofenceWatch(
     focusRouteId ?? undefined,
-    activeStops,
+    mergedStops,
     handleGeofenceTriggered,
   );
 
@@ -477,7 +489,7 @@ export default function MapPage(): ReactElement {
 
           userLocation={userLocation}
 
-          activeStops={activeStops}
+          activeStops={mergedStops}
 
           focusRouteId={focusRouteId ?? undefined}
 
@@ -517,7 +529,7 @@ export default function MapPage(): ReactElement {
 
         </button>
 
-        {focusRouteId && activeStops.length > 0 ? (
+        {focusRouteId && mergedStops.length > 0 ? (
 
           <>
 
@@ -527,9 +539,9 @@ export default function MapPage(): ReactElement {
 
               type="button"
 
-              disabled={currentStopIndex >= activeStops.length - 1}
+              disabled={currentStopIndex >= mergedStops.length - 1}
 
-              onClick={() => setCurrentStopIndex(Math.min(currentStopIndex + 1, activeStops.length - 1))}
+              onClick={() => setCurrentStopIndex(Math.min(currentStopIndex + 1, mergedStops.length - 1))}
 
             >
 
@@ -587,13 +599,23 @@ export default function MapPage(): ReactElement {
 
           {currentStop ? (
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-              Durak {currentStopIndex + 1}/{activeStops.length}: <strong>{currentStop.title}</strong>
+              Durak {currentStopIndex + 1}/{mergedStops.length}: <strong>{currentStop.title}</strong>
             </p>
           ) : null}
-          {focusRouteId && activeStops.length > 0 ? (
+          {focusRouteId && mergedStops.length > 0 ? (
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
               Geofence aktif (~20 m) — durağa yaklaşınca sesli anlatım tetiklenir.
             </p>
+          ) : null}
+
+          {focusRouteId && mergedStops.length > 0 ? (
+            <div className="mt-4 border-t border-stone-900/10 pt-4 dark:border-white/10">
+              <ActiveRoutePlanner
+                mergedStops={mergedStops}
+                currentStopIndex={currentStopIndex}
+                onSelectStop={setCurrentStopIndex}
+              />
+            </div>
           ) : null}
 
           <div className="mt-3 h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800">
@@ -602,7 +624,7 @@ export default function MapPage(): ReactElement {
 
               className="h-full rounded-full bg-primary transition-all"
 
-              style={{ width: activeStops.length ? `${((currentStopIndex + 1) / activeStops.length) * 100}%` : '0%' }}
+              style={{ width: mergedStops.length ? `${((currentStopIndex + 1) / mergedStops.length) * 100}%` : '0%' }}
 
             />
 

@@ -20,10 +20,10 @@ Frontend ve backend **ayrı origin**; backend yalnızca JSON API sunar (`/docs`,
 ```env
 LLM_PROVIDER=openrouter
 OPENROUTER_API_KEY=sk-or-v1-...
-OPENROUTER_MODEL=google/gemini-2.0-flash-001
+OPENROUTER_MODEL=google/gemma-4-31b-it:free
 ```
 
-Alternatif Gemini:
+Alternatif (doğrudan Google Gemini API, OpenRouter değil):
 
 ```env
 LLM_PROVIDER=gemini
@@ -71,18 +71,53 @@ AI durum: https://historial-go-api.onrender.com/ai/status
 
 ## Yerel doğrulama
 
+**1. Ortam (bir kez)**
+
 ```powershell
 .\scripts\setup-local-env.ps1
-# backend\.env -> OPENROUTER_API_KEY ekleyin (https://openrouter.ai/keys)
+# backend\.env -> DATABASE_URL, JWT_SECRET_KEY, OPENROUTER_API_KEY
+```
+
+**2. Backend (PowerShell — iki yol, ikisi de doğru)**
+
+`docker compose` **proje kökünden** çalıştırılır (`docker-compose.yml` kökte).
+
+**Yol A — venv + alembic (sizin kullandığınız):**
+
+```powershell
+cd "c:\Users\gulba\OneDrive\Masaüstü\upschoolproject"
+docker compose up -d
+cd backend
+.\.venv\Scripts\Activate.ps1
+python -m app.db.migrate_on_start
+# veya: alembic -c alembic.ini upgrade head
+uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
+
+**Yol B — uv (README ile aynı):**
+
+```powershell
+cd "c:\Users\gulba\OneDrive\Masaüstü\upschoolproject"
 docker compose up -d
 cd backend
 uv sync
-uv run uvicorn app.main:app --reload
+uv run python -m app.db.migrate_on_start
+uv run uvicorn app.main:app --reload --host 127.0.0.1 --port 8000
+```
 
+- API: http://127.0.0.1:8000/docs  
+- Sağlık: http://127.0.0.1:8000/health  
+
+**3. Frontend (ayrı terminal)**
+
+```powershell
 cd frontend
 npm install
 npm run dev
+```
 
-# Ayri terminal:
+**4. Kontrol**
+
+```powershell
 .\scripts\verify-local.ps1
 ```

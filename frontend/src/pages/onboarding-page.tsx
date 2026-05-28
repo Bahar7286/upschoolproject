@@ -6,10 +6,11 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { DiscoverLoading } from '../components/loading/discover-loading';
 import { ListSkeleton } from '../components/loading/page-skeleton';
-import { formatApiError } from '../lib/api';
+import { formatApiError, getApiBaseUrl } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { listCities } from '../services/city-service';
 import { updatePreferences } from '../services/profile-service';
-import { recommendRoutes } from '../services/route-service';
+import { listRoutes, recommendRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 import type { RouteResponse } from '../types/route';
@@ -48,9 +49,22 @@ function filterByCity(routes: RouteResponse[], city: string): RouteResponse[] {
   return matched.length > 0 ? matched : routes;
 }
 
+function scoreByInterests(routes: RouteResponse[], interestIds: string[]): RouteResponse[] {
+  if (interestIds.length === 0) return routes;
+  const scored = routes.map((r) => {
+    const overlap = r.tags.filter((t) => interestIds.includes(t)).length;
+    return { route: r, score: overlap };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  const withMatch = scored.filter((s) => s.score > 0).map((s) => s.route);
+  return withMatch.length > 0 ? withMatch : routes;
+}
+
 export default function OnboardingPage(): ReactElement {
   const navigate = useNavigate();
+  const { setLocale } = useI18n();
   const accessToken = useAuthStore((s) => s.accessToken);
+  const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
 
   const preferredCity = useOnboardingStore((s) => s.preferredCity);
@@ -70,6 +84,7 @@ export default function OnboardingPage(): ReactElement {
   const [recommended, setRecommended] = useState<RouteResponse[]>([]);
   const [loadingRoutes, setLoadingRoutes] = useState(false);
   const [slowFallback, setSlowFallback] = useState(false);
+  const [routeWarning, setRouteWarning] = useState('');
 
   const { data: cities = [] } = useQuery({
     queryKey: ['cities', 'onboarding'],
@@ -98,19 +113,32 @@ export default function OnboardingPage(): ReactElement {
   const loadRecommendations = async () => {
     setLoadingRoutes(true);
     setSlowFallback(false);
-    setError('');
+    setRouteWarning('');
     const timer = window.setTimeout(() => setSlowFallback(true), RECOMMEND_TIMEOUT_MS);
     try {
-      const routes = await recommendRoutes({
-        interests,
-        duration_minutes: durationMinutes,
-        budget,
-      });
-      const filtered = filterByCity(routes, preferredCity).slice(0, 3);
-      setRecommended(filtered);
-      setStep(6);
+      let routes: RouteResponse[] = [];
+      try {
+        routes = await recommendRoutes({
+          interests,
+          duration_minutes: durationMinutes,
+          budget,
+        });
+      } catch {
+        routes = await listRoutes();
+      }
+      const byCity = filterByCity(routes, preferredCity);
+      const ranked = scoreByInterests(byCity, interests);
+      setRecommended(ranked.slice(0, 3));
+      if (ranked.length === 0) {
+        setRouteWarning(
+          `${preferredCity} için henüz rota yok. Keşfet sayfasından diğer şehirlere bakabilirsin.`,
+        );
+      }
     } catch (err) {
-      setError(formatApiError(err));
+      setRouteWarning(
+        `${formatApiError(err)} Yine de "${preferredCity} Rotalarını Keşfet" ile devam edebilirsin.`,
+      );
+      setRecommended([]);
     } finally {
       window.clearTimeout(timer);
       setLoadingRoutes(false);
@@ -126,26 +154,36 @@ export default function OnboardingPage(): ReactElement {
   const completeOnboarding = async (goDiscover: boolean) => {
     setBusy(true);
     setError('');
-    try {
-      if (accessToken) {
+    const cityQuery = encodeURIComponent(preferredCity);
+    const target = goDiscover ? `/discover?city=${cityQuery}` : '/discover';
+
+    if (accessToken && user) {
+      try {
         const updated = await updatePreferences(accessToken, {
           interests,
           duration_minutes: durationMinutes,
           budget,
-          theme_preference: 'system',
+          theme_preference: user.theme_preference ?? 'system',
           preferred_language: preferredLanguage,
           preferred_city: preferredCity,
           onboarding_completed: true,
         });
         setUser(updated);
+      } catch {
+        setUser({
+          ...user,
+          interests,
+          duration_minutes: durationMinutes,
+          budget,
+          preferred_language: preferredLanguage,
+          preferred_city: preferredCity,
+          onboarding_completed: true,
+        });
       }
-      const cityQuery = encodeURIComponent(preferredCity);
-      navigate(goDiscover ? `/discover?city=${cityQuery}` : '/discover', { replace: true });
-    } catch (err) {
-      setError(formatApiError(err));
-    } finally {
-      setBusy(false);
     }
+
+    navigate(target, { replace: true });
+    setBusy(false);
   };
 
   const goNext = () => {
@@ -189,7 +227,7 @@ export default function OnboardingPage(): ReactElement {
         </div>
       </div>
 
-      {error ? (
+      {error && step < 6 ? (
         <p
           className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100"
           role="alert"
@@ -370,7 +408,10 @@ export default function OnboardingPage(): ReactElement {
                     : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
                 }`}
                 aria-pressed={preferredLanguage === lang.id}
-                onClick={() => setPreferredLanguage(lang.id)}
+                onClick={() => {
+                  setPreferredLanguage(lang.id);
+                  if (lang.id === 'tr' || lang.id === 'en') setLocale(lang.id);
+                }}
               >
                 {lang.label}
               </button>
@@ -402,9 +443,36 @@ export default function OnboardingPage(): ReactElement {
             </div>
           ) : (
             <>
+              {routeWarning ? (
+                <div
+                  className="space-y-2 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100"
+                  role="status"
+                >
+                  <p>{routeWarning}</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className="font-bold text-primary underline"
+                      onClick={() => void loadRecommendations()}
+                    >
+                      Tekrar dene
+                    </button>
+                    <button
+                      type="button"
+                      className="font-bold text-stone-700 underline dark:text-stone-300"
+                      onClick={() => setRouteWarning('')}
+                    >
+                      Kapat
+                    </button>
+                  </div>
+                  <p className="text-xs text-amber-900/80 dark:text-amber-200/80">API: {getApiBaseUrl()}</p>
+                </div>
+              ) : null}
               <header className="text-center">
                 <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-                  Sana en uygun 3 rota hazırlandı
+                  {recommended.length > 0
+                    ? `Sana en uygun ${recommended.length} rota hazırlandı`
+                    : 'Tercihlerin kaydedildi'}
                 </h1>
                 <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
                   {preferredCity} · {interests.length} ilgi alanı · {durationMinutes} dk
@@ -425,7 +493,7 @@ export default function OnboardingPage(): ReactElement {
                   </li>
                 ))}
               </ul>
-              {recommended.length === 0 ? (
+              {recommended.length === 0 && !routeWarning ? (
                 <p className="text-center text-sm text-stone-600 dark:text-stone-400">
                   Bu şehir için henüz özel eşleşme yok; keşifte tüm rotalara bakabilirsin.
                 </p>

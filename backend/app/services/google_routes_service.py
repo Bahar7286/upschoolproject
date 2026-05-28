@@ -34,11 +34,12 @@ class GoogleRoutesService:
         dest_lat: float,
         dest_lng: float,
         travel_mode: str = 'WALK',
+        waypoints: list[tuple[float, float]] | None = None,
     ) -> ComputeRouteResponse:
         if not google_routes_enabled:
             raise ValueError('Google Routes API anahtarı yapılandırılmamış')
 
-        body = {
+        body: dict = {
             'origin': {
                 'location': {'latLng': {'latitude': origin_lat, 'longitude': origin_lng}},
             },
@@ -49,6 +50,11 @@ class GoogleRoutesService:
             'languageCode': 'tr',
             'units': 'METRIC',
         }
+        if waypoints:
+            body['intermediates'] = [
+                {'location': {'latLng': {'latitude': lat, 'longitude': lng}}}
+                for lat, lng in waypoints[:8]
+            ]
         headers = {
             'Content-Type': 'application/json',
             'X-Goog-Api-Key': _routes_key(),

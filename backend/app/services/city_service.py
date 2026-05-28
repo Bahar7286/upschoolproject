@@ -16,6 +16,7 @@ class CityService:
             plate_code=city.plate_code,
             center_lat=city.center_lat,
             center_lng=city.center_lng,
+            image_url=city.image_url,
         )
 
     async def list_all(self) -> list[CityResponse]:

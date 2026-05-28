@@ -44,6 +44,7 @@ export default function DiscoverPage(): ReactElement {
   const effectiveBudget = budget || user?.budget || 150;
   const [premiumMsg, setPremiumMsg] = useState('');
   const [slowRecommend, setSlowRecommend] = useState(false);
+  const [dismissRecommendError, setDismissRecommendError] = useState(false);
 
   const effectiveCity =
     cityFilter || user?.preferred_city || preferredCity || 'İstanbul';
@@ -75,7 +76,7 @@ export default function DiscoverPage(): ReactElement {
             interests: effectiveInterests,
             duration_minutes: effectiveDuration,
             budget: effectiveBudget,
-          }),
+          }).catch(() => routes),
         ]);
         const byId = new Map(routes.map((r) => [r.route_id, r]));
         const scored: ScoredRoute[] = [];
@@ -138,12 +139,10 @@ export default function DiscoverPage(): ReactElement {
         <p className="text-sm leading-relaxed text-theme-muted md:text-base">
           AI motoru ilgi alanı, süre ve bütçene göre skorlar; en uygun rotalar üstte listelenir.
           {aiStatus?.llm_enabled ? (
-            <span className="mt-1 block text-xs font-semibold text-primary">
-              LLM aktif ({aiStatus.provider} · {aiStatus.model})
-            </span>
+            <span className="mt-1 block text-xs text-primary">AI önerileri aktif</span>
           ) : (
             <span className="mt-1 block text-xs text-theme-muted">
-              Yerel skor motoru (LLM anahtarı ekleyince OpenRouter/Gemini devreye girer)
+              Yerel skor motoru (sunucuda LLM anahtarı yok)
             </span>
           )}
         </p>
@@ -193,6 +192,7 @@ export default function DiscoverPage(): ReactElement {
               disabled={recommendMutation.isPending}
               onClick={() => {
                 setPremiumMsg('');
+                setDismissRecommendError(false);
                 if (!canUseAi()) {
                   setPremiumMsg('Ücretsiz planda günlük AI öneri limiti doldu. Premium ile sınırsız kullanabilirsin.');
                   return;
@@ -228,11 +228,24 @@ export default function DiscoverPage(): ReactElement {
         </p>
       ) : null}
 
-      {listError ? <ErrorAlert error={listError} /> : null}
-      {recommendError ? (
+      {listError && display.length === 0 ? <ErrorAlert error={listError} /> : null}
+      {recommendError && !dismissRecommendError && display.length === 0 && !recommendMutation.isPending ? (
         <ErrorAlert
-          error={recommendError}
-          onRetry={() => recommendMutation.mutate()}
+          error={{
+            ...recommendError,
+            message:
+              recommendError.kind === 'network'
+                ? 'Kişisel öneri şu an alınamadı; aşağıdaki rotaları inceleyebilirsin.'
+                : recommendError.message,
+            alternative: 'Asistan sekmesinden soru sorarak da plan yapabilirsin.',
+            actionLabel: 'Asistana git',
+            actionTo: '/assistant',
+          }}
+          onDismiss={() => setDismissRecommendError(true)}
+          onRetry={() => {
+            setDismissRecommendError(false);
+            recommendMutation.mutate();
+          }}
         />
       ) : null}
 

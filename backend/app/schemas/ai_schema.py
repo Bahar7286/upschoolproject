@@ -21,7 +21,7 @@ class AIRecommendationItem(BaseModel):
     fits_duration: bool = True
     source: str = Field(
         default='rules',
-        description='llm = OpenRouter/Gemini API; rules = yerel skor motoru',
+        description='llm = OpenRouter LLM API; rules = yerel skor motoru',
     )
 
 

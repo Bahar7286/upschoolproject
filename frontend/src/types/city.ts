@@ -5,6 +5,7 @@ export interface CityResponse {
   plate_code: string;
   center_lat: number;
   center_lng: number;
+  image_url?: string | null;
 }
 
 export interface DistrictResponse {
@@ -14,5 +15,6 @@ export interface DistrictResponse {
   slug: string;
   center_lat: number;
   center_lng: number;
+  image_url?: string | null;
 }
 

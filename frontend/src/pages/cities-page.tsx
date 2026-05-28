@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Search } from 'lucide-react';
+import { Search } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { CityGridCard } from '../components/explore/city-grid-card';
+import { ExploreHero } from '../components/explore/explore-hero';
 import { listCities } from '../services/city-service';
 
 export default function CitiesPage(): ReactElement {
@@ -21,51 +23,61 @@ export default function CitiesPage(): ReactElement {
   }, [cities, q]);
 
   return (
-    <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="cities-title">
-      <header className="space-y-2">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="cities-title">
-          81 İl
-        </h1>
-        <p className="text-sm text-theme-muted">İl seç → ilçeler ve mekanlar</p>
-      </header>
+    <section className="mx-auto max-w-3xl" aria-labelledby="cities-title">
+      <ExploreHero
+        title="Historial-GO"
+        subtitle="Türkiye'nin güzelliklerini keşfet"
+        backTo="/discover"
+        badge={
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
+              🏙️ {cities.length || 81} İl
+            </span>
+            <Link
+              to="/map"
+              className="inline-flex items-center gap-1 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm"
+            >
+              🧭 Harita
+            </Link>
+          </div>
+        }
+      >
+        <div className="flex items-center gap-2 rounded-2xl bg-white px-4 py-3 shadow-md">
+          <Search className="h-5 w-5 shrink-0 text-stone-400" aria-hidden="true" />
+          <input
+            className="w-full bg-transparent text-sm text-stone-800 outline-none placeholder:text-stone-400"
+            placeholder="İl ara…"
+            value={q}
+            onChange={(e) => setQ(e.target.value)}
+            aria-label="İl ara"
+          />
+        </div>
+      </ExploreHero>
 
-      <div className="theme-card flex items-center gap-2 rounded-2xl p-3">
-        <Search className="h-5 w-5 text-theme-muted" aria-hidden="true" />
-        <input
-          className="w-full bg-transparent text-sm outline-none"
-          placeholder="İl ara (örn. İstanbul, 34)"
-          value={q}
-          onChange={(e) => setQ(e.target.value)}
-        />
-      </div>
+      <h2 className="sr-only" id="cities-title">
+        İller
+      </h2>
 
       {isPending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
       {isError ? (
-        <p className="alert-error rounded-xl px-3 py-2 text-sm" role="alert">
+        <p className="alert-error mx-3 rounded-xl px-3 py-2 text-sm" role="alert">
           Şehir listesi yüklenemedi.
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3 px-0 sm:gap-4">
         {filtered.map((c) => (
-          <Link
+          <CityGridCard
             key={c.city_id}
+            cityId={c.city_id}
+            name={c.name_tr}
+            slug={c.slug}
+            plateCode={c.plate_code}
+            imageUrl={c.image_url}
             to={`/cities/${c.city_id}`}
-            className="theme-card tap-scale rounded-2xl p-4 hover:shadow-lift"
-          >
-            <div className="flex items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-muted">Plaka {c.plate_code}</p>
-                <p className="mt-1 truncate font-display text-lg font-extrabold text-theme">{c.name_tr}</p>
-              </div>
-              <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                <MapPin className="h-5 w-5" aria-hidden="true" />
-              </div>
-            </div>
-          </Link>
+          />
         ))}
       </div>
     </section>
   );
 }
-

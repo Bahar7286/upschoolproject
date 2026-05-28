@@ -41,6 +41,7 @@ export async function computeGoogleRoute(body: {
   dest_lat: number;
   dest_lng: number;
   travel_mode?: string;
+  waypoints?: { lat: number; lng: number }[];
 }): Promise<ComputeRouteResponse> {
   return requestJson<ComputeRouteResponse>('/google/routes', {
     method: 'POST',

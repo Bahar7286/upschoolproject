@@ -16,6 +16,7 @@ class DistrictService:
             slug=d.slug,
             center_lat=d.center_lat,
             center_lng=d.center_lng,
+            image_url=d.image_url,
         )
 
     async def list_by_city_id(self, city_id: int) -> list[DistrictResponse]:

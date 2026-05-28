@@ -16,7 +16,7 @@
 | Veritabanı | PostgreSQL (prod), SQLite (test) | Docker Compose yerel |
 | Auth | JWT (python-jose) | Bearer token |
 | Ödeme | Stripe API | Yoksa demo checkout |
-| LLM (ürün) | OpenRouter veya Google Gemini | `httpx` ile REST |
+| LLM (ürün) | OpenRouter (örn. Gemma) veya doğrudan Gemini API | `httpx` ile REST |
 | Harita | Leaflet + opsiyonel Google Maps | `VITE_GOOGLE_MAPS_API_KEY` |
 | Test BE | pytest, pytest-asyncio, coverage | `tests/unit`, `tests/integration` |
 | Test FE | Vitest | `src/**/*.test.ts` |
@@ -50,11 +50,11 @@
 - **Neden:** Tek web kod tabanından Android/iOS paketi; GPS ve native özellikler için köprü.
 - **Karar:** Akademik teslimde web + mobil klasör yapısı (`/frontend/android`, `/ios`).
 
-### 2.5 OpenRouter / Gemini (LLM)
+### 2.5 OpenRouter (LLM)
 
 - **Neden:** Kabul kriteri — yapay zeka **harici API** ile; statik kural listesi tek başına yeterli değil.
-- **OpenRouter:** Tek endpoint üzerinden model seçimi (ör. `google/gemini-2.0-flash-001`).
-- **Gemini:** Doğrudan Google `generateContent` alternatifi.
+- **OpenRouter:** Tek endpoint üzerinden model seçimi (varsayılan: `google/gemma-4-31b-it:free`).
+- **Gemini API:** `LLM_PROVIDER=gemini` ile doğrudan Google `generateContent` (OpenRouter’dan bağımsız).
 - **Fallback:** Anahtar yoksa `ai_service` kural motoru (`source: rules`).
 - **Karar:** Tüm HTTP çağrıları `llm_service.py` içinde; prompt/parse `ai_service.py`.
 
@@ -81,7 +81,7 @@
 | Dokümantasyon | `prodocs/`, PRD, Plan, Progress taslakları | Öğrenci tarafından doğrulama ve güncelleme |
 | Hata ayıklama | Terminal log analizi (uv PATH, boş sayfa = FE kapalı) | Manuel `npm run dev` + `uvicorn` |
 
-**İlke:** AI üretimi doğrudan commit edilmeden önce çalıştırılabilir test ve yerel smoke ile doğrulanır. Ürün içi LLM (OpenRouter/Gemini) geliştirme aracından **ayrıdır** — yalnızca runtime’da `backend/.env` anahtarları ile etkinleşir.
+**İlke:** AI üretimi doğrudan commit edilmeden önce çalıştırılabilir test ve yerel smoke ile doğrulanır. Ürün içi LLM (OpenRouter) geliştirme aracından **ayrıdır** — yalnızca runtime’da `backend/.env` anahtarları ile etkinleşir.
 
 ---
 

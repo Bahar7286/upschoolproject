@@ -1,4 +1,4 @@
-"""OpenRouter / Gemini üzerinden LLM çağrıları (httpx)."""
+"""OpenRouter (varsayılan) veya doğrudan Google Gemini API üzerinden LLM (httpx)."""
 
 from __future__ import annotations
 
@@ -27,7 +27,7 @@ def _extract_json(text: str) -> Any:
 
 
 class LLMService:
-    """Tek giriş noktası: OpenRouter (varsayılan) veya Google Gemini."""
+    """Tek giriş noktası: OpenRouter (varsayılan, örn. Gemma) veya LLM_PROVIDER=gemini."""
 
     def __init__(self) -> None:
         self.provider = settings.llm_provider

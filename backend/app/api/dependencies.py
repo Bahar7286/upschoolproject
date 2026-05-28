@@ -19,6 +19,7 @@ from app.repositories.content_report_repository import ContentReportRepository
 from app.repositories.route_repository import RouteRepository
 from app.repositories.trip_request_repository import TripRequestRepository
 from app.repositories.stop_repository import StopRepository
+from app.repositories.trip_extra_stop_repository import TripExtraStopRepository
 from app.repositories.user_repository import UserRepository
 from app.services.ai_service import AIService
 from app.services.guide_profile_service import GuideProfileService
@@ -37,6 +38,7 @@ from app.services.moderation_service import ModerationService
 from app.services.route_service import RouteService
 from app.services.trip_request_service import TripRequestService
 from app.services.stop_service import StopService
+from app.services.trip_extra_stop_service import TripExtraStopService
 from app.services.password_reset_service import PasswordResetService
 from app.services.route_access_service import RouteAccessService
 from app.services.user_service import UserService
@@ -48,6 +50,10 @@ def get_route_repository(db: AsyncSession = Depends(get_db)) -> RouteRepository:
 
 def get_stop_repository(db: AsyncSession = Depends(get_db)) -> StopRepository:
     return StopRepository(db=db)
+
+
+def get_trip_extra_stop_repository(db: AsyncSession = Depends(get_db)) -> TripExtraStopRepository:
+    return TripExtraStopRepository(db=db)
 
 
 def get_purchase_repository(db: AsyncSession = Depends(get_db)) -> PurchaseRepository:
@@ -162,6 +168,12 @@ def get_poi_sync_service(
     place_repo: PlaceRepository = Depends(get_place_repository),
 ) -> PoiSyncService:
     return PoiSyncService(city_repo=city_repo, district_repo=district_repo, place_repo=place_repo)
+
+
+def get_image_sync_service(db: AsyncSession = Depends(get_db)):
+    from app.services.image_sync_service import ImageSyncService
+
+    return ImageSyncService(db=db)
 
 
 def get_favorite_service(
@@ -296,6 +308,20 @@ def get_route_access_service(
         purchase_repository=purchase_repo,
         route_repository=route_repo,
         user_repository=user_repo,
+    )
+
+
+def get_trip_extra_stop_service(
+    extra_repo: TripExtraStopRepository = Depends(get_trip_extra_stop_repository),
+    route_repo: RouteRepository = Depends(get_route_repository),
+    stop_repo: StopRepository = Depends(get_stop_repository),
+    access: RouteAccessService = Depends(get_route_access_service),
+) -> TripExtraStopService:
+    return TripExtraStopService(
+        extra_repo=extra_repo,
+        route_repo=route_repo,
+        stop_repo=stop_repo,
+        access=access,
     )
 
 

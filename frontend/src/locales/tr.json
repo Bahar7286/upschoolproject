@@ -2,9 +2,41 @@
   "nav": {
     "discover": "Keşfet",
     "cities": "İller",
+    "guides": "Rehberler",
     "map": "Harita",
-    "profile": "Profil",
-    "assistant": "Asistan"
+    "plan": "Plan",
+    "trips": "Taleplerim",
+    "assistant": "Asistan",
+    "favorites": "Favori",
+    "audio": "Ses",
+    "preferences": "Gezi tercihleri",
+    "purchases": "Satın alımlar",
+    "profile": "Profil"
+  },
+  "profile": {
+    "preferences": "Tercihler",
+    "preferencesHint": "Dil ve bildirim tercihleri",
+    "lookTabHint": "Tema ve font için Görünüm sekmesine geçin.",
+    "lookTabLink": "Görünüm",
+    "weekly": "Haftalık",
+    "traveler": "Gezgin",
+    "tourist": "Turist",
+    "guide": "Rehber",
+    "tabs": {
+      "overview": "Özet",
+      "history": "Geçmiş",
+      "notes": "Notlarım",
+      "play": "Oyun",
+      "look": "Görünüm"
+    }
+  },
+  "city": {
+    "districts": "İlçeler",
+    "districtCount": "{count} İlçe",
+    "placesCount": "{count} Yer",
+    "noDistricts": "Bu il için ilçe listesi henüz yüklenemedi.",
+    "retry": "Yeniden dene",
+    "explore": "Keşfet"
   },
   "onboarding": {
     "cityTitle": "Hangi şehirde gezeceksin?",

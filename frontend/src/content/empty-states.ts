@@ -50,7 +50,7 @@ export const EMPTY_STATES = {
     title: 'Rehberin henüz rotası yok',
     description: 'İlk rotanı oluşturup incelemeye göndererek kazanmaya başla.',
     actionLabel: 'İlk rotanı oluştur',
-    actionTo: '/guide',
+    actionTo: '/guide/rotalar/yeni',
   },
   tripHistory: {
     icon: Map,

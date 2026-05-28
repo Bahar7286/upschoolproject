@@ -14,4 +14,5 @@ class District(Base):
     slug: Mapped[str] = mapped_column(String(120), nullable=False, index=True)
     center_lat: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
     center_lng: Mapped[float] = mapped_column(Float, nullable=False, default=0.0)
+    image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)
 

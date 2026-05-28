@@ -8,6 +8,8 @@ export interface GooglePlaceSummary {
   user_rating_count?: number | null;
   types: string[];
   google_maps_uri: string;
+  photo_url?: string;
+  category?: string;
 }
 
 export interface GooglePlacesNearbyResponse {
@@ -30,6 +32,8 @@ export interface GooglePlaceDetail {
   opening_hours: string;
   types: string[];
   sources: { title: string; url: string }[];
+  photo_url?: string;
+  category?: string;
 }
 
 export interface ComputeRouteResponse {

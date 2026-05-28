@@ -25,7 +25,7 @@
 
 ### 2. Yapay zeka (LLM) — API entegrasyonu
 
-- [x] `app/services/llm_service.py` — OpenRouter & Gemini HTTP API
+- [x] `app/services/llm_service.py` — OpenRouter & isteğe bağlı Gemini HTTP API
 - [x] `POST /ai/recommend` — LLM ile rota sıralama (`source: llm`)
 - [x] `POST /ai/narration/preview` — LLM ile çok dilli anlatım metni
 - [x] `GET /ai/status` — yapılandırma doğrulama

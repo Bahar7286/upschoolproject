@@ -78,13 +78,13 @@ export function MobileHeaderMenu({
         <>
           <button
             type="button"
-            className="fixed inset-0 z-40 bg-black/40"
+            className="fixed inset-0 z-[65] bg-black/40"
             aria-label="Menüyü kapat"
             onClick={() => setOpen(false)}
           />
           <nav
             id="mobile-nav-drawer"
-            className="fixed inset-y-0 right-0 z-50 flex w-[min(100vw-3rem,320px)] flex-col gap-1 overflow-y-auto border-l border-stone-900/10 bg-white p-4 pt-safe shadow-xl dark:border-white/10 dark:bg-zinc-950"
+            className="fixed inset-y-0 right-0 z-[70] flex w-[min(100vw-3rem,320px)] flex-col gap-1 overflow-y-auto border-l border-stone-900/10 bg-white p-4 pt-safe shadow-xl dark:border-white/10 dark:bg-zinc-950"
             aria-label="Mobil menü"
           >
             <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wide text-stone-500">Menü</p>

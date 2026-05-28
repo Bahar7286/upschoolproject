@@ -29,6 +29,7 @@ class PlaceService:
             description=place.description,
             tags=tags,
             is_partner=bool(place.is_partner),
+            image_url=place.image_url,
         )
 
     async def list_places(

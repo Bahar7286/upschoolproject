@@ -1,0 +1,5840 @@
+[
+  {
+    "id": 1757,
+    "name": "Aladağ",
+    "slug": "aladag",
+    "provinceId": 1
+  },
+  {
+    "id": 1219,
+    "name": "Ceyhan",
+    "slug": "ceyhan",
+    "provinceId": 1
+  },
+  {
+    "id": 2033,
+    "name": "Çukurova",
+    "slug": "cukurova",
+    "provinceId": 1
+  },
+  {
+    "id": 1329,
+    "name": "Feke",
+    "slug": "feke",
+    "provinceId": 1
+  },
+  {
+    "id": 1806,
+    "name": "İmamoğlu",
+    "slug": "imamoglu",
+    "provinceId": 1
+  },
+  {
+    "id": 1437,
+    "name": "Karaisalı",
+    "slug": "karaisali",
+    "provinceId": 1
+  },
+  {
+    "id": 1443,
+    "name": "Karataş",
+    "slug": "karatas",
+    "provinceId": 1
+  },
+  {
+    "id": 1486,
+    "name": "Kozan",
+    "slug": "kozan",
+    "provinceId": 1
+  },
+  {
+    "id": 1580,
+    "name": "Pozantı",
+    "slug": "pozanti",
+    "provinceId": 1
+  },
+  {
+    "id": 1588,
+    "name": "Saimbeyli",
+    "slug": "saimbeyli",
+    "provinceId": 1
+  },
+  {
+    "id": 2032,
+    "name": "Sarıçam",
+    "slug": "saricam",
+    "provinceId": 1
+  },
+  {
+    "id": 1104,
+    "name": "Seyhan",
+    "slug": "seyhan",
+    "provinceId": 1
+  },
+  {
+    "id": 1687,
+    "name": "Tufanbeyli",
+    "slug": "tufanbeyli",
+    "provinceId": 1
+  },
+  {
+    "id": 1734,
+    "name": "Yumurtalık",
+    "slug": "yumurtalik",
+    "provinceId": 1
+  },
+  {
+    "id": 1748,
+    "name": "Yüreğir",
+    "slug": "yuregir",
+    "provinceId": 1
+  },
+  {
+    "id": 1182,
+    "name": "Besni",
+    "slug": "besni",
+    "provinceId": 2
+  },
+  {
+    "id": 1246,
+    "name": "Çelikhan",
+    "slug": "celikhan",
+    "provinceId": 2
+  },
+  {
+    "id": 1347,
+    "name": "Gerger",
+    "slug": "gerger",
+    "provinceId": 2
+  },
+  {
+    "id": 1354,
+    "name": "Gölbaşı",
+    "slug": "golbasi",
+    "provinceId": 2
+  },
+  {
+    "id": 1425,
+    "name": "Kahta",
+    "slug": "kahta",
+    "provinceId": 2
+  },
+  {
+    "id": 1105,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 2
+  },
+  {
+    "id": 1592,
+    "name": "Samsat",
+    "slug": "samsat",
+    "provinceId": 2
+  },
+  {
+    "id": 1985,
+    "name": "Sincik",
+    "slug": "sincik",
+    "provinceId": 2
+  },
+  {
+    "id": 1989,
+    "name": "Tut",
+    "slug": "tut",
+    "provinceId": 2
+  },
+  {
+    "id": 1771,
+    "name": "Başmakçı",
+    "slug": "basmakci",
+    "provinceId": 3
+  },
+  {
+    "id": 1773,
+    "name": "Bayat",
+    "slug": "bayat",
+    "provinceId": 3
+  },
+  {
+    "id": 1200,
+    "name": "Bolvadin",
+    "slug": "bolvadin",
+    "provinceId": 3
+  },
+  {
+    "id": 1239,
+    "name": "Çay",
+    "slug": "cay",
+    "provinceId": 3
+  },
+  {
+    "id": 1906,
+    "name": "Çobanlar",
+    "slug": "cobanlar",
+    "provinceId": 3
+  },
+  {
+    "id": 1267,
+    "name": "Dazkırı",
+    "slug": "dazkiri",
+    "provinceId": 3
+  },
+  {
+    "id": 1281,
+    "name": "Dinar",
+    "slug": "dinar",
+    "provinceId": 3
+  },
+  {
+    "id": 1306,
+    "name": "Emirdağ",
+    "slug": "emirdag",
+    "provinceId": 3
+  },
+  {
+    "id": 1923,
+    "name": "Evciler",
+    "slug": "evciler",
+    "provinceId": 3
+  },
+  {
+    "id": 1944,
+    "name": "Hocalar",
+    "slug": "hocalar",
+    "provinceId": 3
+  },
+  {
+    "id": 1404,
+    "name": "İhsaniye",
+    "slug": "ihsaniye",
+    "provinceId": 3
+  },
+  {
+    "id": 1809,
+    "name": "İscehisar",
+    "slug": "iscehisar",
+    "provinceId": 3
+  },
+  {
+    "id": 1961,
+    "name": "Kızılören",
+    "slug": "kiziloren",
+    "provinceId": 3
+  },
+  {
+    "id": 1108,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 3
+  },
+  {
+    "id": 1594,
+    "name": "Sandıklı",
+    "slug": "sandikli",
+    "provinceId": 3
+  },
+  {
+    "id": 1626,
+    "name": "Sinanpaşa",
+    "slug": "sinanpasa",
+    "provinceId": 3
+  },
+  {
+    "id": 1664,
+    "name": "Şuhut",
+    "slug": "suhut",
+    "provinceId": 3
+  },
+  {
+    "id": 1639,
+    "name": "Sultandağı",
+    "slug": "sultandagi",
+    "provinceId": 3
+  },
+  {
+    "id": 1283,
+    "name": "Diyadin",
+    "slug": "diyadin",
+    "provinceId": 4
+  },
+  {
+    "id": 1287,
+    "name": "Doğubayazıt",
+    "slug": "dogubayazit",
+    "provinceId": 4
+  },
+  {
+    "id": 1301,
+    "name": "Eleşkirt",
+    "slug": "eleskirt",
+    "provinceId": 4
+  },
+  {
+    "id": 1379,
+    "name": "Hamur",
+    "slug": "hamur",
+    "provinceId": 4
+  },
+  {
+    "id": 1111,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 4
+  },
+  {
+    "id": 1568,
+    "name": "Patnos",
+    "slug": "patnos",
+    "provinceId": 4
+  },
+  {
+    "id": 1667,
+    "name": "Taşlıçay",
+    "slug": "taslicay",
+    "provinceId": 4
+  },
+  {
+    "id": 1691,
+    "name": "Tutak",
+    "slug": "tutak",
+    "provinceId": 4
+  },
+  {
+    "id": 1860,
+    "name": "Ağaçören",
+    "slug": "agacoren",
+    "provinceId": 68
+  },
+  {
+    "id": 1921,
+    "name": "Eskil",
+    "slug": "eskil",
+    "provinceId": 68
+  },
+  {
+    "id": 1932,
+    "name": "Gülağaç",
+    "slug": "gulagac",
+    "provinceId": 68
+  },
+  {
+    "id": 1861,
+    "name": "Güzelyurt",
+    "slug": "guzelyurt",
+    "provinceId": 68
+  },
+  {
+    "id": 1120,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 68
+  },
+  {
+    "id": 1557,
+    "name": "Ortaköy",
+    "slug": "ortakoy",
+    "provinceId": 68
+  },
+  {
+    "id": 1866,
+    "name": "Sarıyahşi",
+    "slug": "sariyahsi",
+    "provinceId": 68
+  },
+  {
+    "id": 2106,
+    "name": "Sultanhanı",
+    "slug": "sultanhani",
+    "provinceId": 68
+  },
+  {
+    "id": 1363,
+    "name": "Göynücek",
+    "slug": "goynucek",
+    "provinceId": 5
+  },
+  {
+    "id": 1368,
+    "name": "Gümüşhacıköy",
+    "slug": "gumushacikoy",
+    "provinceId": 5
+  },
+  {
+    "id": 1938,
+    "name": "Hamamözü",
+    "slug": "hamamozu",
+    "provinceId": 5
+  },
+  {
+    "id": 1134,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 5
+  },
+  {
+    "id": 1524,
+    "name": "Merzifon",
+    "slug": "merzifon",
+    "provinceId": 5
+  },
+  {
+    "id": 1641,
+    "name": "Suluova",
+    "slug": "suluova",
+    "provinceId": 5
+  },
+  {
+    "id": 1668,
+    "name": "Taşova",
+    "slug": "tasova",
+    "provinceId": 5
+  },
+  {
+    "id": 1872,
+    "name": "Akyurt",
+    "slug": "akyurt",
+    "provinceId": 6
+  },
+  {
+    "id": 1130,
+    "name": "Altındağ",
+    "slug": "altindag",
+    "provinceId": 6
+  },
+  {
+    "id": 1157,
+    "name": "Ayaş",
+    "slug": "ayas",
+    "provinceId": 6
+  },
+  {
+    "id": 1167,
+    "name": "Bala",
+    "slug": "bala",
+    "provinceId": 6
+  },
+  {
+    "id": 1187,
+    "name": "Beypazarı",
+    "slug": "beypazari",
+    "provinceId": 6
+  },
+  {
+    "id": 1227,
+    "name": "Çamlıdere",
+    "slug": "camlidere",
+    "provinceId": 6
+  },
+  {
+    "id": 1231,
+    "name": "Çankaya",
+    "slug": "cankaya",
+    "provinceId": 6
+  },
+  {
+    "id": 1260,
+    "name": "Çubuk",
+    "slug": "cubuk",
+    "provinceId": 6
+  },
+  {
+    "id": 1302,
+    "name": "Elmadağ",
+    "slug": "elmadag",
+    "provinceId": 6
+  },
+  {
+    "id": 1922,
+    "name": "Etimesgut",
+    "slug": "etimesgut",
+    "provinceId": 6
+  },
+  {
+    "id": 1924,
+    "name": "Evren",
+    "slug": "evren",
+    "provinceId": 6
+  },
+  {
+    "id": 1744,
+    "name": "Gölbaşı",
+    "slug": "golbasi",
+    "provinceId": 6
+  },
+  {
+    "id": 1365,
+    "name": "Güdül",
+    "slug": "gudul",
+    "provinceId": 6
+  },
+  {
+    "id": 1387,
+    "name": "Haymana",
+    "slug": "haymana",
+    "provinceId": 6
+  },
+  {
+    "id": 1815,
+    "name": "Kahramankazan",
+    "slug": "kahramankazan",
+    "provinceId": 6
+  },
+  {
+    "id": 1427,
+    "name": "Kalecik",
+    "slug": "kalecik",
+    "provinceId": 6
+  },
+  {
+    "id": 1745,
+    "name": "Keçiören",
+    "slug": "kecioren",
+    "provinceId": 6
+  },
+  {
+    "id": 1473,
+    "name": "Kızılcahamam",
+    "slug": "kizilcahamam",
+    "provinceId": 6
+  },
+  {
+    "id": 1746,
+    "name": "Mamak",
+    "slug": "mamak",
+    "provinceId": 6
+  },
+  {
+    "id": 1539,
+    "name": "Nallıhan",
+    "slug": "nallihan",
+    "provinceId": 6
+  },
+  {
+    "id": 1578,
+    "name": "Polatlı",
+    "slug": "polatli",
+    "provinceId": 6
+  },
+  {
+    "id": 2034,
+    "name": "Pursaklar",
+    "slug": "pursaklar",
+    "provinceId": 6
+  },
+  {
+    "id": 1658,
+    "name": "Şereflikoçhisar",
+    "slug": "sereflikochisar",
+    "provinceId": 6
+  },
+  {
+    "id": 1747,
+    "name": "Sincan",
+    "slug": "sincan",
+    "provinceId": 6
+  },
+  {
+    "id": 1723,
+    "name": "Yenimahalle",
+    "slug": "yenimahalle",
+    "provinceId": 6
+  },
+  {
+    "id": 1121,
+    "name": "Akseki",
+    "slug": "akseki",
+    "provinceId": 7
+  },
+  {
+    "id": 2035,
+    "name": "Aksu",
+    "slug": "aksu",
+    "provinceId": 7
+  },
+  {
+    "id": 1126,
+    "name": "Alanya",
+    "slug": "alanya",
+    "provinceId": 7
+  },
+  {
+    "id": 1811,
+    "name": "Demre",
+    "slug": "demre",
+    "provinceId": 7
+  },
+  {
+    "id": 2036,
+    "name": "Döşemealtı",
+    "slug": "dosemealti",
+    "provinceId": 7
+  },
+  {
+    "id": 1303,
+    "name": "Elmalı",
+    "slug": "elmali",
+    "provinceId": 7
+  },
+  {
+    "id": 1333,
+    "name": "Finike",
+    "slug": "finike",
+    "provinceId": 7
+  },
+  {
+    "id": 1337,
+    "name": "Gazipaşa",
+    "slug": "gazipasa",
+    "provinceId": 7
+  },
+  {
+    "id": 1370,
+    "name": "Gündoğmuş",
+    "slug": "gundogmus",
+    "provinceId": 7
+  },
+  {
+    "id": 1946,
+    "name": "İbradı",
+    "slug": "ibradi",
+    "provinceId": 7
+  },
+  {
+    "id": 1451,
+    "name": "Kaş",
+    "slug": "kas",
+    "provinceId": 7
+  },
+  {
+    "id": 1959,
+    "name": "Kemer",
+    "slug": "kemer",
+    "provinceId": 7
+  },
+  {
+    "id": 2037,
+    "name": "Kepez",
+    "slug": "kepez",
+    "provinceId": 7
+  },
+  {
+    "id": 2038,
+    "name": "Konyaaltı",
+    "slug": "konyaalti",
+    "provinceId": 7
+  },
+  {
+    "id": 1483,
+    "name": "Korkuteli",
+    "slug": "korkuteli",
+    "provinceId": 7
+  },
+  {
+    "id": 1492,
+    "name": "Kumluca",
+    "slug": "kumluca",
+    "provinceId": 7
+  },
+  {
+    "id": 1512,
+    "name": "Manavgat",
+    "slug": "manavgat",
+    "provinceId": 7
+  },
+  {
+    "id": 2039,
+    "name": "Muratpaşa",
+    "slug": "muratpasa",
+    "provinceId": 7
+  },
+  {
+    "id": 1616,
+    "name": "Serik",
+    "slug": "serik",
+    "provinceId": 7
+  },
+  {
+    "id": 1252,
+    "name": "Çıldır",
+    "slug": "cildir",
+    "provinceId": 75
+  },
+  {
+    "id": 2008,
+    "name": "Damal",
+    "slug": "damal",
+    "provinceId": 75
+  },
+  {
+    "id": 1356,
+    "name": "Göle",
+    "slug": "gole",
+    "provinceId": 75
+  },
+  {
+    "id": 1380,
+    "name": "Hanak",
+    "slug": "hanak",
+    "provinceId": 75
+  },
+  {
+    "id": 1144,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 75
+  },
+  {
+    "id": 1579,
+    "name": "Posof",
+    "slug": "posof",
+    "provinceId": 75
+  },
+  {
+    "id": 1145,
+    "name": "Ardanuç",
+    "slug": "ardanuc",
+    "provinceId": 8
+  },
+  {
+    "id": 1147,
+    "name": "Arhavi",
+    "slug": "arhavi",
+    "provinceId": 8
+  },
+  {
+    "id": 1202,
+    "name": "Borçka",
+    "slug": "borcka",
+    "provinceId": 8
+  },
+  {
+    "id": 1395,
+    "name": "Hopa",
+    "slug": "hopa",
+    "provinceId": 8
+  },
+  {
+    "id": 2105,
+    "name": "Kemalpaşa",
+    "slug": "kemalpasa",
+    "provinceId": 8
+  },
+  {
+    "id": 1152,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 8
+  },
+  {
+    "id": 1828,
+    "name": "Murgul",
+    "slug": "murgul",
+    "provinceId": 8
+  },
+  {
+    "id": 1653,
+    "name": "Şavşat",
+    "slug": "savsat",
+    "provinceId": 8
+  },
+  {
+    "id": 1736,
+    "name": "Yusufeli",
+    "slug": "yusufeli",
+    "provinceId": 8
+  },
+  {
+    "id": 1206,
+    "name": "Bozdoğan",
+    "slug": "bozdogan",
+    "provinceId": 9
+  },
+  {
+    "id": 1781,
+    "name": "Buharkent",
+    "slug": "buharkent",
+    "provinceId": 9
+  },
+  {
+    "id": 1256,
+    "name": "Çine",
+    "slug": "cine",
+    "provinceId": 9
+  },
+  {
+    "id": 2000,
+    "name": "Didim",
+    "slug": "didim",
+    "provinceId": 9
+  },
+  {
+    "id": 2076,
+    "name": "Efeler",
+    "slug": "efeler",
+    "provinceId": 9
+  },
+  {
+    "id": 1348,
+    "name": "Germencik",
+    "slug": "germencik",
+    "provinceId": 9
+  },
+  {
+    "id": 1807,
+    "name": "İncirliova",
+    "slug": "incirliova",
+    "provinceId": 9
+  },
+  {
+    "id": 1435,
+    "name": "Karacasu",
+    "slug": "karacasu",
+    "provinceId": 9
+  },
+  {
+    "id": 1957,
+    "name": "Karpuzlu",
+    "slug": "karpuzlu",
+    "provinceId": 9
+  },
+  {
+    "id": 1479,
+    "name": "Koçarlı",
+    "slug": "kocarli",
+    "provinceId": 9
+  },
+  {
+    "id": 1968,
+    "name": "Köşk",
+    "slug": "kosk",
+    "provinceId": 9
+  },
+  {
+    "id": 1497,
+    "name": "Kuşadası",
+    "slug": "kusadasi",
+    "provinceId": 9
+  },
+  {
+    "id": 1498,
+    "name": "Kuyucak",
+    "slug": "kuyucak",
+    "provinceId": 9
+  },
+  {
+    "id": 1542,
+    "name": "Nazilli",
+    "slug": "nazilli",
+    "provinceId": 9
+  },
+  {
+    "id": 1637,
+    "name": "Söke",
+    "slug": "soke",
+    "provinceId": 9
+  },
+  {
+    "id": 1640,
+    "name": "Sultanhisar",
+    "slug": "sultanhisar",
+    "provinceId": 9
+  },
+  {
+    "id": 1724,
+    "name": "Yenipazar",
+    "slug": "yenipazar",
+    "provinceId": 9
+  },
+  {
+    "id": 2077,
+    "name": "Altıeylül",
+    "slug": "altieylul",
+    "provinceId": 10
+  },
+  {
+    "id": 1161,
+    "name": "Ayvalık",
+    "slug": "ayvalik",
+    "provinceId": 10
+  },
+  {
+    "id": 1169,
+    "name": "Balya",
+    "slug": "balya",
+    "provinceId": 10
+  },
+  {
+    "id": 1171,
+    "name": "Bandırma",
+    "slug": "bandirma",
+    "provinceId": 10
+  },
+  {
+    "id": 1191,
+    "name": "Bigadiç",
+    "slug": "bigadic",
+    "provinceId": 10
+  },
+  {
+    "id": 1216,
+    "name": "Burhaniye",
+    "slug": "burhaniye",
+    "provinceId": 10
+  },
+  {
+    "id": 1291,
+    "name": "Dursunbey",
+    "slug": "dursunbey",
+    "provinceId": 10
+  },
+  {
+    "id": 1294,
+    "name": "Edremit",
+    "slug": "edremit",
+    "provinceId": 10
+  },
+  {
+    "id": 1310,
+    "name": "Erdek",
+    "slug": "erdek",
+    "provinceId": 10
+  },
+  {
+    "id": 1928,
+    "name": "Gömeç",
+    "slug": "gomec",
+    "provinceId": 10
+  },
+  {
+    "id": 1360,
+    "name": "Gönen",
+    "slug": "gonen",
+    "provinceId": 10
+  },
+  {
+    "id": 1384,
+    "name": "Havran",
+    "slug": "havran",
+    "provinceId": 10
+  },
+  {
+    "id": 1418,
+    "name": "İvrindi",
+    "slug": "ivrindi",
+    "provinceId": 10
+  },
+  {
+    "id": 2078,
+    "name": "Karesi",
+    "slug": "karesi",
+    "provinceId": 10
+  },
+  {
+    "id": 1462,
+    "name": "Kepsut",
+    "slug": "kepsut",
+    "provinceId": 10
+  },
+  {
+    "id": 1514,
+    "name": "Manyas",
+    "slug": "manyas",
+    "provinceId": 10
+  },
+  {
+    "id": 1824,
+    "name": "Marmara",
+    "slug": "marmara",
+    "provinceId": 10
+  },
+  {
+    "id": 1608,
+    "name": "Savaştepe",
+    "slug": "savastepe",
+    "provinceId": 10
+  },
+  {
+    "id": 1619,
+    "name": "Sındırgı",
+    "slug": "sindirgi",
+    "provinceId": 10
+  },
+  {
+    "id": 1644,
+    "name": "Susurluk",
+    "slug": "susurluk",
+    "provinceId": 10
+  },
+  {
+    "id": 1761,
+    "name": "Amasra",
+    "slug": "amasra",
+    "provinceId": 74
+  },
+  {
+    "id": 1496,
+    "name": "Kurucaşile",
+    "slug": "kurucasile",
+    "provinceId": 74
+  },
+  {
+    "id": 1172,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 74
+  },
+  {
+    "id": 1701,
+    "name": "Ulus",
+    "slug": "ulus",
+    "provinceId": 74
+  },
+  {
+    "id": 1184,
+    "name": "Beşiri",
+    "slug": "besiri",
+    "provinceId": 72
+  },
+  {
+    "id": 1345,
+    "name": "Gercüş",
+    "slug": "gercus",
+    "provinceId": 72
+  },
+  {
+    "id": 1941,
+    "name": "Hasankeyf",
+    "slug": "hasankeyf",
+    "provinceId": 72
+  },
+  {
+    "id": 1487,
+    "name": "Kozluk",
+    "slug": "kozluk",
+    "provinceId": 72
+  },
+  {
+    "id": 1174,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 72
+  },
+  {
+    "id": 1607,
+    "name": "Sason",
+    "slug": "sason",
+    "provinceId": 72
+  },
+  {
+    "id": 1767,
+    "name": "Aydıntepe",
+    "slug": "aydintepe",
+    "provinceId": 69
+  },
+  {
+    "id": 1788,
+    "name": "Demirözü",
+    "slug": "demirozu",
+    "provinceId": 69
+  },
+  {
+    "id": 1176,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 69
+  },
+  {
+    "id": 1210,
+    "name": "Bozüyük",
+    "slug": "bozuyuk",
+    "provinceId": 11
+  },
+  {
+    "id": 1359,
+    "name": "Gölpazarı",
+    "slug": "golpazari",
+    "provinceId": 11
+  },
+  {
+    "id": 1948,
+    "name": "İnhisar",
+    "slug": "inhisar",
+    "provinceId": 11
+  },
+  {
+    "id": 1192,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 11
+  },
+  {
+    "id": 1559,
+    "name": "Osmaneli",
+    "slug": "osmaneli",
+    "provinceId": 11
+  },
+  {
+    "id": 1571,
+    "name": "Pazaryeri",
+    "slug": "pazaryeri",
+    "provinceId": 11
+  },
+  {
+    "id": 1636,
+    "name": "Söğüt",
+    "slug": "sogut",
+    "provinceId": 11
+  },
+  {
+    "id": 1857,
+    "name": "Yenipazar",
+    "slug": "yenipazar",
+    "provinceId": 11
+  },
+  {
+    "id": 1750,
+    "name": "Adaklı",
+    "slug": "adakli",
+    "provinceId": 12
+  },
+  {
+    "id": 1344,
+    "name": "Genç",
+    "slug": "genc",
+    "provinceId": 12
+  },
+  {
+    "id": 1446,
+    "name": "Karlıova",
+    "slug": "karliova",
+    "provinceId": 12
+  },
+  {
+    "id": 1475,
+    "name": "Kiğı",
+    "slug": "kigi",
+    "provinceId": 12
+  },
+  {
+    "id": 1193,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 12
+  },
+  {
+    "id": 1633,
+    "name": "Solhan",
+    "slug": "solhan",
+    "provinceId": 12
+  },
+  {
+    "id": 1855,
+    "name": "Yayladere",
+    "slug": "yayladere",
+    "provinceId": 12
+  },
+  {
+    "id": 1996,
+    "name": "Yedisu",
+    "slug": "yedisu",
+    "provinceId": 12
+  },
+  {
+    "id": 1106,
+    "name": "Adilcevaz",
+    "slug": "adilcevaz",
+    "provinceId": 13
+  },
+  {
+    "id": 1112,
+    "name": "Ahlat",
+    "slug": "ahlat",
+    "provinceId": 13
+  },
+  {
+    "id": 1798,
+    "name": "Güroymak",
+    "slug": "guroymak",
+    "provinceId": 13
+  },
+  {
+    "id": 1394,
+    "name": "Hizan",
+    "slug": "hizan",
+    "provinceId": 13
+  },
+  {
+    "id": 1196,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 13
+  },
+  {
+    "id": 1537,
+    "name": "Mutki",
+    "slug": "mutki",
+    "provinceId": 13
+  },
+  {
+    "id": 1669,
+    "name": "Tatvan",
+    "slug": "tatvan",
+    "provinceId": 13
+  },
+  {
+    "id": 1916,
+    "name": "Dörtdivan",
+    "slug": "dortdivan",
+    "provinceId": 14
+  },
+  {
+    "id": 1346,
+    "name": "Gerede",
+    "slug": "gerede",
+    "provinceId": 14
+  },
+  {
+    "id": 1364,
+    "name": "Göynük",
+    "slug": "goynuk",
+    "provinceId": 14
+  },
+  {
+    "id": 1466,
+    "name": "Kıbrıscık",
+    "slug": "kibriscik",
+    "provinceId": 14
+  },
+  {
+    "id": 1522,
+    "name": "Mengen",
+    "slug": "mengen",
+    "provinceId": 14
+  },
+  {
+    "id": 1199,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 14
+  },
+  {
+    "id": 1531,
+    "name": "Mudurnu",
+    "slug": "mudurnu",
+    "provinceId": 14
+  },
+  {
+    "id": 1610,
+    "name": "Seben",
+    "slug": "seben",
+    "provinceId": 14
+  },
+  {
+    "id": 1997,
+    "name": "Yeniçağa",
+    "slug": "yenicaga",
+    "provinceId": 14
+  },
+  {
+    "id": 1109,
+    "name": "Ağlasun",
+    "slug": "aglasun",
+    "provinceId": 15
+  },
+  {
+    "id": 1874,
+    "name": "Altınyayla",
+    "slug": "altinyayla",
+    "provinceId": 15
+  },
+  {
+    "id": 1211,
+    "name": "Bucak",
+    "slug": "bucak",
+    "provinceId": 15
+  },
+  {
+    "id": 1899,
+    "name": "Çavdır",
+    "slug": "cavdir",
+    "provinceId": 15
+  },
+  {
+    "id": 1903,
+    "name": "Çeltikçi",
+    "slug": "celtikci",
+    "provinceId": 15
+  },
+  {
+    "id": 1357,
+    "name": "Gölhisar",
+    "slug": "golhisar",
+    "provinceId": 15
+  },
+  {
+    "id": 1813,
+    "name": "Karamanlı",
+    "slug": "karamanli",
+    "provinceId": 15
+  },
+  {
+    "id": 1816,
+    "name": "Kemer",
+    "slug": "kemer",
+    "provinceId": 15
+  },
+  {
+    "id": 1215,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 15
+  },
+  {
+    "id": 1672,
+    "name": "Tefenni",
+    "slug": "tefenni",
+    "provinceId": 15
+  },
+  {
+    "id": 1728,
+    "name": "Yeşilova",
+    "slug": "yesilova",
+    "provinceId": 15
+  },
+  {
+    "id": 1783,
+    "name": "Büyükorhan",
+    "slug": "buyukorhan",
+    "provinceId": 16
+  },
+  {
+    "id": 1343,
+    "name": "Gemlik",
+    "slug": "gemlik",
+    "provinceId": 16
+  },
+  {
+    "id": 1935,
+    "name": "Gürsu",
+    "slug": "gursu",
+    "provinceId": 16
+  },
+  {
+    "id": 1799,
+    "name": "Harmancık",
+    "slug": "harmancik",
+    "provinceId": 16
+  },
+  {
+    "id": 1411,
+    "name": "İnegöl",
+    "slug": "inegol",
+    "provinceId": 16
+  },
+  {
+    "id": 1420,
+    "name": "İznik",
+    "slug": "iznik",
+    "provinceId": 16
+  },
+  {
+    "id": 1434,
+    "name": "Karacabey",
+    "slug": "karacabey",
+    "provinceId": 16
+  },
+  {
+    "id": 1457,
+    "name": "Keles",
+    "slug": "keles",
+    "provinceId": 16
+  },
+  {
+    "id": 1960,
+    "name": "Kestel",
+    "slug": "kestel",
+    "provinceId": 16
+  },
+  {
+    "id": 1530,
+    "name": "Mudanya",
+    "slug": "mudanya",
+    "provinceId": 16
+  },
+  {
+    "id": 1535,
+    "name": "Mustafakemalpaşa",
+    "slug": "mustafakemalpasa",
+    "provinceId": 16
+  },
+  {
+    "id": 1829,
+    "name": "Nilüfer",
+    "slug": "nilufer",
+    "provinceId": 16
+  },
+  {
+    "id": 1553,
+    "name": "Orhaneli",
+    "slug": "orhaneli",
+    "provinceId": 16
+  },
+  {
+    "id": 1554,
+    "name": "Orhangazi",
+    "slug": "orhangazi",
+    "provinceId": 16
+  },
+  {
+    "id": 1832,
+    "name": "Osmangazi",
+    "slug": "osmangazi",
+    "provinceId": 16
+  },
+  {
+    "id": 1725,
+    "name": "Yenişehir",
+    "slug": "yenisehir",
+    "provinceId": 16
+  },
+  {
+    "id": 1859,
+    "name": "Yıldırım",
+    "slug": "yildirim",
+    "provinceId": 16
+  },
+  {
+    "id": 1160,
+    "name": "Ayvacık",
+    "slug": "ayvacik",
+    "provinceId": 17
+  },
+  {
+    "id": 1180,
+    "name": "Bayramiç",
+    "slug": "bayramic",
+    "provinceId": 17
+  },
+  {
+    "id": 1190,
+    "name": "Biga",
+    "slug": "biga",
+    "provinceId": 17
+  },
+  {
+    "id": 1205,
+    "name": "Bozcaada",
+    "slug": "bozcaada",
+    "provinceId": 17
+  },
+  {
+    "id": 1229,
+    "name": "Çan",
+    "slug": "can",
+    "provinceId": 17
+  },
+  {
+    "id": 1293,
+    "name": "Eceabat",
+    "slug": "eceabat",
+    "provinceId": 17
+  },
+  {
+    "id": 1326,
+    "name": "Ezine",
+    "slug": "ezine",
+    "provinceId": 17
+  },
+  {
+    "id": 1340,
+    "name": "Gelibolu",
+    "slug": "gelibolu",
+    "provinceId": 17
+  },
+  {
+    "id": 1408,
+    "name": "Gökçeada",
+    "slug": "gokceada",
+    "provinceId": 17
+  },
+  {
+    "id": 1503,
+    "name": "Lapseki",
+    "slug": "lapseki",
+    "provinceId": 17
+  },
+  {
+    "id": 1230,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 17
+  },
+  {
+    "id": 1722,
+    "name": "Yenice",
+    "slug": "yenice",
+    "provinceId": 17
+  },
+  {
+    "id": 1765,
+    "name": "Atkaracalar",
+    "slug": "atkaracalar",
+    "provinceId": 18
+  },
+  {
+    "id": 1885,
+    "name": "Bayramören",
+    "slug": "bayramoren",
+    "provinceId": 18
+  },
+  {
+    "id": 1248,
+    "name": "Çerkeş",
+    "slug": "cerkes",
+    "provinceId": 18
+  },
+  {
+    "id": 1300,
+    "name": "Eldivan",
+    "slug": "eldivan",
+    "provinceId": 18
+  },
+  {
+    "id": 1399,
+    "name": "Ilgaz",
+    "slug": "ilgaz",
+    "provinceId": 18
+  },
+  {
+    "id": 1817,
+    "name": "Kızılırmak",
+    "slug": "kizilirmak",
+    "provinceId": 18
+  },
+  {
+    "id": 1963,
+    "name": "Korgun",
+    "slug": "korgun",
+    "provinceId": 18
+  },
+  {
+    "id": 1494,
+    "name": "Kurşunlu",
+    "slug": "kursunlu",
+    "provinceId": 18
+  },
+  {
+    "id": 1232,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 18
+  },
+  {
+    "id": 1555,
+    "name": "Orta",
+    "slug": "orta",
+    "provinceId": 18
+  },
+  {
+    "id": 1649,
+    "name": "Şabanözü",
+    "slug": "sabanozu",
+    "provinceId": 18
+  },
+  {
+    "id": 1718,
+    "name": "Yapraklı",
+    "slug": "yaprakli",
+    "provinceId": 18
+  },
+  {
+    "id": 1124,
+    "name": "Alaca",
+    "slug": "alaca",
+    "provinceId": 19
+  },
+  {
+    "id": 1177,
+    "name": "Bayat",
+    "slug": "bayat",
+    "provinceId": 19
+  },
+  {
+    "id": 1778,
+    "name": "Boğazkale",
+    "slug": "bogazkale",
+    "provinceId": 19
+  },
+  {
+    "id": 1911,
+    "name": "Dodurga",
+    "slug": "dodurga",
+    "provinceId": 19
+  },
+  {
+    "id": 1414,
+    "name": "İskilip",
+    "slug": "iskilip",
+    "provinceId": 19
+  },
+  {
+    "id": 1445,
+    "name": "Kargı",
+    "slug": "kargi",
+    "provinceId": 19
+  },
+  {
+    "id": 1972,
+    "name": "Laçin",
+    "slug": "lacin",
+    "provinceId": 19
+  },
+  {
+    "id": 1520,
+    "name": "Mecitözü",
+    "slug": "mecitozu",
+    "provinceId": 19
+  },
+  {
+    "id": 1259,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 19
+  },
+  {
+    "id": 1976,
+    "name": "Oğuzlar",
+    "slug": "oguzlar",
+    "provinceId": 19
+  },
+  {
+    "id": 1556,
+    "name": "Ortaköy",
+    "slug": "ortakoy",
+    "provinceId": 19
+  },
+  {
+    "id": 1558,
+    "name": "Osmancık",
+    "slug": "osmancik",
+    "provinceId": 19
+  },
+  {
+    "id": 1642,
+    "name": "Sungurlu",
+    "slug": "sungurlu",
+    "provinceId": 19
+  },
+  {
+    "id": 1850,
+    "name": "Uğurludağ",
+    "slug": "ugurludag",
+    "provinceId": 19
+  },
+  {
+    "id": 1102,
+    "name": "Acıpayam",
+    "slug": "acipayam",
+    "provinceId": 20
+  },
+  {
+    "id": 1769,
+    "name": "Babadağ",
+    "slug": "babadag",
+    "provinceId": 20
+  },
+  {
+    "id": 1881,
+    "name": "Baklan",
+    "slug": "baklan",
+    "provinceId": 20
+  },
+  {
+    "id": 1774,
+    "name": "Bekilli",
+    "slug": "bekilli",
+    "provinceId": 20
+  },
+  {
+    "id": 1888,
+    "name": "Beyağaç",
+    "slug": "beyagac",
+    "provinceId": 20
+  },
+  {
+    "id": 1889,
+    "name": "Bozkurt",
+    "slug": "bozkurt",
+    "provinceId": 20
+  },
+  {
+    "id": 1214,
+    "name": "Buldan",
+    "slug": "buldan",
+    "provinceId": 20
+  },
+  {
+    "id": 1224,
+    "name": "Çal",
+    "slug": "cal",
+    "provinceId": 20
+  },
+  {
+    "id": 1226,
+    "name": "Çameli",
+    "slug": "cameli",
+    "provinceId": 20
+  },
+  {
+    "id": 1233,
+    "name": "Çardak",
+    "slug": "cardak",
+    "provinceId": 20
+  },
+  {
+    "id": 1257,
+    "name": "Çivril",
+    "slug": "civril",
+    "provinceId": 20
+  },
+  {
+    "id": 1371,
+    "name": "Güney",
+    "slug": "guney",
+    "provinceId": 20
+  },
+  {
+    "id": 1803,
+    "name": "Honaz",
+    "slug": "honaz",
+    "provinceId": 20
+  },
+  {
+    "id": 1426,
+    "name": "Kale",
+    "slug": "kale",
+    "provinceId": 20
+  },
+  {
+    "id": 2079,
+    "name": "Merkezefendi",
+    "slug": "merkezefendi",
+    "provinceId": 20
+  },
+  {
+    "id": 1871,
+    "name": "Pamukkale",
+    "slug": "pamukkale",
+    "provinceId": 20
+  },
+  {
+    "id": 1597,
+    "name": "Sarayköy",
+    "slug": "saraykoy",
+    "provinceId": 20
+  },
+  {
+    "id": 1840,
+    "name": "Serinhisar",
+    "slug": "serinhisar",
+    "provinceId": 20
+  },
+  {
+    "id": 1670,
+    "name": "Tavas",
+    "slug": "tavas",
+    "provinceId": 20
+  },
+  {
+    "id": 2040,
+    "name": "Bağlar",
+    "slug": "baglar",
+    "provinceId": 21
+  },
+  {
+    "id": 1195,
+    "name": "Bismil",
+    "slug": "bismil",
+    "provinceId": 21
+  },
+  {
+    "id": 1249,
+    "name": "Çermik",
+    "slug": "cermik",
+    "provinceId": 21
+  },
+  {
+    "id": 1253,
+    "name": "Çınar",
+    "slug": "cinar",
+    "provinceId": 21
+  },
+  {
+    "id": 1263,
+    "name": "Çüngüş",
+    "slug": "cungus",
+    "provinceId": 21
+  },
+  {
+    "id": 1278,
+    "name": "Dicle",
+    "slug": "dicle",
+    "provinceId": 21
+  },
+  {
+    "id": 1791,
+    "name": "Eğil",
+    "slug": "egil",
+    "provinceId": 21
+  },
+  {
+    "id": 1315,
+    "name": "Ergani",
+    "slug": "ergani",
+    "provinceId": 21
+  },
+  {
+    "id": 1381,
+    "name": "Hani",
+    "slug": "hani",
+    "provinceId": 21
+  },
+  {
+    "id": 1389,
+    "name": "Hazro",
+    "slug": "hazro",
+    "provinceId": 21
+  },
+  {
+    "id": 2041,
+    "name": "Kayapınar",
+    "slug": "kayapinar",
+    "provinceId": 21
+  },
+  {
+    "id": 1962,
+    "name": "Kocaköy",
+    "slug": "kocakoy",
+    "provinceId": 21
+  },
+  {
+    "id": 1490,
+    "name": "Kulp",
+    "slug": "kulp",
+    "provinceId": 21
+  },
+  {
+    "id": 1504,
+    "name": "Lice",
+    "slug": "lice",
+    "provinceId": 21
+  },
+  {
+    "id": 1624,
+    "name": "Silvan",
+    "slug": "silvan",
+    "provinceId": 21
+  },
+  {
+    "id": 2042,
+    "name": "Sur",
+    "slug": "sur",
+    "provinceId": 21
+  },
+  {
+    "id": 2043,
+    "name": "Yenişehir",
+    "slug": "yenisehir",
+    "provinceId": 21
+  },
+  {
+    "id": 1116,
+    "name": "Akçakoca",
+    "slug": "akcakoca",
+    "provinceId": 81
+  },
+  {
+    "id": 1905,
+    "name": "Çilimli",
+    "slug": "cilimli",
+    "provinceId": 81
+  },
+  {
+    "id": 1784,
+    "name": "Cumayeri",
+    "slug": "cumayeri",
+    "provinceId": 81
+  },
+  {
+    "id": 1794,
+    "name": "Gölyaka",
+    "slug": "golyaka",
+    "provinceId": 81
+  },
+  {
+    "id": 2017,
+    "name": "Gümüşova",
+    "slug": "gumusova",
+    "provinceId": 81
+  },
+  {
+    "id": 2031,
+    "name": "Kaynaşlı",
+    "slug": "kaynasli",
+    "provinceId": 81
+  },
+  {
+    "id": 1292,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 81
+  },
+  {
+    "id": 1730,
+    "name": "Yığılca",
+    "slug": "yigilca",
+    "provinceId": 81
+  },
+  {
+    "id": 1307,
+    "name": "Enez",
+    "slug": "enez",
+    "provinceId": 22
+  },
+  {
+    "id": 1385,
+    "name": "Havsa",
+    "slug": "havsa",
+    "provinceId": 22
+  },
+  {
+    "id": 1412,
+    "name": "İpsala",
+    "slug": "ipsala",
+    "provinceId": 22
+  },
+  {
+    "id": 1464,
+    "name": "Keşan",
+    "slug": "kesan",
+    "provinceId": 22
+  },
+  {
+    "id": 1502,
+    "name": "Lalapaşa",
+    "slug": "lalapasa",
+    "provinceId": 22
+  },
+  {
+    "id": 1523,
+    "name": "Meriç",
+    "slug": "meric",
+    "provinceId": 22
+  },
+  {
+    "id": 1295,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 22
+  },
+  {
+    "id": 1988,
+    "name": "Süloğlu",
+    "slug": "suloglu",
+    "provinceId": 22
+  },
+  {
+    "id": 1705,
+    "name": "Uzunköprü",
+    "slug": "uzunkopru",
+    "provinceId": 22
+  },
+  {
+    "id": 1110,
+    "name": "Ağın",
+    "slug": "agin",
+    "provinceId": 23
+  },
+  {
+    "id": 1873,
+    "name": "Alacakaya",
+    "slug": "alacakaya",
+    "provinceId": 23
+  },
+  {
+    "id": 1762,
+    "name": "Arıcak",
+    "slug": "aricak",
+    "provinceId": 23
+  },
+  {
+    "id": 1173,
+    "name": "Baskil",
+    "slug": "baskil",
+    "provinceId": 23
+  },
+  {
+    "id": 1438,
+    "name": "Karakoçan",
+    "slug": "karakocan",
+    "provinceId": 23
+  },
+  {
+    "id": 1455,
+    "name": "Keban",
+    "slug": "keban",
+    "provinceId": 23
+  },
+  {
+    "id": 1820,
+    "name": "Kovancılar",
+    "slug": "kovancilar",
+    "provinceId": 23
+  },
+  {
+    "id": 1506,
+    "name": "Maden",
+    "slug": "maden",
+    "provinceId": 23
+  },
+  {
+    "id": 1298,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 23
+  },
+  {
+    "id": 1566,
+    "name": "Palu",
+    "slug": "palu",
+    "provinceId": 23
+  },
+  {
+    "id": 1631,
+    "name": "Sivrice",
+    "slug": "sivrice",
+    "provinceId": 23
+  },
+  {
+    "id": 1243,
+    "name": "Çayırlı",
+    "slug": "cayirli",
+    "provinceId": 24
+  },
+  {
+    "id": 1406,
+    "name": "İliç",
+    "slug": "ilic",
+    "provinceId": 24
+  },
+  {
+    "id": 1459,
+    "name": "Kemah",
+    "slug": "kemah",
+    "provinceId": 24
+  },
+  {
+    "id": 1460,
+    "name": "Kemaliye",
+    "slug": "kemaliye",
+    "provinceId": 24
+  },
+  {
+    "id": 1318,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 24
+  },
+  {
+    "id": 1977,
+    "name": "Otlukbeli",
+    "slug": "otlukbeli",
+    "provinceId": 24
+  },
+  {
+    "id": 1583,
+    "name": "Refahiye",
+    "slug": "refahiye",
+    "provinceId": 24
+  },
+  {
+    "id": 1675,
+    "name": "Tercan",
+    "slug": "tercan",
+    "provinceId": 24
+  },
+  {
+    "id": 1853,
+    "name": "Üzümlü",
+    "slug": "uzumlu",
+    "provinceId": 24
+  },
+  {
+    "id": 1153,
+    "name": "Aşkale",
+    "slug": "askale",
+    "provinceId": 25
+  },
+  {
+    "id": 1945,
+    "name": "Aziziye",
+    "slug": "aziziye",
+    "provinceId": 25
+  },
+  {
+    "id": 1235,
+    "name": "Çat",
+    "slug": "cat",
+    "provinceId": 25
+  },
+  {
+    "id": 1392,
+    "name": "Hınıs",
+    "slug": "hinis",
+    "provinceId": 25
+  },
+  {
+    "id": 1396,
+    "name": "Horasan",
+    "slug": "horasan",
+    "provinceId": 25
+  },
+  {
+    "id": 1416,
+    "name": "İspir",
+    "slug": "ispir",
+    "provinceId": 25
+  },
+  {
+    "id": 1812,
+    "name": "Karaçoban",
+    "slug": "karacoban",
+    "provinceId": 25
+  },
+  {
+    "id": 1444,
+    "name": "Karayazı",
+    "slug": "karayazi",
+    "provinceId": 25
+  },
+  {
+    "id": 1967,
+    "name": "Köprüköy",
+    "slug": "koprukoy",
+    "provinceId": 25
+  },
+  {
+    "id": 1540,
+    "name": "Narman",
+    "slug": "narman",
+    "provinceId": 25
+  },
+  {
+    "id": 1550,
+    "name": "Oltu",
+    "slug": "oltu",
+    "provinceId": 25
+  },
+  {
+    "id": 1551,
+    "name": "Olur",
+    "slug": "olur",
+    "provinceId": 25
+  },
+  {
+    "id": 2044,
+    "name": "Palandöken",
+    "slug": "palandoken",
+    "provinceId": 25
+  },
+  {
+    "id": 1567,
+    "name": "Pasinler",
+    "slug": "pasinler",
+    "provinceId": 25
+  },
+  {
+    "id": 1865,
+    "name": "Pazaryolu",
+    "slug": "pazaryolu",
+    "provinceId": 25
+  },
+  {
+    "id": 1657,
+    "name": "Şenkaya",
+    "slug": "senkaya",
+    "provinceId": 25
+  },
+  {
+    "id": 1674,
+    "name": "Tekman",
+    "slug": "tekman",
+    "provinceId": 25
+  },
+  {
+    "id": 1683,
+    "name": "Tortum",
+    "slug": "tortum",
+    "provinceId": 25
+  },
+  {
+    "id": 1851,
+    "name": "Uzundere",
+    "slug": "uzundere",
+    "provinceId": 25
+  },
+  {
+    "id": 2045,
+    "name": "Yakutiye",
+    "slug": "yakutiye",
+    "provinceId": 25
+  },
+  {
+    "id": 1759,
+    "name": "Alpu",
+    "slug": "alpu",
+    "provinceId": 26
+  },
+  {
+    "id": 1777,
+    "name": "Beylikova",
+    "slug": "beylikova",
+    "provinceId": 26
+  },
+  {
+    "id": 1255,
+    "name": "Çifteler",
+    "slug": "cifteler",
+    "provinceId": 26
+  },
+  {
+    "id": 1934,
+    "name": "Günyüzü",
+    "slug": "gunyuzu",
+    "provinceId": 26
+  },
+  {
+    "id": 1939,
+    "name": "Han",
+    "slug": "han",
+    "provinceId": 26
+  },
+  {
+    "id": 1808,
+    "name": "İnönü",
+    "slug": "inonu",
+    "provinceId": 26
+  },
+  {
+    "id": 1508,
+    "name": "Mahmudiye",
+    "slug": "mahmudiye",
+    "provinceId": 26
+  },
+  {
+    "id": 1973,
+    "name": "Mihalgazi",
+    "slug": "mihalgazi",
+    "provinceId": 26
+  },
+  {
+    "id": 1527,
+    "name": "Mihalıççık",
+    "slug": "mihaliccik",
+    "provinceId": 26
+  },
+  {
+    "id": 2046,
+    "name": "Odunpazarı",
+    "slug": "odunpazari",
+    "provinceId": 26
+  },
+  {
+    "id": 1599,
+    "name": "Sarıcakaya",
+    "slug": "saricakaya",
+    "provinceId": 26
+  },
+  {
+    "id": 1618,
+    "name": "Seyitgazi",
+    "slug": "seyitgazi",
+    "provinceId": 26
+  },
+  {
+    "id": 1632,
+    "name": "Sivrihisar",
+    "slug": "sivrihisar",
+    "provinceId": 26
+  },
+  {
+    "id": 2047,
+    "name": "Tepebaşı",
+    "slug": "tepebasi",
+    "provinceId": 26
+  },
+  {
+    "id": 1139,
+    "name": "Araban",
+    "slug": "araban",
+    "provinceId": 27
+  },
+  {
+    "id": 1415,
+    "name": "İslahiye",
+    "slug": "islahiye",
+    "provinceId": 27
+  },
+  {
+    "id": 1956,
+    "name": "Karkamış",
+    "slug": "karkamis",
+    "provinceId": 27
+  },
+  {
+    "id": 1546,
+    "name": "Nizip",
+    "slug": "nizip",
+    "provinceId": 27
+  },
+  {
+    "id": 1974,
+    "name": "Nurdağı",
+    "slug": "nurdagi",
+    "provinceId": 27
+  },
+  {
+    "id": 1549,
+    "name": "Oğuzeli",
+    "slug": "oguzeli",
+    "provinceId": 27
+  },
+  {
+    "id": 1841,
+    "name": "Şahinbey",
+    "slug": "sahinbey",
+    "provinceId": 27
+  },
+  {
+    "id": 1844,
+    "name": "Şehitkamil",
+    "slug": "sehitkamil",
+    "provinceId": 27
+  },
+  {
+    "id": 1720,
+    "name": "Yavuzeli",
+    "slug": "yavuzeli",
+    "provinceId": 27
+  },
+  {
+    "id": 1133,
+    "name": "Alucra",
+    "slug": "alucra",
+    "provinceId": 28
+  },
+  {
+    "id": 1212,
+    "name": "Bulancak",
+    "slug": "bulancak",
+    "provinceId": 28
+  },
+  {
+    "id": 1893,
+    "name": "Çamoluk",
+    "slug": "camoluk",
+    "provinceId": 28
+  },
+  {
+    "id": 1894,
+    "name": "Çanakçı",
+    "slug": "canakci",
+    "provinceId": 28
+  },
+  {
+    "id": 1272,
+    "name": "Dereli",
+    "slug": "dereli",
+    "provinceId": 28
+  },
+  {
+    "id": 1912,
+    "name": "Doğankent",
+    "slug": "dogankent",
+    "provinceId": 28
+  },
+  {
+    "id": 1320,
+    "name": "Espiye",
+    "slug": "espiye",
+    "provinceId": 28
+  },
+  {
+    "id": 1324,
+    "name": "Eynesil",
+    "slug": "eynesil",
+    "provinceId": 28
+  },
+  {
+    "id": 1361,
+    "name": "Görele",
+    "slug": "gorele",
+    "provinceId": 28
+  },
+  {
+    "id": 1930,
+    "name": "Güce",
+    "slug": "guce",
+    "provinceId": 28
+  },
+  {
+    "id": 1465,
+    "name": "Keşap",
+    "slug": "kesap",
+    "provinceId": 28
+  },
+  {
+    "id": 1352,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 28
+  },
+  {
+    "id": 1837,
+    "name": "Piraziz",
+    "slug": "piraziz",
+    "provinceId": 28
+  },
+  {
+    "id": 1654,
+    "name": "Şebinkarahisar",
+    "slug": "sebinkarahisar",
+    "provinceId": 28
+  },
+  {
+    "id": 1678,
+    "name": "Tirebolu",
+    "slug": "tirebolu",
+    "provinceId": 28
+  },
+  {
+    "id": 1854,
+    "name": "Yağlıdere",
+    "slug": "yaglidere",
+    "provinceId": 28
+  },
+  {
+    "id": 1458,
+    "name": "Kelkit",
+    "slug": "kelkit",
+    "provinceId": 29
+  },
+  {
+    "id": 1822,
+    "name": "Köse",
+    "slug": "kose",
+    "provinceId": 29
+  },
+  {
+    "id": 1971,
+    "name": "Kürtün",
+    "slug": "kurtun",
+    "provinceId": 29
+  },
+  {
+    "id": 1369,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 29
+  },
+  {
+    "id": 1660,
+    "name": "Şiran",
+    "slug": "siran",
+    "provinceId": 29
+  },
+  {
+    "id": 1684,
+    "name": "Torul",
+    "slug": "torul",
+    "provinceId": 29
+  },
+  {
+    "id": 1261,
+    "name": "Çukurca",
+    "slug": "cukurca",
+    "provinceId": 30
+  },
+  {
+    "id": 2107,
+    "name": "Derecik",
+    "slug": "derecik",
+    "provinceId": 30
+  },
+  {
+    "id": 1377,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 30
+  },
+  {
+    "id": 1656,
+    "name": "Şemdinli",
+    "slug": "semdinli",
+    "provinceId": 30
+  },
+  {
+    "id": 1737,
+    "name": "Yüksekova",
+    "slug": "yuksekova",
+    "provinceId": 30
+  },
+  {
+    "id": 1131,
+    "name": "Altınözü",
+    "slug": "altinozu",
+    "provinceId": 31
+  },
+  {
+    "id": 2080,
+    "name": "Antakya",
+    "slug": "antakya",
+    "provinceId": 31
+  },
+  {
+    "id": 2081,
+    "name": "Arsuz",
+    "slug": "arsuz",
+    "provinceId": 31
+  },
+  {
+    "id": 1887,
+    "name": "Belen",
+    "slug": "belen",
+    "provinceId": 31
+  },
+  {
+    "id": 2082,
+    "name": "Defne",
+    "slug": "defne",
+    "provinceId": 31
+  },
+  {
+    "id": 1289,
+    "name": "Dörtyol",
+    "slug": "dortyol",
+    "provinceId": 31
+  },
+  {
+    "id": 1792,
+    "name": "Erzin",
+    "slug": "erzin",
+    "provinceId": 31
+  },
+  {
+    "id": 1382,
+    "name": "Hassa",
+    "slug": "hassa",
+    "provinceId": 31
+  },
+  {
+    "id": 1413,
+    "name": "İskenderun",
+    "slug": "iskenderun",
+    "provinceId": 31
+  },
+  {
+    "id": 1468,
+    "name": "Kırıkhan",
+    "slug": "kirikhan",
+    "provinceId": 31
+  },
+  {
+    "id": 1970,
+    "name": "Kumlu",
+    "slug": "kumlu",
+    "provinceId": 31
+  },
+  {
+    "id": 2083,
+    "name": "Payas",
+    "slug": "payas",
+    "provinceId": 31
+  },
+  {
+    "id": 1585,
+    "name": "Reyhanlı",
+    "slug": "reyhanli",
+    "provinceId": 31
+  },
+  {
+    "id": 1591,
+    "name": "Samandağ",
+    "slug": "samandag",
+    "provinceId": 31
+  },
+  {
+    "id": 1721,
+    "name": "Yayladağı",
+    "slug": "yayladagi",
+    "provinceId": 31
+  },
+  {
+    "id": 1142,
+    "name": "Aralık",
+    "slug": "aralik",
+    "provinceId": 76
+  },
+  {
+    "id": 2011,
+    "name": "Karakoyunlu",
+    "slug": "karakoyunlu",
+    "provinceId": 76
+  },
+  {
+    "id": 1398,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 76
+  },
+  {
+    "id": 1692,
+    "name": "Tuzluca",
+    "slug": "tuzluca",
+    "provinceId": 76
+  },
+  {
+    "id": 1755,
+    "name": "Aksu",
+    "slug": "aksu",
+    "provinceId": 32
+  },
+  {
+    "id": 1154,
+    "name": "Atabey",
+    "slug": "atabey",
+    "provinceId": 32
+  },
+  {
+    "id": 1297,
+    "name": "Eğirdir",
+    "slug": "egirdir",
+    "provinceId": 32
+  },
+  {
+    "id": 1341,
+    "name": "Gelendost",
+    "slug": "gelendost",
+    "provinceId": 32
+  },
+  {
+    "id": 1929,
+    "name": "Gönen",
+    "slug": "gonen",
+    "provinceId": 32
+  },
+  {
+    "id": 1456,
+    "name": "Keçiborlu",
+    "slug": "keciborlu",
+    "provinceId": 32
+  },
+  {
+    "id": 1401,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 32
+  },
+  {
+    "id": 1651,
+    "name": "Şarkikaraağaç",
+    "slug": "sarkikaraagac",
+    "provinceId": 32
+  },
+  {
+    "id": 1615,
+    "name": "Senirkent",
+    "slug": "senirkent",
+    "provinceId": 32
+  },
+  {
+    "id": 1648,
+    "name": "Sütçüler",
+    "slug": "sutculer",
+    "provinceId": 32
+  },
+  {
+    "id": 1699,
+    "name": "Uluborlu",
+    "slug": "uluborlu",
+    "provinceId": 32
+  },
+  {
+    "id": 1717,
+    "name": "Yalvaç",
+    "slug": "yalvac",
+    "provinceId": 32
+  },
+  {
+    "id": 2001,
+    "name": "Yenişarbademli",
+    "slug": "yenisarbademli",
+    "provinceId": 32
+  },
+  {
+    "id": 1103,
+    "name": "Adalar",
+    "slug": "adalar",
+    "provinceId": 34
+  },
+  {
+    "id": 2048,
+    "name": "Arnavutköy",
+    "slug": "arnavutkoy",
+    "provinceId": 34
+  },
+  {
+    "id": 2049,
+    "name": "Ataşehir",
+    "slug": "atasehir",
+    "provinceId": 34
+  },
+  {
+    "id": 2003,
+    "name": "Avcılar",
+    "slug": "avcilar",
+    "provinceId": 34
+  },
+  {
+    "id": 2004,
+    "name": "Bağcılar",
+    "slug": "bagcilar",
+    "provinceId": 34
+  },
+  {
+    "id": 2005,
+    "name": "Bahçelievler",
+    "slug": "bahcelievler",
+    "provinceId": 34
+  },
+  {
+    "id": 1166,
+    "name": "Bakırköy",
+    "slug": "bakirkoy",
+    "provinceId": 34
+  },
+  {
+    "id": 2050,
+    "name": "Başakşehir",
+    "slug": "basaksehir",
+    "provinceId": 34
+  },
+  {
+    "id": 1886,
+    "name": "Bayrampaşa",
+    "slug": "bayrampasa",
+    "provinceId": 34
+  },
+  {
+    "id": 1183,
+    "name": "Beşiktaş",
+    "slug": "besiktas",
+    "provinceId": 34
+  },
+  {
+    "id": 1185,
+    "name": "Beykoz",
+    "slug": "beykoz",
+    "provinceId": 34
+  },
+  {
+    "id": 2051,
+    "name": "Beylikdüzü",
+    "slug": "beylikduzu",
+    "provinceId": 34
+  },
+  {
+    "id": 1186,
+    "name": "Beyoğlu",
+    "slug": "beyoglu",
+    "provinceId": 34
+  },
+  {
+    "id": 1782,
+    "name": "Büyükçekmece",
+    "slug": "buyukcekmece",
+    "provinceId": 34
+  },
+  {
+    "id": 1237,
+    "name": "Çatalca",
+    "slug": "catalca",
+    "provinceId": 34
+  },
+  {
+    "id": 2052,
+    "name": "Çekmeköy",
+    "slug": "cekmekoy",
+    "provinceId": 34
+  },
+  {
+    "id": 2016,
+    "name": "Esenler",
+    "slug": "esenler",
+    "provinceId": 34
+  },
+  {
+    "id": 2053,
+    "name": "Esenyurt",
+    "slug": "esenyurt",
+    "provinceId": 34
+  },
+  {
+    "id": 1325,
+    "name": "Eyüpsultan",
+    "slug": "eyupsultan",
+    "provinceId": 34
+  },
+  {
+    "id": 1327,
+    "name": "Fatih",
+    "slug": "fatih",
+    "provinceId": 34
+  },
+  {
+    "id": 1336,
+    "name": "Gaziosmanpaşa",
+    "slug": "gaziosmanpasa",
+    "provinceId": 34
+  },
+  {
+    "id": 2010,
+    "name": "Güngören",
+    "slug": "gungoren",
+    "provinceId": 34
+  },
+  {
+    "id": 1421,
+    "name": "Kadıköy",
+    "slug": "kadikoy",
+    "provinceId": 34
+  },
+  {
+    "id": 1810,
+    "name": "Kağıthane",
+    "slug": "kagithane",
+    "provinceId": 34
+  },
+  {
+    "id": 1449,
+    "name": "Kartal",
+    "slug": "kartal",
+    "provinceId": 34
+  },
+  {
+    "id": 1823,
+    "name": "Küçükçekmece",
+    "slug": "kucukcekmece",
+    "provinceId": 34
+  },
+  {
+    "id": 2012,
+    "name": "Maltepe",
+    "slug": "maltepe",
+    "provinceId": 34
+  },
+  {
+    "id": 1835,
+    "name": "Pendik",
+    "slug": "pendik",
+    "provinceId": 34
+  },
+  {
+    "id": 2054,
+    "name": "Sancaktepe",
+    "slug": "sancaktepe",
+    "provinceId": 34
+  },
+  {
+    "id": 1604,
+    "name": "Sarıyer",
+    "slug": "sariyer",
+    "provinceId": 34
+  },
+  {
+    "id": 1659,
+    "name": "Şile",
+    "slug": "sile",
+    "provinceId": 34
+  },
+  {
+    "id": 1622,
+    "name": "Silivri",
+    "slug": "silivri",
+    "provinceId": 34
+  },
+  {
+    "id": 1663,
+    "name": "Şişli",
+    "slug": "sisli",
+    "provinceId": 34
+  },
+  {
+    "id": 2014,
+    "name": "Sultanbeyli",
+    "slug": "sultanbeyli",
+    "provinceId": 34
+  },
+  {
+    "id": 2055,
+    "name": "Sultangazi",
+    "slug": "sultangazi",
+    "provinceId": 34
+  },
+  {
+    "id": 2015,
+    "name": "Tuzla",
+    "slug": "tuzla",
+    "provinceId": 34
+  },
+  {
+    "id": 1852,
+    "name": "Ümraniye",
+    "slug": "umraniye",
+    "provinceId": 34
+  },
+  {
+    "id": 1708,
+    "name": "Üsküdar",
+    "slug": "uskudar",
+    "provinceId": 34
+  },
+  {
+    "id": 1739,
+    "name": "Zeytinburnu",
+    "slug": "zeytinburnu",
+    "provinceId": 34
+  },
+  {
+    "id": 1128,
+    "name": "Aliağa",
+    "slug": "aliaga",
+    "provinceId": 35
+  },
+  {
+    "id": 2006,
+    "name": "Balçova",
+    "slug": "balcova",
+    "provinceId": 35
+  },
+  {
+    "id": 1178,
+    "name": "Bayındır",
+    "slug": "bayindir",
+    "provinceId": 35
+  },
+  {
+    "id": 2056,
+    "name": "Bayraklı",
+    "slug": "bayrakli",
+    "provinceId": 35
+  },
+  {
+    "id": 1181,
+    "name": "Bergama",
+    "slug": "bergama",
+    "provinceId": 35
+  },
+  {
+    "id": 1776,
+    "name": "Beydağ",
+    "slug": "beydag",
+    "provinceId": 35
+  },
+  {
+    "id": 1203,
+    "name": "Bornova",
+    "slug": "bornova",
+    "provinceId": 35
+  },
+  {
+    "id": 1780,
+    "name": "Buca",
+    "slug": "buca",
+    "provinceId": 35
+  },
+  {
+    "id": 1251,
+    "name": "Çeşme",
+    "slug": "cesme",
+    "provinceId": 35
+  },
+  {
+    "id": 2007,
+    "name": "Çiğli",
+    "slug": "cigli",
+    "provinceId": 35
+  },
+  {
+    "id": 1280,
+    "name": "Dikili",
+    "slug": "dikili",
+    "provinceId": 35
+  },
+  {
+    "id": 1334,
+    "name": "Foça",
+    "slug": "foca",
+    "provinceId": 35
+  },
+  {
+    "id": 2009,
+    "name": "Gaziemir",
+    "slug": "gaziemir",
+    "provinceId": 35
+  },
+  {
+    "id": 2018,
+    "name": "Güzelbahçe",
+    "slug": "guzelbahce",
+    "provinceId": 35
+  },
+  {
+    "id": 2057,
+    "name": "Karabağlar",
+    "slug": "karabaglar",
+    "provinceId": 35
+  },
+  {
+    "id": 1432,
+    "name": "Karaburun",
+    "slug": "karaburun",
+    "provinceId": 35
+  },
+  {
+    "id": 1448,
+    "name": "Karşıyaka",
+    "slug": "karsiyaka",
+    "provinceId": 35
+  },
+  {
+    "id": 1461,
+    "name": "Kemalpaşa",
+    "slug": "kemalpasa",
+    "provinceId": 35
+  },
+  {
+    "id": 1467,
+    "name": "Kınık",
+    "slug": "kinik",
+    "provinceId": 35
+  },
+  {
+    "id": 1477,
+    "name": "Kiraz",
+    "slug": "kiraz",
+    "provinceId": 35
+  },
+  {
+    "id": 1819,
+    "name": "Konak",
+    "slug": "konak",
+    "provinceId": 35
+  },
+  {
+    "id": 1826,
+    "name": "Menderes",
+    "slug": "menderes",
+    "provinceId": 35
+  },
+  {
+    "id": 1521,
+    "name": "Menemen",
+    "slug": "menemen",
+    "provinceId": 35
+  },
+  {
+    "id": 2013,
+    "name": "Narlıdere",
+    "slug": "narlidere",
+    "provinceId": 35
+  },
+  {
+    "id": 1563,
+    "name": "Ödemiş",
+    "slug": "odemis",
+    "provinceId": 35
+  },
+  {
+    "id": 1611,
+    "name": "Seferihisar",
+    "slug": "seferihisar",
+    "provinceId": 35
+  },
+  {
+    "id": 1612,
+    "name": "Selçuk",
+    "slug": "selcuk",
+    "provinceId": 35
+  },
+  {
+    "id": 1677,
+    "name": "Tire",
+    "slug": "tire",
+    "provinceId": 35
+  },
+  {
+    "id": 1682,
+    "name": "Torbalı",
+    "slug": "torbali",
+    "provinceId": 35
+  },
+  {
+    "id": 1703,
+    "name": "Urla",
+    "slug": "urla",
+    "provinceId": 35
+  },
+  {
+    "id": 1107,
+    "name": "Afşin",
+    "slug": "afsin",
+    "provinceId": 46
+  },
+  {
+    "id": 1136,
+    "name": "Andırın",
+    "slug": "andirin",
+    "provinceId": 46
+  },
+  {
+    "id": 1785,
+    "name": "Çağlayancerit",
+    "slug": "caglayancerit",
+    "provinceId": 46
+  },
+  {
+    "id": 2084,
+    "name": "Dulkadiroğlu",
+    "slug": "dulkadiroglu",
+    "provinceId": 46
+  },
+  {
+    "id": 1919,
+    "name": "Ekinözü",
+    "slug": "ekinozu",
+    "provinceId": 46
+  },
+  {
+    "id": 1299,
+    "name": "Elbistan",
+    "slug": "elbistan",
+    "provinceId": 46
+  },
+  {
+    "id": 1353,
+    "name": "Göksun",
+    "slug": "goksun",
+    "provinceId": 46
+  },
+  {
+    "id": 1975,
+    "name": "Nurhak",
+    "slug": "nurhak",
+    "provinceId": 46
+  },
+  {
+    "id": 2085,
+    "name": "Onikişubat",
+    "slug": "onikisubat",
+    "provinceId": 46
+  },
+  {
+    "id": 1570,
+    "name": "Pazarcık",
+    "slug": "pazarcik",
+    "provinceId": 46
+  },
+  {
+    "id": 1694,
+    "name": "Türkoğlu",
+    "slug": "turkoglu",
+    "provinceId": 46
+  },
+  {
+    "id": 1296,
+    "name": "Eflani",
+    "slug": "eflani",
+    "provinceId": 78
+  },
+  {
+    "id": 1321,
+    "name": "Eskipazar",
+    "slug": "eskipazar",
+    "provinceId": 78
+  },
+  {
+    "id": 1433,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 78
+  },
+  {
+    "id": 1561,
+    "name": "Ovacık",
+    "slug": "ovacik",
+    "provinceId": 78
+  },
+  {
+    "id": 1587,
+    "name": "Safranbolu",
+    "slug": "safranbolu",
+    "provinceId": 78
+  },
+  {
+    "id": 1856,
+    "name": "Yenice",
+    "slug": "yenice",
+    "provinceId": 78
+  },
+  {
+    "id": 1768,
+    "name": "Ayrancı",
+    "slug": "ayranci",
+    "provinceId": 70
+  },
+  {
+    "id": 1884,
+    "name": "Başyayla",
+    "slug": "basyayla",
+    "provinceId": 70
+  },
+  {
+    "id": 1316,
+    "name": "Ermenek",
+    "slug": "ermenek",
+    "provinceId": 70
+  },
+  {
+    "id": 1862,
+    "name": "Kazımkarabekir",
+    "slug": "kazimkarabekir",
+    "provinceId": 70
+  },
+  {
+    "id": 1439,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 70
+  },
+  {
+    "id": 1983,
+    "name": "Sarıveliler",
+    "slug": "sariveliler",
+    "provinceId": 70
+  },
+  {
+    "id": 1756,
+    "name": "Akyaka",
+    "slug": "akyaka",
+    "provinceId": 36
+  },
+  {
+    "id": 1149,
+    "name": "Arpaçay",
+    "slug": "arpacay",
+    "provinceId": 36
+  },
+  {
+    "id": 1279,
+    "name": "Digor",
+    "slug": "digor",
+    "provinceId": 36
+  },
+  {
+    "id": 1424,
+    "name": "Kağızman",
+    "slug": "kagizman",
+    "provinceId": 36
+  },
+  {
+    "id": 1447,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 36
+  },
+  {
+    "id": 1601,
+    "name": "Sarıkamış",
+    "slug": "sarikamis",
+    "provinceId": 36
+  },
+  {
+    "id": 1614,
+    "name": "Selim",
+    "slug": "selim",
+    "provinceId": 36
+  },
+  {
+    "id": 1645,
+    "name": "Susuz",
+    "slug": "susuz",
+    "provinceId": 36
+  },
+  {
+    "id": 1101,
+    "name": "Abana",
+    "slug": "abana",
+    "provinceId": 37
+  },
+  {
+    "id": 1867,
+    "name": "Ağlı",
+    "slug": "agli",
+    "provinceId": 37
+  },
+  {
+    "id": 1140,
+    "name": "Araç",
+    "slug": "arac",
+    "provinceId": 37
+  },
+  {
+    "id": 1162,
+    "name": "Azdavay",
+    "slug": "azdavay",
+    "provinceId": 37
+  },
+  {
+    "id": 1208,
+    "name": "Bozkurt",
+    "slug": "bozkurt",
+    "provinceId": 37
+  },
+  {
+    "id": 1238,
+    "name": "Çatalzeytin",
+    "slug": "catalzeytin",
+    "provinceId": 37
+  },
+  {
+    "id": 1221,
+    "name": "Cide",
+    "slug": "cide",
+    "provinceId": 37
+  },
+  {
+    "id": 1264,
+    "name": "Daday",
+    "slug": "daday",
+    "provinceId": 37
+  },
+  {
+    "id": 1277,
+    "name": "Devrekani",
+    "slug": "devrekani",
+    "provinceId": 37
+  },
+  {
+    "id": 1915,
+    "name": "Doğanyurt",
+    "slug": "doganyurt",
+    "provinceId": 37
+  },
+  {
+    "id": 1940,
+    "name": "Hanönü",
+    "slug": "hanonu",
+    "provinceId": 37
+  },
+  {
+    "id": 1805,
+    "name": "İhsangazi",
+    "slug": "ihsangazi",
+    "provinceId": 37
+  },
+  {
+    "id": 1410,
+    "name": "İnebolu",
+    "slug": "inebolu",
+    "provinceId": 37
+  },
+  {
+    "id": 1499,
+    "name": "Küre",
+    "slug": "kure",
+    "provinceId": 37
+  },
+  {
+    "id": 1450,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 37
+  },
+  {
+    "id": 1836,
+    "name": "Pınarbaşı",
+    "slug": "pinarbasi",
+    "provinceId": 37
+  },
+  {
+    "id": 1845,
+    "name": "Şenpazar",
+    "slug": "senpazar",
+    "provinceId": 37
+  },
+  {
+    "id": 1984,
+    "name": "Seydiler",
+    "slug": "seydiler",
+    "provinceId": 37
+  },
+  {
+    "id": 1666,
+    "name": "Taşköprü",
+    "slug": "taskopru",
+    "provinceId": 37
+  },
+  {
+    "id": 1685,
+    "name": "Tosya",
+    "slug": "tosya",
+    "provinceId": 37
+  },
+  {
+    "id": 1752,
+    "name": "Akkışla",
+    "slug": "akkisla",
+    "provinceId": 38
+  },
+  {
+    "id": 1218,
+    "name": "Bünyan",
+    "slug": "bunyan",
+    "provinceId": 38
+  },
+  {
+    "id": 1275,
+    "name": "Develi",
+    "slug": "develi",
+    "provinceId": 38
+  },
+  {
+    "id": 1330,
+    "name": "Felahiye",
+    "slug": "felahiye",
+    "provinceId": 38
+  },
+  {
+    "id": 1936,
+    "name": "Hacılar",
+    "slug": "hacilar",
+    "provinceId": 38
+  },
+  {
+    "id": 1409,
+    "name": "İncesu",
+    "slug": "incesu",
+    "provinceId": 38
+  },
+  {
+    "id": 1863,
+    "name": "Kocasinan",
+    "slug": "kocasinan",
+    "provinceId": 38
+  },
+  {
+    "id": 1864,
+    "name": "Melikgazi",
+    "slug": "melikgazi",
+    "provinceId": 38
+  },
+  {
+    "id": 1978,
+    "name": "Özvatan",
+    "slug": "ozvatan",
+    "provinceId": 38
+  },
+  {
+    "id": 1576,
+    "name": "Pınarbaşı",
+    "slug": "pinarbasi",
+    "provinceId": 38
+  },
+  {
+    "id": 1603,
+    "name": "Sarıoğlan",
+    "slug": "sarioglan",
+    "provinceId": 38
+  },
+  {
+    "id": 1605,
+    "name": "Sarız",
+    "slug": "sariz",
+    "provinceId": 38
+  },
+  {
+    "id": 1846,
+    "name": "Talas",
+    "slug": "talas",
+    "provinceId": 38
+  },
+  {
+    "id": 1680,
+    "name": "Tomarza",
+    "slug": "tomarza",
+    "provinceId": 38
+  },
+  {
+    "id": 1715,
+    "name": "Yahyalı",
+    "slug": "yahyali",
+    "provinceId": 38
+  },
+  {
+    "id": 1727,
+    "name": "Yeşilhisar",
+    "slug": "yesilhisar",
+    "provinceId": 38
+  },
+  {
+    "id": 2023,
+    "name": "Elbeyli",
+    "slug": "elbeyli",
+    "provinceId": 79
+  },
+  {
+    "id": 1476,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 79
+  },
+  {
+    "id": 2024,
+    "name": "Musabeyli",
+    "slug": "musabeyli",
+    "provinceId": 79
+  },
+  {
+    "id": 2025,
+    "name": "Polateli",
+    "slug": "polateli",
+    "provinceId": 79
+  },
+  {
+    "id": 1880,
+    "name": "Bahşılı",
+    "slug": "bahsili",
+    "provinceId": 71
+  },
+  {
+    "id": 1882,
+    "name": "Balışeyh",
+    "slug": "baliseyh",
+    "provinceId": 71
+  },
+  {
+    "id": 1901,
+    "name": "Çelebi",
+    "slug": "celebi",
+    "provinceId": 71
+  },
+  {
+    "id": 1268,
+    "name": "Delice",
+    "slug": "delice",
+    "provinceId": 71
+  },
+  {
+    "id": 1954,
+    "name": "Karakeçili",
+    "slug": "karakecili",
+    "provinceId": 71
+  },
+  {
+    "id": 1463,
+    "name": "Keskin",
+    "slug": "keskin",
+    "provinceId": 71
+  },
+  {
+    "id": 1469,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 71
+  },
+  {
+    "id": 1638,
+    "name": "Sulakyurt",
+    "slug": "sulakyurt",
+    "provinceId": 71
+  },
+  {
+    "id": 1992,
+    "name": "Yahşihan",
+    "slug": "yahsihan",
+    "provinceId": 71
+  },
+  {
+    "id": 1163,
+    "name": "Babaeski",
+    "slug": "babaeski",
+    "provinceId": 39
+  },
+  {
+    "id": 1270,
+    "name": "Demirköy",
+    "slug": "demirkoy",
+    "provinceId": 39
+  },
+  {
+    "id": 1480,
+    "name": "Kofçaz",
+    "slug": "kofcaz",
+    "provinceId": 39
+  },
+  {
+    "id": 1505,
+    "name": "Lüleburgaz",
+    "slug": "luleburgaz",
+    "provinceId": 39
+  },
+  {
+    "id": 1471,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 39
+  },
+  {
+    "id": 1572,
+    "name": "Pehlivanköy",
+    "slug": "pehlivankoy",
+    "provinceId": 39
+  },
+  {
+    "id": 1577,
+    "name": "Pınarhisar",
+    "slug": "pinarhisar",
+    "provinceId": 39
+  },
+  {
+    "id": 1714,
+    "name": "Vize",
+    "slug": "vize",
+    "provinceId": 39
+  },
+  {
+    "id": 1869,
+    "name": "Akçakent",
+    "slug": "akcakent",
+    "provinceId": 40
+  },
+  {
+    "id": 1754,
+    "name": "Akpınar",
+    "slug": "akpinar",
+    "provinceId": 40
+  },
+  {
+    "id": 1890,
+    "name": "Boztepe",
+    "slug": "boztepe",
+    "provinceId": 40
+  },
+  {
+    "id": 1254,
+    "name": "Çiçekdağı",
+    "slug": "cicekdagi",
+    "provinceId": 40
+  },
+  {
+    "id": 1429,
+    "name": "Kaman",
+    "slug": "kaman",
+    "provinceId": 40
+  },
+  {
+    "id": 1472,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 40
+  },
+  {
+    "id": 1529,
+    "name": "Mucur",
+    "slug": "mucur",
+    "provinceId": 40
+  },
+  {
+    "id": 2058,
+    "name": "Başiskele",
+    "slug": "basiskele",
+    "provinceId": 41
+  },
+  {
+    "id": 2059,
+    "name": "Çayırova",
+    "slug": "cayirova",
+    "provinceId": 41
+  },
+  {
+    "id": 2060,
+    "name": "Darıca",
+    "slug": "darica",
+    "provinceId": 41
+  },
+  {
+    "id": 2030,
+    "name": "Derince",
+    "slug": "derince",
+    "provinceId": 41
+  },
+  {
+    "id": 2061,
+    "name": "Dilovası",
+    "slug": "dilovasi",
+    "provinceId": 41
+  },
+  {
+    "id": 1338,
+    "name": "Gebze",
+    "slug": "gebze",
+    "provinceId": 41
+  },
+  {
+    "id": 1355,
+    "name": "Gölcük",
+    "slug": "golcuk",
+    "provinceId": 41
+  },
+  {
+    "id": 2062,
+    "name": "İzmit",
+    "slug": "izmit",
+    "provinceId": 41
+  },
+  {
+    "id": 1430,
+    "name": "Kandıra",
+    "slug": "kandira",
+    "provinceId": 41
+  },
+  {
+    "id": 1440,
+    "name": "Karamürsel",
+    "slug": "karamursel",
+    "provinceId": 41
+  },
+  {
+    "id": 2063,
+    "name": "Kartepe",
+    "slug": "kartepe",
+    "provinceId": 41
+  },
+  {
+    "id": 1821,
+    "name": "Körfez",
+    "slug": "korfez",
+    "provinceId": 41
+  },
+  {
+    "id": 1868,
+    "name": "Ahırlı",
+    "slug": "ahirli",
+    "provinceId": 42
+  },
+  {
+    "id": 1753,
+    "name": "Akören",
+    "slug": "akoren",
+    "provinceId": 42
+  },
+  {
+    "id": 1122,
+    "name": "Akşehir",
+    "slug": "aksehir",
+    "provinceId": 42
+  },
+  {
+    "id": 1760,
+    "name": "Altınekin",
+    "slug": "altinekin",
+    "provinceId": 42
+  },
+  {
+    "id": 1188,
+    "name": "Beyşehir",
+    "slug": "beysehir",
+    "provinceId": 42
+  },
+  {
+    "id": 1207,
+    "name": "Bozkır",
+    "slug": "bozkir",
+    "provinceId": 42
+  },
+  {
+    "id": 1902,
+    "name": "Çeltik",
+    "slug": "celtik",
+    "provinceId": 42
+  },
+  {
+    "id": 1222,
+    "name": "Cihanbeyli",
+    "slug": "cihanbeyli",
+    "provinceId": 42
+  },
+  {
+    "id": 1262,
+    "name": "Çumra",
+    "slug": "cumra",
+    "provinceId": 42
+  },
+  {
+    "id": 1907,
+    "name": "Derbent",
+    "slug": "derbent",
+    "provinceId": 42
+  },
+  {
+    "id": 1789,
+    "name": "Derebucak",
+    "slug": "derebucak",
+    "provinceId": 42
+  },
+  {
+    "id": 1285,
+    "name": "Doğanhisar",
+    "slug": "doganhisar",
+    "provinceId": 42
+  },
+  {
+    "id": 1920,
+    "name": "Emirgazi",
+    "slug": "emirgazi",
+    "provinceId": 42
+  },
+  {
+    "id": 1312,
+    "name": "Ereğli",
+    "slug": "eregli",
+    "provinceId": 42
+  },
+  {
+    "id": 1933,
+    "name": "Güneysınır",
+    "slug": "guneysinir",
+    "provinceId": 42
+  },
+  {
+    "id": 1375,
+    "name": "Hadim",
+    "slug": "hadim",
+    "provinceId": 42
+  },
+  {
+    "id": 1937,
+    "name": "Halkapınar",
+    "slug": "halkapinar",
+    "provinceId": 42
+  },
+  {
+    "id": 1804,
+    "name": "Hüyük",
+    "slug": "huyuk",
+    "provinceId": 42
+  },
+  {
+    "id": 1400,
+    "name": "Ilgın",
+    "slug": "ilgin",
+    "provinceId": 42
+  },
+  {
+    "id": 1422,
+    "name": "Kadınhanı",
+    "slug": "kadinhani",
+    "provinceId": 42
+  },
+  {
+    "id": 1441,
+    "name": "Karapınar",
+    "slug": "karapinar",
+    "provinceId": 42
+  },
+  {
+    "id": 1814,
+    "name": "Karatay",
+    "slug": "karatay",
+    "provinceId": 42
+  },
+  {
+    "id": 1491,
+    "name": "Kulu",
+    "slug": "kulu",
+    "provinceId": 42
+  },
+  {
+    "id": 1827,
+    "name": "Meram",
+    "slug": "meram",
+    "provinceId": 42
+  },
+  {
+    "id": 1598,
+    "name": "Sarayönü",
+    "slug": "sarayonu",
+    "provinceId": 42
+  },
+  {
+    "id": 1839,
+    "name": "Selçuklu",
+    "slug": "selcuklu",
+    "provinceId": 42
+  },
+  {
+    "id": 1617,
+    "name": "Seydişehir",
+    "slug": "seydisehir",
+    "provinceId": 42
+  },
+  {
+    "id": 1848,
+    "name": "Taşkent",
+    "slug": "taskent",
+    "provinceId": 42
+  },
+  {
+    "id": 1990,
+    "name": "Tuzlukçu",
+    "slug": "tuzlukcu",
+    "provinceId": 42
+  },
+  {
+    "id": 1994,
+    "name": "Yalıhüyük",
+    "slug": "yalihuyuk",
+    "provinceId": 42
+  },
+  {
+    "id": 1735,
+    "name": "Yunak",
+    "slug": "yunak",
+    "provinceId": 42
+  },
+  {
+    "id": 1132,
+    "name": "Altıntaş",
+    "slug": "altintas",
+    "provinceId": 43
+  },
+  {
+    "id": 1764,
+    "name": "Aslanapa",
+    "slug": "aslanapa",
+    "provinceId": 43
+  },
+  {
+    "id": 1898,
+    "name": "Çavdarhisar",
+    "slug": "cavdarhisar",
+    "provinceId": 43
+  },
+  {
+    "id": 1288,
+    "name": "Domaniç",
+    "slug": "domanic",
+    "provinceId": 43
+  },
+  {
+    "id": 1790,
+    "name": "Dumlupınar",
+    "slug": "dumlupinar",
+    "provinceId": 43
+  },
+  {
+    "id": 1304,
+    "name": "Emet",
+    "slug": "emet",
+    "provinceId": 43
+  },
+  {
+    "id": 1339,
+    "name": "Gediz",
+    "slug": "gediz",
+    "provinceId": 43
+  },
+  {
+    "id": 1802,
+    "name": "Hisarcık",
+    "slug": "hisarcik",
+    "provinceId": 43
+  },
+  {
+    "id": 1500,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 43
+  },
+  {
+    "id": 1979,
+    "name": "Pazarlar",
+    "slug": "pazarlar",
+    "provinceId": 43
+  },
+  {
+    "id": 1843,
+    "name": "Şaphane",
+    "slug": "saphane",
+    "provinceId": 43
+  },
+  {
+    "id": 1625,
+    "name": "Simav",
+    "slug": "simav",
+    "provinceId": 43
+  },
+  {
+    "id": 1671,
+    "name": "Tavşanlı",
+    "slug": "tavsanli",
+    "provinceId": 43
+  },
+  {
+    "id": 1114,
+    "name": "Akçadağ",
+    "slug": "akcadag",
+    "provinceId": 44
+  },
+  {
+    "id": 1143,
+    "name": "Arapgir",
+    "slug": "arapgir",
+    "provinceId": 44
+  },
+  {
+    "id": 1148,
+    "name": "Arguvan",
+    "slug": "arguvan",
+    "provinceId": 44
+  },
+  {
+    "id": 1772,
+    "name": "Battalgazi",
+    "slug": "battalgazi",
+    "provinceId": 44
+  },
+  {
+    "id": 1265,
+    "name": "Darende",
+    "slug": "darende",
+    "provinceId": 44
+  },
+  {
+    "id": 1286,
+    "name": "Doğanşehir",
+    "slug": "dogansehir",
+    "provinceId": 44
+  },
+  {
+    "id": 1914,
+    "name": "Doğanyol",
+    "slug": "doganyol",
+    "provinceId": 44
+  },
+  {
+    "id": 1390,
+    "name": "Hekimhan",
+    "slug": "hekimhan",
+    "provinceId": 44
+  },
+  {
+    "id": 1953,
+    "name": "Kale",
+    "slug": "kale",
+    "provinceId": 44
+  },
+  {
+    "id": 1969,
+    "name": "Kuluncak",
+    "slug": "kuluncak",
+    "provinceId": 44
+  },
+  {
+    "id": 1582,
+    "name": "Pütürge",
+    "slug": "puturge",
+    "provinceId": 44
+  },
+  {
+    "id": 1995,
+    "name": "Yazıhan",
+    "slug": "yazihan",
+    "provinceId": 44
+  },
+  {
+    "id": 1729,
+    "name": "Yeşilyurt",
+    "slug": "yesilyurt",
+    "provinceId": 44
+  },
+  {
+    "id": 1751,
+    "name": "Ahmetli",
+    "slug": "ahmetli",
+    "provinceId": 45
+  },
+  {
+    "id": 1118,
+    "name": "Akhisar",
+    "slug": "akhisar",
+    "provinceId": 45
+  },
+  {
+    "id": 1127,
+    "name": "Alaşehir",
+    "slug": "alasehir",
+    "provinceId": 45
+  },
+  {
+    "id": 1269,
+    "name": "Demirci",
+    "slug": "demirci",
+    "provinceId": 45
+  },
+  {
+    "id": 1793,
+    "name": "Gölmarmara",
+    "slug": "golmarmara",
+    "provinceId": 45
+  },
+  {
+    "id": 1362,
+    "name": "Gördes",
+    "slug": "gordes",
+    "provinceId": 45
+  },
+  {
+    "id": 1470,
+    "name": "Kırkağaç",
+    "slug": "kirkagac",
+    "provinceId": 45
+  },
+  {
+    "id": 1965,
+    "name": "Köprübaşı",
+    "slug": "koprubasi",
+    "provinceId": 45
+  },
+  {
+    "id": 1489,
+    "name": "Kula",
+    "slug": "kula",
+    "provinceId": 45
+  },
+  {
+    "id": 1590,
+    "name": "Salihli",
+    "slug": "salihli",
+    "provinceId": 45
+  },
+  {
+    "id": 1600,
+    "name": "Sarıgöl",
+    "slug": "sarigol",
+    "provinceId": 45
+  },
+  {
+    "id": 1606,
+    "name": "Saruhanlı",
+    "slug": "saruhanli",
+    "provinceId": 45
+  },
+  {
+    "id": 2086,
+    "name": "Şehzadeler",
+    "slug": "sehzadeler",
+    "provinceId": 45
+  },
+  {
+    "id": 1613,
+    "name": "Selendi",
+    "slug": "selendi",
+    "provinceId": 45
+  },
+  {
+    "id": 1634,
+    "name": "Soma",
+    "slug": "soma",
+    "provinceId": 45
+  },
+  {
+    "id": 1689,
+    "name": "Turgutlu",
+    "slug": "turgutlu",
+    "provinceId": 45
+  },
+  {
+    "id": 2087,
+    "name": "Yunusemre",
+    "slug": "yunusemre",
+    "provinceId": 45
+  },
+  {
+    "id": 2088,
+    "name": "Artuklu",
+    "slug": "artuklu",
+    "provinceId": 47
+  },
+  {
+    "id": 1787,
+    "name": "Dargeçit",
+    "slug": "dargecit",
+    "provinceId": 47
+  },
+  {
+    "id": 1273,
+    "name": "Derik",
+    "slug": "derik",
+    "provinceId": 47
+  },
+  {
+    "id": 1474,
+    "name": "Kızıltepe",
+    "slug": "kiziltepe",
+    "provinceId": 47
+  },
+  {
+    "id": 1519,
+    "name": "Mazıdağı",
+    "slug": "mazidagi",
+    "provinceId": 47
+  },
+  {
+    "id": 1526,
+    "name": "Midyat",
+    "slug": "midyat",
+    "provinceId": 47
+  },
+  {
+    "id": 1547,
+    "name": "Nusaybin",
+    "slug": "nusaybin",
+    "provinceId": 47
+  },
+  {
+    "id": 1564,
+    "name": "Ömerli",
+    "slug": "omerli",
+    "provinceId": 47
+  },
+  {
+    "id": 1609,
+    "name": "Savur",
+    "slug": "savur",
+    "provinceId": 47
+  },
+  {
+    "id": 2002,
+    "name": "Yeşilli",
+    "slug": "yesilli",
+    "provinceId": 47
+  },
+  {
+    "id": 2064,
+    "name": "Akdeniz",
+    "slug": "akdeniz",
+    "provinceId": 33
+  },
+  {
+    "id": 1135,
+    "name": "Anamur",
+    "slug": "anamur",
+    "provinceId": 33
+  },
+  {
+    "id": 1766,
+    "name": "Aydıncık",
+    "slug": "aydincik",
+    "provinceId": 33
+  },
+  {
+    "id": 1779,
+    "name": "Bozyazı",
+    "slug": "bozyazi",
+    "provinceId": 33
+  },
+  {
+    "id": 1892,
+    "name": "Çamlıyayla",
+    "slug": "camliyayla",
+    "provinceId": 33
+  },
+  {
+    "id": 1311,
+    "name": "Erdemli",
+    "slug": "erdemli",
+    "provinceId": 33
+  },
+  {
+    "id": 1366,
+    "name": "Gülnar",
+    "slug": "gulnar",
+    "provinceId": 33
+  },
+  {
+    "id": 2065,
+    "name": "Mezitli",
+    "slug": "mezitli",
+    "provinceId": 33
+  },
+  {
+    "id": 1536,
+    "name": "Mut",
+    "slug": "mut",
+    "provinceId": 33
+  },
+  {
+    "id": 1621,
+    "name": "Silifke",
+    "slug": "silifke",
+    "provinceId": 33
+  },
+  {
+    "id": 1665,
+    "name": "Tarsus",
+    "slug": "tarsus",
+    "provinceId": 33
+  },
+  {
+    "id": 2066,
+    "name": "Toroslar",
+    "slug": "toroslar",
+    "provinceId": 33
+  },
+  {
+    "id": 2067,
+    "name": "Yenişehir",
+    "slug": "yenisehir",
+    "provinceId": 33
+  },
+  {
+    "id": 1197,
+    "name": "Bodrum",
+    "slug": "bodrum",
+    "provinceId": 48
+  },
+  {
+    "id": 1742,
+    "name": "Dalaman",
+    "slug": "dalaman",
+    "provinceId": 48
+  },
+  {
+    "id": 1266,
+    "name": "Datça",
+    "slug": "datca",
+    "provinceId": 48
+  },
+  {
+    "id": 1331,
+    "name": "Fethiye",
+    "slug": "fethiye",
+    "provinceId": 48
+  },
+  {
+    "id": 1958,
+    "name": "Kavaklıdere",
+    "slug": "kavaklidere",
+    "provinceId": 48
+  },
+  {
+    "id": 1488,
+    "name": "Köyceğiz",
+    "slug": "koycegiz",
+    "provinceId": 48
+  },
+  {
+    "id": 1517,
+    "name": "Marmaris",
+    "slug": "marmaris",
+    "provinceId": 48
+  },
+  {
+    "id": 2089,
+    "name": "Menteşe",
+    "slug": "mentese",
+    "provinceId": 48
+  },
+  {
+    "id": 1528,
+    "name": "Milas",
+    "slug": "milas",
+    "provinceId": 48
+  },
+  {
+    "id": 1831,
+    "name": "Ortaca",
+    "slug": "ortaca",
+    "provinceId": 48
+  },
+  {
+    "id": 2090,
+    "name": "Seydikemer",
+    "slug": "seydikemer",
+    "provinceId": 48
+  },
+  {
+    "id": 1695,
+    "name": "Ula",
+    "slug": "ula",
+    "provinceId": 48
+  },
+  {
+    "id": 1719,
+    "name": "Yatağan",
+    "slug": "yatagan",
+    "provinceId": 48
+  },
+  {
+    "id": 1213,
+    "name": "Bulanık",
+    "slug": "bulanik",
+    "provinceId": 49
+  },
+  {
+    "id": 1801,
+    "name": "Hasköy",
+    "slug": "haskoy",
+    "provinceId": 49
+  },
+  {
+    "id": 1964,
+    "name": "Korkut",
+    "slug": "korkut",
+    "provinceId": 49
+  },
+  {
+    "id": 1510,
+    "name": "Malazgirt",
+    "slug": "malazgirt",
+    "provinceId": 49
+  },
+  {
+    "id": 1534,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 49
+  },
+  {
+    "id": 1711,
+    "name": "Varto",
+    "slug": "varto",
+    "provinceId": 49
+  },
+  {
+    "id": 1749,
+    "name": "Acıgöl",
+    "slug": "acigol",
+    "provinceId": 50
+  },
+  {
+    "id": 1155,
+    "name": "Avanos",
+    "slug": "avanos",
+    "provinceId": 50
+  },
+  {
+    "id": 1274,
+    "name": "Derinkuyu",
+    "slug": "derinkuyu",
+    "provinceId": 50
+  },
+  {
+    "id": 1367,
+    "name": "Gülşehir",
+    "slug": "gulsehir",
+    "provinceId": 50
+  },
+  {
+    "id": 1374,
+    "name": "Hacıbektaş",
+    "slug": "hacibektas",
+    "provinceId": 50
+  },
+  {
+    "id": 1485,
+    "name": "Kozaklı",
+    "slug": "kozakli",
+    "provinceId": 50
+  },
+  {
+    "id": 1543,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 50
+  },
+  {
+    "id": 1707,
+    "name": "Ürgüp",
+    "slug": "urgup",
+    "provinceId": 50
+  },
+  {
+    "id": 1876,
+    "name": "Altunhisar",
+    "slug": "altunhisar",
+    "provinceId": 51
+  },
+  {
+    "id": 1201,
+    "name": "Bor",
+    "slug": "bor",
+    "provinceId": 51
+  },
+  {
+    "id": 1225,
+    "name": "Çamardı",
+    "slug": "camardi",
+    "provinceId": 51
+  },
+  {
+    "id": 1904,
+    "name": "Çiftlik",
+    "slug": "ciftlik",
+    "provinceId": 51
+  },
+  {
+    "id": 1544,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 51
+  },
+  {
+    "id": 1700,
+    "name": "Ulukışla",
+    "slug": "ulukisla",
+    "provinceId": 51
+  },
+  {
+    "id": 1119,
+    "name": "Akkuş",
+    "slug": "akkus",
+    "provinceId": 52
+  },
+  {
+    "id": 2103,
+    "name": "Altınordu",
+    "slug": "altinordu",
+    "provinceId": 52
+  },
+  {
+    "id": 1158,
+    "name": "Aybastı",
+    "slug": "aybasti",
+    "provinceId": 52
+  },
+  {
+    "id": 1891,
+    "name": "Çamaş",
+    "slug": "camas",
+    "provinceId": 52
+  },
+  {
+    "id": 1897,
+    "name": "Çatalpınar",
+    "slug": "catalpinar",
+    "provinceId": 52
+  },
+  {
+    "id": 1900,
+    "name": "Çaybaşı",
+    "slug": "caybasi",
+    "provinceId": 52
+  },
+  {
+    "id": 1328,
+    "name": "Fatsa",
+    "slug": "fatsa",
+    "provinceId": 52
+  },
+  {
+    "id": 1358,
+    "name": "Gölköy",
+    "slug": "golkoy",
+    "provinceId": 52
+  },
+  {
+    "id": 1795,
+    "name": "Gülyalı",
+    "slug": "gulyali",
+    "provinceId": 52
+  },
+  {
+    "id": 1797,
+    "name": "Gürgentepe",
+    "slug": "gurgentepe",
+    "provinceId": 52
+  },
+  {
+    "id": 1947,
+    "name": "İkizce",
+    "slug": "ikizce",
+    "provinceId": 52
+  },
+  {
+    "id": 1950,
+    "name": "Kabadüz",
+    "slug": "kabaduz",
+    "provinceId": 52
+  },
+  {
+    "id": 1951,
+    "name": "Kabataş",
+    "slug": "kabatas",
+    "provinceId": 52
+  },
+  {
+    "id": 1482,
+    "name": "Korgan",
+    "slug": "korgan",
+    "provinceId": 52
+  },
+  {
+    "id": 1493,
+    "name": "Kumru",
+    "slug": "kumru",
+    "provinceId": 52
+  },
+  {
+    "id": 1525,
+    "name": "Mesudiye",
+    "slug": "mesudiye",
+    "provinceId": 52
+  },
+  {
+    "id": 1573,
+    "name": "Perşembe",
+    "slug": "persembe",
+    "provinceId": 52
+  },
+  {
+    "id": 1696,
+    "name": "Ulubey",
+    "slug": "ulubey",
+    "provinceId": 52
+  },
+  {
+    "id": 1706,
+    "name": "Ünye",
+    "slug": "unye",
+    "provinceId": 52
+  },
+  {
+    "id": 1165,
+    "name": "Bahçe",
+    "slug": "bahce",
+    "provinceId": 80
+  },
+  {
+    "id": 1743,
+    "name": "Düziçi",
+    "slug": "duzici",
+    "provinceId": 80
+  },
+  {
+    "id": 2027,
+    "name": "Hasanbeyli",
+    "slug": "hasanbeyli",
+    "provinceId": 80
+  },
+  {
+    "id": 1423,
+    "name": "Kadirli",
+    "slug": "kadirli",
+    "provinceId": 80
+  },
+  {
+    "id": 1560,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 80
+  },
+  {
+    "id": 2028,
+    "name": "Sumbas",
+    "slug": "sumbas",
+    "provinceId": 80
+  },
+  {
+    "id": 2029,
+    "name": "Toprakkale",
+    "slug": "toprakkale",
+    "provinceId": 80
+  },
+  {
+    "id": 1146,
+    "name": "Ardeşen",
+    "slug": "ardesen",
+    "provinceId": 53
+  },
+  {
+    "id": 1228,
+    "name": "Çamlıhemşin",
+    "slug": "camlihemsin",
+    "provinceId": 53
+  },
+  {
+    "id": 1241,
+    "name": "Çayeli",
+    "slug": "cayeli",
+    "provinceId": 53
+  },
+  {
+    "id": 1908,
+    "name": "Derepazarı",
+    "slug": "derepazari",
+    "provinceId": 53
+  },
+  {
+    "id": 1332,
+    "name": "Fındıklı",
+    "slug": "findikli",
+    "provinceId": 53
+  },
+  {
+    "id": 1796,
+    "name": "Güneysu",
+    "slug": "guneysu",
+    "provinceId": 53
+  },
+  {
+    "id": 1943,
+    "name": "Hemşin",
+    "slug": "hemsin",
+    "provinceId": 53
+  },
+  {
+    "id": 1405,
+    "name": "İkizdere",
+    "slug": "ikizdere",
+    "provinceId": 53
+  },
+  {
+    "id": 1949,
+    "name": "İyidere",
+    "slug": "iyidere",
+    "provinceId": 53
+  },
+  {
+    "id": 1428,
+    "name": "Kalkandere",
+    "slug": "kalkandere",
+    "provinceId": 53
+  },
+  {
+    "id": 1586,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 53
+  },
+  {
+    "id": 1569,
+    "name": "Pazar",
+    "slug": "pazar",
+    "provinceId": 53
+  },
+  {
+    "id": 2068,
+    "name": "Adapazarı",
+    "slug": "adapazari",
+    "provinceId": 54
+  },
+  {
+    "id": 1123,
+    "name": "Akyazı",
+    "slug": "akyazi",
+    "provinceId": 54
+  },
+  {
+    "id": 2069,
+    "name": "Arifiye",
+    "slug": "arifiye",
+    "provinceId": 54
+  },
+  {
+    "id": 2070,
+    "name": "Erenler",
+    "slug": "erenler",
+    "provinceId": 54
+  },
+  {
+    "id": 1925,
+    "name": "Ferizli",
+    "slug": "ferizli",
+    "provinceId": 54
+  },
+  {
+    "id": 1351,
+    "name": "Geyve",
+    "slug": "geyve",
+    "provinceId": 54
+  },
+  {
+    "id": 1391,
+    "name": "Hendek",
+    "slug": "hendek",
+    "provinceId": 54
+  },
+  {
+    "id": 1955,
+    "name": "Karapürçek",
+    "slug": "karapurcek",
+    "provinceId": 54
+  },
+  {
+    "id": 1442,
+    "name": "Karasu",
+    "slug": "karasu",
+    "provinceId": 54
+  },
+  {
+    "id": 1453,
+    "name": "Kaynarca",
+    "slug": "kaynarca",
+    "provinceId": 54
+  },
+  {
+    "id": 1818,
+    "name": "Kocaali",
+    "slug": "kocaali",
+    "provinceId": 54
+  },
+  {
+    "id": 1833,
+    "name": "Pamukova",
+    "slug": "pamukova",
+    "provinceId": 54
+  },
+  {
+    "id": 1595,
+    "name": "Sapanca",
+    "slug": "sapanca",
+    "provinceId": 54
+  },
+  {
+    "id": 2071,
+    "name": "Serdivan",
+    "slug": "serdivan",
+    "provinceId": 54
+  },
+  {
+    "id": 1986,
+    "name": "Söğütlü",
+    "slug": "sogutlu",
+    "provinceId": 54
+  },
+  {
+    "id": 1847,
+    "name": "Taraklı",
+    "slug": "tarakli",
+    "provinceId": 54
+  },
+  {
+    "id": 1830,
+    "name": "19 Mayıs",
+    "slug": "19-mayis",
+    "provinceId": 55
+  },
+  {
+    "id": 1125,
+    "name": "Alaçam",
+    "slug": "alacam",
+    "provinceId": 55
+  },
+  {
+    "id": 1763,
+    "name": "Asarcık",
+    "slug": "asarcik",
+    "provinceId": 55
+  },
+  {
+    "id": 2072,
+    "name": "Atakum",
+    "slug": "atakum",
+    "provinceId": 55
+  },
+  {
+    "id": 1879,
+    "name": "Ayvacık",
+    "slug": "ayvacik",
+    "provinceId": 55
+  },
+  {
+    "id": 1164,
+    "name": "Bafra",
+    "slug": "bafra",
+    "provinceId": 55
+  },
+  {
+    "id": 2073,
+    "name": "Canik",
+    "slug": "canik",
+    "provinceId": 55
+  },
+  {
+    "id": 1234,
+    "name": "Çarşamba",
+    "slug": "carsamba",
+    "provinceId": 55
+  },
+  {
+    "id": 1386,
+    "name": "Havza",
+    "slug": "havza",
+    "provinceId": 55
+  },
+  {
+    "id": 2074,
+    "name": "İlkadım",
+    "slug": "ilkadim",
+    "provinceId": 55
+  },
+  {
+    "id": 1452,
+    "name": "Kavak",
+    "slug": "kavak",
+    "provinceId": 55
+  },
+  {
+    "id": 1501,
+    "name": "Ladik",
+    "slug": "ladik",
+    "provinceId": 55
+  },
+  {
+    "id": 1838,
+    "name": "Salıpazarı",
+    "slug": "salipazari",
+    "provinceId": 55
+  },
+  {
+    "id": 1849,
+    "name": "Tekkeköy",
+    "slug": "tekkekoy",
+    "provinceId": 55
+  },
+  {
+    "id": 1676,
+    "name": "Terme",
+    "slug": "terme",
+    "provinceId": 55
+  },
+  {
+    "id": 1712,
+    "name": "Vezirköprü",
+    "slug": "vezirkopru",
+    "provinceId": 55
+  },
+  {
+    "id": 1993,
+    "name": "Yakakent",
+    "slug": "yakakent",
+    "provinceId": 55
+  },
+  {
+    "id": 1115,
+    "name": "Akçakale",
+    "slug": "akcakale",
+    "provinceId": 63
+  },
+  {
+    "id": 1194,
+    "name": "Birecik",
+    "slug": "birecik",
+    "provinceId": 63
+  },
+  {
+    "id": 1209,
+    "name": "Bozova",
+    "slug": "bozova",
+    "provinceId": 63
+  },
+  {
+    "id": 1220,
+    "name": "Ceylanpınar",
+    "slug": "ceylanpinar",
+    "provinceId": 63
+  },
+  {
+    "id": 2091,
+    "name": "Eyyübiye",
+    "slug": "eyyubiye",
+    "provinceId": 63
+  },
+  {
+    "id": 1378,
+    "name": "Halfeti",
+    "slug": "halfeti",
+    "provinceId": 63
+  },
+  {
+    "id": 2092,
+    "name": "Haliliye",
+    "slug": "haliliye",
+    "provinceId": 63
+  },
+  {
+    "id": 1800,
+    "name": "Harran",
+    "slug": "harran",
+    "provinceId": 63
+  },
+  {
+    "id": 1393,
+    "name": "Hilvan",
+    "slug": "hilvan",
+    "provinceId": 63
+  },
+  {
+    "id": 2093,
+    "name": "Karaköprü",
+    "slug": "karakopru",
+    "provinceId": 63
+  },
+  {
+    "id": 1630,
+    "name": "Siverek",
+    "slug": "siverek",
+    "provinceId": 63
+  },
+  {
+    "id": 1643,
+    "name": "Suruç",
+    "slug": "suruc",
+    "provinceId": 63
+  },
+  {
+    "id": 1713,
+    "name": "Viranşehir",
+    "slug": "viransehir",
+    "provinceId": 63
+  },
+  {
+    "id": 1179,
+    "name": "Baykan",
+    "slug": "baykan",
+    "provinceId": 56
+  },
+  {
+    "id": 1317,
+    "name": "Eruh",
+    "slug": "eruh",
+    "provinceId": 56
+  },
+  {
+    "id": 1495,
+    "name": "Kurtalan",
+    "slug": "kurtalan",
+    "provinceId": 56
+  },
+  {
+    "id": 1620,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 56
+  },
+  {
+    "id": 1575,
+    "name": "Pervari",
+    "slug": "pervari",
+    "provinceId": 56
+  },
+  {
+    "id": 1662,
+    "name": "Şirvan",
+    "slug": "sirvan",
+    "provinceId": 56
+  },
+  {
+    "id": 1878,
+    "name": "Tillo",
+    "slug": "tillo",
+    "provinceId": 56
+  },
+  {
+    "id": 1156,
+    "name": "Ayancık",
+    "slug": "ayancik",
+    "provinceId": 57
+  },
+  {
+    "id": 1204,
+    "name": "Boyabat",
+    "slug": "boyabat",
+    "provinceId": 57
+  },
+  {
+    "id": 1910,
+    "name": "Dikmen",
+    "slug": "dikmen",
+    "provinceId": 57
+  },
+  {
+    "id": 1290,
+    "name": "Durağan",
+    "slug": "duragan",
+    "provinceId": 57
+  },
+  {
+    "id": 1314,
+    "name": "Erfelek",
+    "slug": "erfelek",
+    "provinceId": 57
+  },
+  {
+    "id": 1349,
+    "name": "Gerze",
+    "slug": "gerze",
+    "provinceId": 57
+  },
+  {
+    "id": 1627,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 57
+  },
+  {
+    "id": 1981,
+    "name": "Saraydüzü",
+    "slug": "sarayduzu",
+    "provinceId": 57
+  },
+  {
+    "id": 1693,
+    "name": "Türkeli",
+    "slug": "turkeli",
+    "provinceId": 57
+  },
+  {
+    "id": 1189,
+    "name": "Beytüşşebap",
+    "slug": "beytussebap",
+    "provinceId": 73
+  },
+  {
+    "id": 1223,
+    "name": "Cizre",
+    "slug": "cizre",
+    "provinceId": 73
+  },
+  {
+    "id": 1931,
+    "name": "Güçlükonak",
+    "slug": "guclukonak",
+    "provinceId": 73
+  },
+  {
+    "id": 1403,
+    "name": "İdil",
+    "slug": "idil",
+    "provinceId": 73
+  },
+  {
+    "id": 1661,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 73
+  },
+  {
+    "id": 1623,
+    "name": "Silopi",
+    "slug": "silopi",
+    "provinceId": 73
+  },
+  {
+    "id": 1698,
+    "name": "Uludere",
+    "slug": "uludere",
+    "provinceId": 73
+  },
+  {
+    "id": 1870,
+    "name": "Akıncılar",
+    "slug": "akincilar",
+    "provinceId": 58
+  },
+  {
+    "id": 1875,
+    "name": "Altınyayla",
+    "slug": "altinyayla",
+    "provinceId": 58
+  },
+  {
+    "id": 1282,
+    "name": "Divriği",
+    "slug": "divrigi",
+    "provinceId": 58
+  },
+  {
+    "id": 1913,
+    "name": "Doğanşar",
+    "slug": "dogansar",
+    "provinceId": 58
+  },
+  {
+    "id": 1342,
+    "name": "Gemerek",
+    "slug": "gemerek",
+    "provinceId": 58
+  },
+  {
+    "id": 1927,
+    "name": "Gölova",
+    "slug": "golova",
+    "provinceId": 58
+  },
+  {
+    "id": 1373,
+    "name": "Gürün",
+    "slug": "gurun",
+    "provinceId": 58
+  },
+  {
+    "id": 1376,
+    "name": "Hafik",
+    "slug": "hafik",
+    "provinceId": 58
+  },
+  {
+    "id": 1407,
+    "name": "İmranlı",
+    "slug": "imranli",
+    "provinceId": 58
+  },
+  {
+    "id": 1431,
+    "name": "Kangal",
+    "slug": "kangal",
+    "provinceId": 58
+  },
+  {
+    "id": 1484,
+    "name": "Koyulhisar",
+    "slug": "koyulhisar",
+    "provinceId": 58
+  },
+  {
+    "id": 1628,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 58
+  },
+  {
+    "id": 1650,
+    "name": "Şarkışla",
+    "slug": "sarkisla",
+    "provinceId": 58
+  },
+  {
+    "id": 1646,
+    "name": "Suşehri",
+    "slug": "susehri",
+    "provinceId": 58
+  },
+  {
+    "id": 1991,
+    "name": "Ulaş",
+    "slug": "ulas",
+    "provinceId": 58
+  },
+  {
+    "id": 1731,
+    "name": "Yıldızeli",
+    "slug": "yildizeli",
+    "provinceId": 58
+  },
+  {
+    "id": 1738,
+    "name": "Zara",
+    "slug": "zara",
+    "provinceId": 58
+  },
+  {
+    "id": 1250,
+    "name": "Çerkezköy",
+    "slug": "cerkezkoy",
+    "provinceId": 59
+  },
+  {
+    "id": 1258,
+    "name": "Çorlu",
+    "slug": "corlu",
+    "provinceId": 59
+  },
+  {
+    "id": 2094,
+    "name": "Ergene",
+    "slug": "ergene",
+    "provinceId": 59
+  },
+  {
+    "id": 1388,
+    "name": "Hayrabolu",
+    "slug": "hayrabolu",
+    "provinceId": 59
+  },
+  {
+    "id": 2095,
+    "name": "Kapaklı",
+    "slug": "kapakli",
+    "provinceId": 59
+  },
+  {
+    "id": 1511,
+    "name": "Malkara",
+    "slug": "malkara",
+    "provinceId": 59
+  },
+  {
+    "id": 1825,
+    "name": "Marmaraereğlisi",
+    "slug": "marmaraereglisi",
+    "provinceId": 59
+  },
+  {
+    "id": 1538,
+    "name": "Muratlı",
+    "slug": "muratli",
+    "provinceId": 59
+  },
+  {
+    "id": 1596,
+    "name": "Saray",
+    "slug": "saray",
+    "provinceId": 59
+  },
+  {
+    "id": 1652,
+    "name": "Şarköy",
+    "slug": "sarkoy",
+    "provinceId": 59
+  },
+  {
+    "id": 2096,
+    "name": "Süleymanpaşa",
+    "slug": "suleymanpasa",
+    "provinceId": 59
+  },
+  {
+    "id": 1129,
+    "name": "Almus",
+    "slug": "almus",
+    "provinceId": 60
+  },
+  {
+    "id": 1151,
+    "name": "Artova",
+    "slug": "artova",
+    "provinceId": 60
+  },
+  {
+    "id": 1883,
+    "name": "Başçiftlik",
+    "slug": "basciftlik",
+    "provinceId": 60
+  },
+  {
+    "id": 1308,
+    "name": "Erbaa",
+    "slug": "erbaa",
+    "provinceId": 60
+  },
+  {
+    "id": 1679,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 60
+  },
+  {
+    "id": 1545,
+    "name": "Niksar",
+    "slug": "niksar",
+    "provinceId": 60
+  },
+  {
+    "id": 1834,
+    "name": "Pazar",
+    "slug": "pazar",
+    "provinceId": 60
+  },
+  {
+    "id": 1584,
+    "name": "Reşadiye",
+    "slug": "resadiye",
+    "provinceId": 60
+  },
+  {
+    "id": 1987,
+    "name": "Sulusaray",
+    "slug": "sulusaray",
+    "provinceId": 60
+  },
+  {
+    "id": 1690,
+    "name": "Turhal",
+    "slug": "turhal",
+    "provinceId": 60
+  },
+  {
+    "id": 1858,
+    "name": "Yeşilyurt",
+    "slug": "yesilyurt",
+    "provinceId": 60
+  },
+  {
+    "id": 1740,
+    "name": "Zile",
+    "slug": "zile",
+    "provinceId": 60
+  },
+  {
+    "id": 1113,
+    "name": "Akçaabat",
+    "slug": "akcaabat",
+    "provinceId": 61
+  },
+  {
+    "id": 1141,
+    "name": "Araklı",
+    "slug": "arakli",
+    "provinceId": 61
+  },
+  {
+    "id": 1150,
+    "name": "Arsin",
+    "slug": "arsin",
+    "provinceId": 61
+  },
+  {
+    "id": 1775,
+    "name": "Beşikdüzü",
+    "slug": "besikduzu",
+    "provinceId": 61
+  },
+  {
+    "id": 1896,
+    "name": "Çarşıbaşı",
+    "slug": "carsibasi",
+    "provinceId": 61
+  },
+  {
+    "id": 1244,
+    "name": "Çaykara",
+    "slug": "caykara",
+    "provinceId": 61
+  },
+  {
+    "id": 1909,
+    "name": "Dernekpazarı",
+    "slug": "dernekpazari",
+    "provinceId": 61
+  },
+  {
+    "id": 1917,
+    "name": "Düzköy",
+    "slug": "duzkoy",
+    "provinceId": 61
+  },
+  {
+    "id": 1942,
+    "name": "Hayrat",
+    "slug": "hayrat",
+    "provinceId": 61
+  },
+  {
+    "id": 1966,
+    "name": "Köprübaşı",
+    "slug": "koprubasi",
+    "provinceId": 61
+  },
+  {
+    "id": 1507,
+    "name": "Maçka",
+    "slug": "macka",
+    "provinceId": 61
+  },
+  {
+    "id": 1548,
+    "name": "Of",
+    "slug": "of",
+    "provinceId": 61
+  },
+  {
+    "id": 2097,
+    "name": "Ortahisar",
+    "slug": "ortahisar",
+    "provinceId": 61
+  },
+  {
+    "id": 1842,
+    "name": "Şalpazarı",
+    "slug": "salpazari",
+    "provinceId": 61
+  },
+  {
+    "id": 1647,
+    "name": "Sürmene",
+    "slug": "surmene",
+    "provinceId": 61
+  },
+  {
+    "id": 1681,
+    "name": "Tonya",
+    "slug": "tonya",
+    "provinceId": 61
+  },
+  {
+    "id": 1709,
+    "name": "Vakfıkebir",
+    "slug": "vakfikebir",
+    "provinceId": 61
+  },
+  {
+    "id": 1732,
+    "name": "Yomra",
+    "slug": "yomra",
+    "provinceId": 61
+  },
+  {
+    "id": 1247,
+    "name": "Çemişgezek",
+    "slug": "cemisgezek",
+    "provinceId": 62
+  },
+  {
+    "id": 1397,
+    "name": "Hozat",
+    "slug": "hozat",
+    "provinceId": 62
+  },
+  {
+    "id": 1518,
+    "name": "Mazgirt",
+    "slug": "mazgirt",
+    "provinceId": 62
+  },
+  {
+    "id": 1688,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 62
+  },
+  {
+    "id": 1541,
+    "name": "Nazımiye",
+    "slug": "nazimiye",
+    "provinceId": 62
+  },
+  {
+    "id": 1562,
+    "name": "Ovacık",
+    "slug": "ovacik",
+    "provinceId": 62
+  },
+  {
+    "id": 1574,
+    "name": "Pertek",
+    "slug": "pertek",
+    "provinceId": 62
+  },
+  {
+    "id": 1581,
+    "name": "Pülümür",
+    "slug": "pulumur",
+    "provinceId": 62
+  },
+  {
+    "id": 1170,
+    "name": "Banaz",
+    "slug": "banaz",
+    "provinceId": 64
+  },
+  {
+    "id": 1323,
+    "name": "Eşme",
+    "slug": "esme",
+    "provinceId": 64
+  },
+  {
+    "id": 1436,
+    "name": "Karahallı",
+    "slug": "karahalli",
+    "provinceId": 64
+  },
+  {
+    "id": 1704,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 64
+  },
+  {
+    "id": 1629,
+    "name": "Sivaslı",
+    "slug": "sivasli",
+    "provinceId": 64
+  },
+  {
+    "id": 1697,
+    "name": "Ulubey",
+    "slug": "ulubey",
+    "provinceId": 64
+  },
+  {
+    "id": 1770,
+    "name": "Bahçesaray",
+    "slug": "bahcesaray",
+    "provinceId": 65
+  },
+  {
+    "id": 1175,
+    "name": "Başkale",
+    "slug": "baskale",
+    "provinceId": 65
+  },
+  {
+    "id": 1786,
+    "name": "Çaldıran",
+    "slug": "caldiran",
+    "provinceId": 65
+  },
+  {
+    "id": 1236,
+    "name": "Çatak",
+    "slug": "catak",
+    "provinceId": 65
+  },
+  {
+    "id": 1918,
+    "name": "Edremit",
+    "slug": "edremit",
+    "provinceId": 65
+  },
+  {
+    "id": 1309,
+    "name": "Erciş",
+    "slug": "ercis",
+    "provinceId": 65
+  },
+  {
+    "id": 1350,
+    "name": "Gevaş",
+    "slug": "gevas",
+    "provinceId": 65
+  },
+  {
+    "id": 1372,
+    "name": "Gürpınar",
+    "slug": "gurpinar",
+    "provinceId": 65
+  },
+  {
+    "id": 2098,
+    "name": "İpekyolu",
+    "slug": "ipekyolu",
+    "provinceId": 65
+  },
+  {
+    "id": 1533,
+    "name": "Muradiye",
+    "slug": "muradiye",
+    "provinceId": 65
+  },
+  {
+    "id": 1565,
+    "name": "Özalp",
+    "slug": "ozalp",
+    "provinceId": 65
+  },
+  {
+    "id": 1980,
+    "name": "Saray",
+    "slug": "saray",
+    "provinceId": 65
+  },
+  {
+    "id": 2099,
+    "name": "Tuşba",
+    "slug": "tusba",
+    "provinceId": 65
+  },
+  {
+    "id": 2019,
+    "name": "Altınova",
+    "slug": "altinova",
+    "provinceId": 77
+  },
+  {
+    "id": 2020,
+    "name": "Armutlu",
+    "slug": "armutlu",
+    "provinceId": 77
+  },
+  {
+    "id": 2022,
+    "name": "Çiftlikköy",
+    "slug": "ciftlikkoy",
+    "provinceId": 77
+  },
+  {
+    "id": 2021,
+    "name": "Çınarcık",
+    "slug": "cinarcik",
+    "provinceId": 77
+  },
+  {
+    "id": 1716,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 77
+  },
+  {
+    "id": 2026,
+    "name": "Termal",
+    "slug": "termal",
+    "provinceId": 77
+  },
+  {
+    "id": 1117,
+    "name": "Akdağmadeni",
+    "slug": "akdagmadeni",
+    "provinceId": 66
+  },
+  {
+    "id": 1877,
+    "name": "Aydıncık",
+    "slug": "aydincik",
+    "provinceId": 66
+  },
+  {
+    "id": 1198,
+    "name": "Boğazlıyan",
+    "slug": "bogazliyan",
+    "provinceId": 66
+  },
+  {
+    "id": 1895,
+    "name": "Çandır",
+    "slug": "candir",
+    "provinceId": 66
+  },
+  {
+    "id": 1242,
+    "name": "Çayıralan",
+    "slug": "cayiralan",
+    "provinceId": 66
+  },
+  {
+    "id": 1245,
+    "name": "Çekerek",
+    "slug": "cekerek",
+    "provinceId": 66
+  },
+  {
+    "id": 1952,
+    "name": "Kadışehri",
+    "slug": "kadisehri",
+    "provinceId": 66
+  },
+  {
+    "id": 1733,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 66
+  },
+  {
+    "id": 1982,
+    "name": "Saraykent",
+    "slug": "saraykent",
+    "provinceId": 66
+  },
+  {
+    "id": 1602,
+    "name": "Sarıkaya",
+    "slug": "sarikaya",
+    "provinceId": 66
+  },
+  {
+    "id": 1655,
+    "name": "Şefaatli",
+    "slug": "sefaatli",
+    "provinceId": 66
+  },
+  {
+    "id": 1635,
+    "name": "Sorgun",
+    "slug": "sorgun",
+    "provinceId": 66
+  },
+  {
+    "id": 1998,
+    "name": "Yenifakılı",
+    "slug": "yenifakili",
+    "provinceId": 66
+  },
+  {
+    "id": 1726,
+    "name": "Yerköy",
+    "slug": "yerkoy",
+    "provinceId": 66
+  },
+  {
+    "id": 1758,
+    "name": "Alaplı",
+    "slug": "alapli",
+    "provinceId": 67
+  },
+  {
+    "id": 1240,
+    "name": "Çaycuma",
+    "slug": "caycuma",
+    "provinceId": 67
+  },
+  {
+    "id": 1276,
+    "name": "Devrek",
+    "slug": "devrek",
+    "provinceId": 67
+  },
+  {
+    "id": 1313,
+    "name": "Ereğli",
+    "slug": "eregli",
+    "provinceId": 67
+  },
+  {
+    "id": 1926,
+    "name": "Gökçebey",
+    "slug": "gokcebey",
+    "provinceId": 67
+  },
+  {
+    "id": 2100,
+    "name": "Kilimli",
+    "slug": "kilimli",
+    "provinceId": 67
+  },
+  {
+    "id": 2101,
+    "name": "Kozlu",
+    "slug": "kozlu",
+    "provinceId": 67
+  },
+  {
+    "id": 1741,
+    "name": "Merkez",
+    "slug": "merkez",
+    "provinceId": 67
+  }
+]

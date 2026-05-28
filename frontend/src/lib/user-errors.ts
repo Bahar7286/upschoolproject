@@ -36,10 +36,27 @@ function isNetworkError(error: unknown): boolean {
 
 export function mapError(error: unknown, context: ErrorContext = 'general'): UserFacingError {
   if (isNetworkError(error)) {
+    if (context === 'assistant') {
+      return {
+        kind: 'network',
+        message: 'Asistan sunucusuna ulaşılamıyor (API kapalı veya yanlış adres).',
+        alternative:
+          'Yerelde backend: uvicorn :8000 · frontend .env: VITE_API_BASE_URL=http://127.0.0.1:8000',
+        actionLabel: 'Sayfayı yenile',
+      };
+    }
+    if (context === 'discover' || context === 'route-recommendations') {
+      return {
+        kind: 'network',
+        message: 'Sunucuya bağlanılamadı. API adresini veya internet bağlantını kontrol et.',
+        alternative: 'Render kullanıyorsan API servisinin uyandığını doğrula (ilk istek yavaş olabilir).',
+        actionLabel: 'Sayfayı yenile',
+      };
+    }
     return {
       kind: 'network',
-      message: 'İnternet bağlantını kontrol edip tekrar deneyebilirsin.',
-      alternative: 'Bağlantın düzelince sayfayı yenilemen yeterli.',
+      message: 'Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar dene.',
+      alternative: 'Yerelde çalışıyorsan backend ve docker (PostgreSQL) açık olmalı.',
       actionLabel: 'Sayfayı yenile',
     };
   }
@@ -78,6 +95,14 @@ export function mapError(error: unknown, context: ErrorContext = 'general'): Use
       };
     }
     if (error.status >= 500) {
+      if (context === 'assistant') {
+        return {
+          kind: 'api',
+          message: 'AI asistan şu an yanıt veremiyor (LLM anahtarı veya model).',
+          alternative: 'backend/.env içinde OPENROUTER_API_KEY ve OPENROUTER_MODEL kontrol edin.',
+          actionLabel: 'Tekrar dene',
+        };
+      }
       if (context === 'route-recommendations' || context === 'discover') {
         return {
           kind: 'api',

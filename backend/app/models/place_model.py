@@ -19,3 +19,4 @@ class Place(Base):
     description: Mapped[str] = mapped_column(Text, nullable=False, default='')
     tags: Mapped[str] = mapped_column(String(255), nullable=False, default='')
     is_partner: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    image_url: Mapped[str | None] = mapped_column(String(1024), nullable=True)

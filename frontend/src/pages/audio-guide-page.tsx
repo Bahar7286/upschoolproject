@@ -17,7 +17,7 @@ const LANGS = [
 
 export default function AudioGuidePage(): ReactElement {
   const routeTitle = useActiveRouteStore((s) => s.routeTitle);
-  const stops = useActiveRouteStore((s) => s.stops);
+  const mergedStops = useActiveRouteStore((s) => s.mergedStops)();
   const currentStopIndex = useActiveRouteStore((s) => s.currentStopIndex);
   const setCurrentStopIndex = useActiveRouteStore((s) => s.setCurrentStopIndex);
 
@@ -27,7 +27,7 @@ export default function AudioGuidePage(): ReactElement {
   const { speak, stop, speaking, progress } = useSpeechSynthesis();
   const [offlineSaved, setOfflineSaved] = useState(false);
 
-  const currentStop = stops[currentStopIndex] ?? stops[0] ?? null;
+  const currentStop = mergedStops[currentStopIndex] ?? mergedStops[0] ?? null;
   const displayTitle = currentStop?.title ?? 'Durak seçilmedi';
   const displayText =
     currentStop?.description ??
@@ -43,21 +43,28 @@ export default function AudioGuidePage(): ReactElement {
 
   useEffect(() => {
     const pkg = loadOfflineRoutePackage();
-    if (pkg && !stops.length) {
-      useActiveRouteStore.getState().setActiveRoute(pkg.routeId, pkg.routeTitle, pkg.stops);
+    if (pkg && !mergedStops.length) {
+      useActiveRouteStore.getState().setActiveRoute(
+        pkg.routeId,
+        pkg.routeTitle,
+        pkg.stops,
+        pkg.extraStops ?? [],
+      );
       setOfflineSaved(true);
     }
-  }, [stops.length]);
+  }, [mergedStops.length]);
 
   const routeId = useActiveRouteStore((s) => s.routeId);
 
   const saveOffline = () => {
-    if (!stops.length) return;
+    if (!mergedStops.length) return;
     try {
+      const state = useActiveRouteStore.getState();
       saveOfflineRoutePackage({
         routeId: routeId ?? 0,
         routeTitle,
-        stops,
+        stops: state.baseStops,
+        extraStops: state.extraStops,
         savedAt: new Date().toISOString(),
       });
       setOfflineSaved(true);
@@ -99,7 +106,7 @@ export default function AudioGuidePage(): ReactElement {
         </p>
       </header>
 
-      {!stops.length ? (
+      {!mergedStops.length ? (
         <div className="rounded-[22px] border border-amber-500/35 bg-amber-500/10 p-5 text-center">
           <p className="font-semibold text-amber-950 dark:text-amber-100">Henüz aktif rota yok</p>
           <p className="mt-1 text-sm text-amber-900/80 dark:text-amber-200/80">Keşfet&apos;ten bir rota satın alın ve başlatın.</p>
@@ -122,7 +129,7 @@ export default function AudioGuidePage(): ReactElement {
           <div className="space-y-4 p-6">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-primary">
-                Durak {currentStopIndex + 1}/{stops.length}
+                Durak {currentStopIndex + 1}/{mergedStops.length}
               </p>
               <h2 className="mt-1 font-display text-xl font-bold text-heritage-ink dark:text-stone-50">{displayTitle}</h2>
               <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">{displayText}</p>
@@ -188,7 +195,7 @@ export default function AudioGuidePage(): ReactElement {
               <button
                 type="button"
                 className="tap-scale flex-1 rounded-xl border border-stone-900/10 py-2 text-sm font-semibold disabled:opacity-40 dark:border-white/10"
-                disabled={currentStopIndex >= stops.length - 1}
+                disabled={currentStopIndex >= mergedStops.length - 1}
                 onClick={() => setCurrentStopIndex(currentStopIndex + 1)}
               >
                 Sonraki →

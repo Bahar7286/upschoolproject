@@ -10,4 +10,5 @@ class CityResponse(BaseModel):
     plate_code: str = Field(min_length=2, max_length=2)
     center_lat: float
     center_lng: float
+    image_url: str | None = None
 

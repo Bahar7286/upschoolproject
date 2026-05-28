@@ -228,19 +228,46 @@ async def seed_initial_data(session: AsyncSession) -> None:
         )
         await session.commit()
 
-    existing_districts = await session.execute(select(District.district_id).limit(1))
-    if not existing_districts.first():
-        session.add_all(
-            [
-                District(
-                    district_id=item['id'],
-                    city_id=item['provinceId'],
-                    name_tr=item['name'],
-                    slug=item['slug'],
-                    center_lat=0.0,
-                    center_lng=0.0,
-                )
-                for item in TR_DISTRICTS
-            ]
+    await ensure_districts_seeded(session)
+
+
+async def ensure_districts_seeded(session: AsyncSession) -> None:
+    """Tüm iller için eksik ilçeleri ekle (kısmi seed sonrası boş kalan iller için)."""
+    existing_ids = set(
+        (await session.execute(select(District.district_id))).scalars().all()
+    )
+    city_rows = await session.execute(select(City))
+    city_coords = {
+        c.city_id: (float(c.center_lat), float(c.center_lng))
+        for c in city_rows.scalars().all()
+    }
+    to_add: list[District] = []
+    for item in TR_DISTRICTS:
+        if item['id'] in existing_ids:
+            continue
+        lat, lng = city_coords.get(item['provinceId'], (0.0, 0.0))
+        to_add.append(
+            District(
+                district_id=item['id'],
+                city_id=item['provinceId'],
+                name_tr=item['name'],
+                slug=item['slug'],
+                center_lat=lat,
+                center_lng=lng,
+            )
         )
+    if to_add:
+        session.add_all(to_add)
+        await session.commit()
+
+    zero_rows = await session.execute(
+        select(District).where(District.center_lat == 0.0, District.center_lng == 0.0)
+    )
+    patched = False
+    for d in zero_rows.scalars().all():
+        coords = city_coords.get(d.city_id)
+        if coords and (coords[0] != 0.0 or coords[1] != 0.0):
+            d.center_lat, d.center_lng = coords
+            patched = True
+    if patched:
         await session.commit()

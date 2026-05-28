@@ -6,9 +6,11 @@ import { ButtonLink } from './button';
 export function ErrorAlert({
   error,
   onRetry,
+  onDismiss,
 }: {
   error: UserFacingError;
   onRetry?: () => void;
+  onDismiss?: () => void;
 }): ReactElement {
   return (
     <div
@@ -20,6 +22,15 @@ export function ErrorAlert({
         <p className="mt-1 text-sm text-red-800/90 dark:text-red-200/90">{error.alternative}</p>
       ) : null}
       <div className="mt-3 flex flex-wrap gap-2">
+        {onDismiss ? (
+          <button
+            type="button"
+            className="tap-scale min-h-[44px] rounded-lg border border-red-300 px-4 text-sm font-semibold text-red-900 dark:border-red-500/50 dark:text-red-100"
+            onClick={onDismiss}
+          >
+            Kapat
+          </button>
+        ) : null}
         {onRetry ? (
           <button
             type="button"

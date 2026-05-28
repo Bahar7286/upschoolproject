@@ -1,9 +1,11 @@
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 
+import { ButtonLink } from '../ui/button';
 import { EmptyState } from '../ui/empty-state';
 import { ErrorAlert } from '../ui/error-alert';
+import { ApiError, getApiBaseUrl } from '../../lib/api';
 import { EMPTY_STATES } from '../../content/empty-states';
 import { mapError } from '../../lib/user-errors';
 import {
@@ -27,9 +29,11 @@ const STATUS_LABEL: Record<string, string> = {
 export function GuideRoutesPanel(): ReactElement {
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
+  const location = useLocation();
   const [routes, setRoutes] = useState<RouteResponse[]>([]);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<number | null>(null);
+  const [createdBanner, setCreatedBanner] = useState('');
 
   const load = async () => {
     if (!user || user.role !== 'guide') return;
@@ -38,13 +42,27 @@ export function GuideRoutesPanel(): ReactElement {
       setRoutes(res.items);
       setError('');
     } catch (err) {
-      setError(mapError(err).message);
+      if (err instanceof ApiError && err.status === 404) {
+        setError('Rehber profili bulunamadı. Çıkış yapıp rehber olarak tekrar giriş yapmayı dene.');
+      } else if (err instanceof TypeError || (err instanceof ApiError && err.status === 0)) {
+        setError(`Sunucuya ulaşılamıyor (${getApiBaseUrl()}). API çalışıyor mu kontrol et.`);
+      } else {
+        setError(mapError(err).message);
+      }
     }
   };
 
   useEffect(() => {
     void load();
-  }, [user?.user_id]);
+  }, [user?.user_id, location.key]);
+
+  useEffect(() => {
+    const state = location.state as { routeCreated?: number } | null;
+    if (state?.routeCreated) {
+      setCreatedBanner('Rota taslak olarak kaydedildi. İncelemeye gönderebilirsin.');
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
 
   const handleSubmit = async (routeId: number) => {
     if (!accessToken || !user) return;
@@ -74,8 +92,22 @@ export function GuideRoutesPanel(): ReactElement {
 
   return (
     <section className="rounded-[22px] border border-stone-900/10 bg-white/90 p-5 dark:border-white/10 dark:bg-zinc-900/95">
-      <h2 className="font-display text-lg font-bold">Rotalarım</h2>
-      <p className="mt-1 text-sm text-stone-600">Taslak → incelemeye gönder → admin onayı → yayınla</p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="font-display text-lg font-bold">Rotalarım</h2>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+            Taslak → incelemeye gönder → admin onayı → yayınla
+          </p>
+        </div>
+        <ButtonLink className="shrink-0" to="/guide/rotalar/yeni">
+          + Yeni rota
+        </ButtonLink>
+      </div>
+      {createdBanner ? (
+        <p className="mt-3 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-dark dark:text-primary" role="status">
+          {createdBanner}
+        </p>
+      ) : null}
       {error ? (
         <div className="mt-2">
           <ErrorAlert error={{ kind: 'api', message: error }} />

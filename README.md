@@ -1,6 +1,6 @@
 # Historial-GO
 
-B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / geofence, rehber pazaryeri, trip talepleri, gamification ve Stripe ödeme. **İnteraktif web + API** (statik site değil); LLM OpenRouter veya Google Gemini üzerinden.
+B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / geofence, rehber pazaryeri, trip talepleri, gamification ve Stripe ödeme. **İnteraktif web + API** (statik site değil); LLM varsayılan olarak OpenRouter (ör. Gemma) üzerinden.
 
 ## Repo yapısı
 
@@ -9,6 +9,7 @@ B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / g
 | [`frontend/`](frontend/) | React + Vite arayüz; mobil: `android/`, `ios/` (Capacitor) |
 | [`backend/`](backend/) | FastAPI REST API |
 | [`prodocs/`](prodocs/) | Yapay zeka ajanları için geliştirme referansı |
+| [`prodocs/API_KEYS_TR.md`](prodocs/API_KEYS_TR.md) | API anahtarları: nereden alınır, nereye yapıştırılır (TR) |
 | [`.gitignore`](.gitignore) | Gizli dosya, cache, coverage hariç tutma |
 | [`.env.example`](.env.example) | Ortam değişkeni şablonu (gerçek anahtar yok) |
 | [`PRD.md`](PRD.md) | Proje anayasası: problem, kullanıcı, özellikler |
@@ -86,7 +87,7 @@ Ayrıntı: [`prodocs/testing.md`](prodocs/testing.md).
 
 - **Frontend:** React 19, TypeScript, Vite, Tailwind, Capacitor  
 - **Backend:** FastAPI, SQLAlchemy 2, async PostgreSQL/SQLite, JWT, Stripe, httpx (LLM)  
-- **LLM:** OpenRouter veya Gemini (`GET /ai/status`)
+- **LLM:** OpenRouter (`GET /ai/status`; model: `OPENROUTER_MODEL`)
 
 ## Lisans / teslim
 

@@ -1,14 +1,16 @@
 import { useQuery } from '@tanstack/react-query';
-import { Map } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
 import { BackButton } from '../components/ui/back-button';
+import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-card';
+import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { listCities } from '../services/city-service';
+import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
 import { listPlaces } from '../services/place-service';
-import type { PlaceCategory, PlaceResponse } from '../types/place';
+import type { PlaceCategory } from '../types/place';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
 
 export default function CityPlacesPage(): ReactElement {
@@ -25,6 +27,13 @@ export default function CityPlacesPage(): ReactElement {
   });
   const city = useMemo(() => cities.find((c) => c.city_id === city_id) ?? null, [cities, city_id]);
 
+  const { data: center } = useQuery({
+    queryKey: ['geo-center-city', city_id],
+    queryFn: () => fetchGeoCenter({ cityId: city_id }),
+    enabled: city_id > 0,
+    staleTime: 60 * 60 * 1000,
+  });
+
   const { data: places = [], isPending, isError } = useQuery({
     queryKey: ['city-places', city?.name_tr ?? '', category ?? 'all', q],
     queryFn: () =>
@@ -37,6 +46,23 @@ export default function CityPlacesPage(): ReactElement {
     enabled: Boolean(city),
     staleTime: 2 * 60 * 1000,
   });
+
+  const { data: googlePlaces = [] } = useQuery({
+    queryKey: ['city-google', center?.lat, center?.lng, category],
+    queryFn: () =>
+      fetchGooglePlacesNearby({
+        lat: center!.lat,
+        lng: center!.lng,
+        radius_m: 12000,
+        category: category ?? 'museum',
+      }).then((r) => r.places),
+    enabled: Boolean(center && category),
+    staleTime: 10 * 60 * 1000,
+    retry: false,
+  });
+
+  const dbNames = new Set(places.map((p) => p.name.toLowerCase()));
+  const extraGoogle = googlePlaces.filter((p) => !dbNames.has(p.name.toLowerCase()));
 
   return (
     <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="cityp-title">
@@ -74,15 +100,31 @@ export default function CityPlacesPage(): ReactElement {
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        {places.map((p: PlaceResponse) => (
-          <Link key={p.place_id} to={`/places/${p.place_id}`} className="theme-card tap-scale rounded-2xl p-4 hover:shadow-lift">
-            <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-muted">{PLACE_CATEGORY_LABELS[p.category]}</p>
-            <p className="mt-1 font-display text-lg font-extrabold text-theme">{p.name}</p>
-            <p className="mt-1 line-clamp-2 text-sm text-theme-muted">{p.description || `${p.district} / ${p.city}`}</p>
-          </Link>
+        {places.map((p) => (
+          <VenuePlaceCard
+            key={p.place_id}
+            placeId={p.place_id}
+            name={p.name}
+            category={p.category}
+            subtitle={p.description || `${p.district} / ${p.city}`}
+            imageUrl={p.image_url}
+            to={`/places/${p.place_id}`}
+          />
         ))}
+        {category
+          ? extraGoogle.map((p) => (
+              <GoogleVenuePlaceCard
+                key={p.place_id}
+                placeId={p.place_id}
+                name={p.name}
+                category={(p.category as PlaceCategory) || category}
+                subtitle={p.address}
+                photoUrl={p.photo_url}
+                to={`/google/places/${encodeURIComponent(p.place_id)}?back=${encodeURIComponent(`/cities/${city_id}/places?category=${category}`)}&cityId=${city_id}`}
+              />
+            ))
+          : null}
       </div>
     </section>
   );
 }
-

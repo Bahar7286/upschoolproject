@@ -90,6 +90,7 @@ async def compute_route(payload: ComputeRouteRequest) -> ComputeRouteResponse:
             dest_lat=payload.dest_lat,
             dest_lng=payload.dest_lng,
             travel_mode=payload.travel_mode,
+            waypoints=[(w.lat, w.lng) for w in payload.waypoints],
         )
     except ValueError as exc:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

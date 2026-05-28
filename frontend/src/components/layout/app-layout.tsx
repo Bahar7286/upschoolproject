@@ -23,6 +23,7 @@ import { BrandLogo } from '../brand/brand-logo';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { MobileHeaderMenu } from './mobile-header-menu';
 import { ThemeToggle } from '../theme/theme-toggle';
+import { useI18n } from '../../lib/i18n';
 import { fetchCurrentUser } from '../../services/auth-service';
 import { useAuthStore } from '../../stores/auth-store';
 import { useOnboardingStore } from '../../stores/onboarding-store';
@@ -35,6 +36,7 @@ function navClass(isActive: boolean): string {
 }
 
 export function AppLayout(): ReactElement {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
@@ -106,57 +108,57 @@ export function AppLayout(): ReactElement {
               <>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/discover">
                   <Compass className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Keşfet
+                  {t('nav.discover', 'Keşfet')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/cities">
                   <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  İller
+                  {t('nav.cities', 'İller')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/rehberler">
                   <Users className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Rehberler
+                  {t('nav.guides', 'Rehberler')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/map">
                   <MapIcon className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Harita
+                  {t('nav.map', 'Harita')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/planner">
                   <CalendarDays className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Plan
+                  {t('nav.plan', 'Plan')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/talepler">
                   <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Taleplerim
+                  {t('nav.trips', 'Taleplerim')}
                 </NavLink>
-                <NavLink className={({ isActive }) => navClass(isActive)} to="/assistant">
+                <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/assistant">
                   <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Asistan
+                  {t('nav.assistant', 'Asistan')}
                 </NavLink>
-                <NavLink className={({ isActive }) => navClass(isActive)} to="/favorites">
+                <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/favorites">
                   <Heart className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Favori
+                  {t('nav.favorites', 'Favori')}
                 </NavLink>
               </>
             )}
-            <NavLink className={({ isActive }) => navClass(isActive)} to="/audio">
+            <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/audio">
               <Headphones className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
               Ses
             </NavLink>
             {isTourist ? (
-              <NavLink className={({ isActive }) => navClass(isActive)} to="/onboarding">
+              <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/onboarding">
                 <Palette className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
                 Gezi tercihleri
               </NavLink>
             ) : null}
             {isTourist ? (
-              <NavLink className={({ isActive }) => navClass(isActive)} to="/purchases">
+              <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/purchases">
                 <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
                 Satın alımlar
               </NavLink>
             ) : null}
             <NavLink className={({ isActive }) => navClass(isActive)} to="/profile">
               <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-              Profil
+              {t('nav.profile', 'Profil')}
             </NavLink>
           </nav>
 

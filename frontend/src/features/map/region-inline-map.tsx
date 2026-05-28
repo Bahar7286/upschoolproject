@@ -5,6 +5,7 @@ import { Link } from 'react-router-dom';
 
 import { formatApiError } from '../../lib/api';
 import { fetchGeoCenter, fetchGooglePlacesNearby } from '../../services/google-service';
+import { listPlaces } from '../../services/place-service';
 import type { PlaceCategory } from '../../types/place';
 import { GoogleExploreMap } from './google-explore-map';
 import { LeafletRegionMap } from './leaflet-region-map';
@@ -17,6 +18,8 @@ export interface RegionInlineMapProps {
   category?: PlaceCategory | null;
   /** district/city tablosundan merkez (geo API yedek) */
   fallbackCenter?: { lat: number; lng: number };
+  /** Veritabanı mekan sayısını etikette göster */
+  showDbCount?: boolean;
 }
 
 export function RegionInlineMap({
@@ -26,6 +29,7 @@ export function RegionInlineMap({
   districtName,
   category,
   fallbackCenter,
+  showDbCount,
 }: RegionInlineMapProps): ReactElement {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const isDistrict = Boolean(districtId && districtId > 0);
@@ -53,6 +57,19 @@ export function RegionInlineMap({
     return { lat: 39.0, lng: 35.0 };
   }, [geoCenter, fallbackCenter]);
 
+  const { data: dbPlaces = [] } = useQuery({
+    queryKey: ['db-places-count', cityName, districtName, category],
+    queryFn: () =>
+      listPlaces({
+        city: cityName,
+        district: districtName,
+        category: category ?? undefined,
+        limit: 200,
+      }),
+    enabled: showDbCount && Boolean(cityName),
+    staleTime: 5 * 60 * 1000,
+  });
+
   const {
     data: nearby,
     isFetching: placesLoading,
@@ -67,7 +84,8 @@ export function RegionInlineMap({
         category: category ?? undefined,
       }),
     staleTime: 30 * 60 * 1000,
-    retry: 1,
+    retry: false,
+    throwOnError: false,
   });
 
   const mapLink = useMemo(() => {
@@ -92,7 +110,8 @@ export function RegionInlineMap({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-stone-600 dark:text-stone-400">
           {geoLoading ? 'Harita yükleniyor…' : regionLabel}
-          {nearby?.places.length != null ? ` · ${nearby.places.length} canlı mekan` : ''}
+          {nearby?.places.length != null ? ` · ${nearby.places.length} canlı pin` : ''}
+          {showDbCount && dbPlaces.length > 0 ? ` · ${dbPlaces.length} DB mekan` : ''}
         </p>
         <Link className="text-xs font-bold text-primary hover:underline" to={mapLink}>
           Tam ekran harita →

@@ -2,9 +2,41 @@
   "nav": {
     "discover": "Discover",
     "cities": "Cities",
+    "guides": "Guides",
     "map": "Map",
-    "profile": "Profile",
-    "assistant": "Assistant"
+    "plan": "Plan",
+    "trips": "My trips",
+    "assistant": "Assistant",
+    "favorites": "Favorites",
+    "audio": "Audio",
+    "preferences": "Trip preferences",
+    "purchases": "Purchases",
+    "profile": "Profile"
+  },
+  "profile": {
+    "preferences": "Preferences",
+    "preferencesHint": "Language and notification settings",
+    "lookTabHint": "Go to the Appearance tab for theme and font.",
+    "lookTabLink": "Appearance",
+    "weekly": "Weekly",
+    "traveler": "Traveler",
+    "tourist": "Tourist",
+    "guide": "Guide",
+    "tabs": {
+      "overview": "Overview",
+      "history": "History",
+      "notes": "My notes",
+      "play": "Play",
+      "look": "Appearance"
+    }
+  },
+  "city": {
+    "districts": "Districts",
+    "districtCount": "{count} districts",
+    "placesCount": "{count} places",
+    "noDistricts": "District list could not be loaded for this city.",
+    "retry": "Retry",
+    "explore": "Explore"
   },
   "onboarding": {
     "cityTitle": "Which city will you explore?",

@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { AssistantMessageBody } from '../components/ai/assistant-message-body';
 import { BackButton } from '../components/ui/back-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { assistantChat, fetchAiStatus, type AssistantMessage } from '../services/ai-service';
@@ -45,7 +46,8 @@ export default function AssistantPage(): ReactElement {
   const [msgs, setMsgs] = useState<AssistantMessage[]>(() => [
     {
       role: 'assistant' as const,
-      content: 'Merhaba! Şehir/ilçe ve ilgi alanına göre plan yapabilirim. Nereye gideceksin, kaç günün var?',
+      content:
+        'Merhaba! 👋 Ben Historial-GO AI asistanınızım. Tarihi ve kültürel yerler hakkında sorularınızı yanıtlayabilirim. Nereye gideceksiniz, kaç gününüz var?',
     },
   ]);
   const [error, setError] = useState('');
@@ -99,18 +101,24 @@ export default function AssistantPage(): ReactElement {
         <p className="text-sm text-theme-muted">Şehir/ilçe ve ilgi alanına göre öneri + mini plan</p>
       </header>
 
-      <div className="rounded-xl border border-stone-900/10 bg-stone-50 px-3 py-2 text-xs text-stone-600 dark:border-white/10 dark:bg-zinc-900 dark:text-stone-400">
-        API: {getApiBaseUrl()}
-        {aiStatus ? (
-          <>
-            {' '}
-            · LLM: {aiStatus.llm_enabled ? `açık (${aiStatus.provider})` : 'kapalı — Render’da OPENROUTER_API_KEY gerekli'}
-          </>
-        ) : null}
-      </div>
+      {import.meta.env.DEV ? (
+        <div className="rounded-xl border border-stone-900/10 bg-stone-50 px-3 py-2 text-xs text-stone-500 dark:border-white/10 dark:bg-zinc-900">
+          Geliştirme: {getApiBaseUrl()}
+          {aiStatus?.llm_enabled ? ' · LLM açık' : ' · LLM kapalı'}
+        </div>
+      ) : null}
 
       {error ? (
-        <ErrorAlert error={mapError(new Error(error), 'assistant')} onRetry={() => setError('')} />
+        <ErrorAlert
+          error={{
+            kind: 'api',
+            message: error,
+            alternative: aiStatus?.llm_enabled
+              ? undefined
+              : 'LLM kapalı: backend/.env dosyasına OPENROUTER_API_KEY ekleyin.',
+          }}
+          onRetry={() => setError('')}
+        />
       ) : null}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -155,13 +163,17 @@ export default function AssistantPage(): ReactElement {
             <div key={idx} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
               <div
                 className={[
-                  'max-w-[92%] rounded-2xl px-4 py-3 text-sm leading-relaxed sm:max-w-[85%]',
+                  'max-w-[92%] rounded-2xl px-4 py-3 sm:max-w-[85%]',
                   m.role === 'user'
-                    ? 'bg-primary text-white'
-                    : 'bg-stone-100 text-stone-900 dark:bg-zinc-800 dark:text-stone-50',
+                    ? 'bg-primary text-sm leading-relaxed text-white'
+                    : 'bg-stone-100 dark:bg-zinc-800',
                 ].join(' ')}
               >
-                {m.content}
+                {m.role === 'user' ? (
+                  <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
+                ) : (
+                  <AssistantMessageBody content={m.content} />
+                )}
               </div>
             </div>
           ))}
@@ -182,7 +194,7 @@ export default function AssistantPage(): ReactElement {
         <div className="flex shrink-0 items-center gap-2 border-t border-stone-900/5 pt-2 dark:border-white/10">
           <input
             className="h-12 min-w-0 flex-1 rounded-xl border border-stone-900/10 bg-white px-3 text-base outline-none dark:border-white/10 dark:bg-zinc-900 sm:px-4 sm:text-sm"
-            placeholder="Mesaj yaz…"
+            placeholder="Soru sor…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {

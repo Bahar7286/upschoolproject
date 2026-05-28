@@ -28,7 +28,7 @@ import type { GamificationResponse } from '../types/user';
 import { BADGE_LABELS } from '../types/user';
 import type { NoteResponse } from '../types/social';
 import type { PlanResponse } from '../types/plan';
-import { LanguageSwitcher } from '../lib/i18n';
+import { LanguageSwitcher, useI18n } from '../lib/i18n';
 import { ProfileQuickLinks } from '../components/profile/profile-quick-links';
 import { SiteFooter } from '../components/legal/site-footer';
 import { ErrorAlert } from '../components/ui/error-alert';
@@ -47,15 +47,15 @@ const ALL_BADGES = ['welcome', 'first_step', 'route_explorer', 'streak_3', 'stre
 
 type Tab = 'overview' | 'history' | 'notes' | 'play' | 'look';
 
-const TABS: { id: Tab; label: string; icon: typeof Award }[] = [
-  { id: 'overview', label: 'Özet', icon: Award },
-  { id: 'history', label: 'Geçmiş', icon: History },
-  { id: 'notes', label: 'Notlarım', icon: BookOpen },
-  { id: 'play', label: 'Oyun', icon: Trophy },
-  { id: 'look', label: 'Görünüm', icon: Palette },
-];
-
 export default function ProfilePage(): ReactElement {
+  const { t, locale } = useI18n();
+  const TABS: { id: Tab; label: string; icon: typeof Award }[] = [
+    { id: 'overview', label: t('profile.tabs.overview', 'Özet'), icon: Award },
+    { id: 'history', label: t('profile.tabs.history', 'Geçmiş'), icon: History },
+    { id: 'notes', label: t('profile.tabs.notes', 'Notlarım'), icon: BookOpen },
+    { id: 'play', label: t('profile.tabs.play', 'Oyun'), icon: Trophy },
+    { id: 'look', label: t('profile.tabs.look', 'Görünüm'), icon: Palette },
+  ];
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -138,13 +138,14 @@ export default function ProfilePage(): ReactElement {
 
   const xp = stats?.xp ?? user?.xp ?? 0;
   const streak = stats?.streak_days ?? user?.streak_days ?? 0;
-  const levelName = stats?.level_name ?? 'Gezgin';
+  const levelName = stats?.level_name ?? t('profile.traveler', 'Gezgin');
   const nextXp = stats?.next_level_xp ?? 200;
   const badges = stats?.badges ?? user?.badges ?? [];
   const xpRules = stats?.xp_rules ?? [];
   const rewards = stats?.rewards ?? [];
   const redeemedRewards = stats?.redeemed_rewards ?? [];
-  const rank = leaderboard?.your_rank ?? stats?.weekly_rank ?? null;
+  const rankRaw = leaderboard?.your_rank ?? stats?.weekly_rank;
+  const rank = rankRaw != null && Number.isFinite(rankRaw) ? rankRaw : null;
   const boardEntries = leaderboard?.entries ?? [];
   const viewerOnBoard = user ? boardEntries.some((e) => e.user_id === user.user_id) : false;
   const xpPct = Math.min(100, Math.round((xp / nextXp) * 100));
@@ -204,7 +205,7 @@ export default function ProfilePage(): ReactElement {
               <h2 className="font-display text-xl font-bold text-theme">{user?.full_name}</h2>
               <p className="text-sm text-theme-muted">{user?.email}</p>
               <span className="badge-pill mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold">
-                {user?.role === 'guide' ? 'Rehber' : 'Turist'}
+                {user?.role === 'guide' ? t('profile.guide', 'Rehber') : t('profile.tourist', 'Turist')}
               </span>
               {user?.is_premium ? (
                 <span className="badge-pill ml-2 mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-100">
@@ -220,11 +221,27 @@ export default function ProfilePage(): ReactElement {
           </div>
           <ProfileQuickLinks />
           <div className="theme-card space-y-3 p-5" id="settings">
-            <h2 className="font-display text-lg font-bold text-theme">Tercihler</h2>
-            <p className="text-sm text-theme-muted">Dil ve bildirim tercihleri</p>
+            <h2 className="font-display text-lg font-bold text-theme">{t('profile.preferences', 'Tercihler')}</h2>
+            <p className="text-sm text-theme-muted">{t('profile.preferencesHint', 'Dil ve bildirim tercihleri')}</p>
             <LanguageSwitcher />
             <p className="text-xs text-theme-muted">
-              Tema ve font için <button type="button" className="font-bold text-primary underline" onClick={() => setTab('look')}>Görünüm</button> sekmesine geçin.
+              {locale === 'en' ? (
+                <>
+                  For theme and font, open the{' '}
+                  <button type="button" className="font-bold text-primary underline" onClick={() => setTab('look')}>
+                    {t('profile.lookTabLink', 'Appearance')}
+                  </button>{' '}
+                  tab.
+                </>
+              ) : (
+                <>
+                  Tema ve font için{' '}
+                  <button type="button" className="font-bold text-primary underline" onClick={() => setTab('look')}>
+                    {t('profile.lookTabLink', 'Görünüm')}
+                  </button>{' '}
+                  sekmesine geçin.
+                </>
+              )}
             </p>
           </div>
           <div className="grid grid-cols-3 gap-3">

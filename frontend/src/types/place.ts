@@ -19,6 +19,7 @@ export interface PlaceResponse {
   description: string;
   tags: string[];
   is_partner: boolean;
+  image_url?: string | null;
 }
 
 export interface PlaceNearbyResponse extends PlaceResponse {

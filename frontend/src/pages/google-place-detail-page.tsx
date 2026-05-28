@@ -6,7 +6,9 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { BackButton } from '../components/ui/back-button';
 import { LoadingButton } from '../components/ui/loading-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
+import { AddToActiveRouteButton } from '../features/active-route/active-route-planner';
 import { RoutePreviewMap } from '../features/map/route-preview-map';
+import { resolveGooglePlaceImage } from '../lib/region-images';
 import { langToSpeechCode, playAudioBase64, useSpeech } from '../hooks/use-speech';
 import { formatApiError } from '../lib/api';
 import { fetchNarrationAudio, fetchNarrationPreview } from '../services/ai-service';
@@ -14,6 +16,7 @@ import { computeGoogleRoute, fetchGooglePlaceDetail } from '../services/google-s
 import type { ComputeRouteResponse, GooglePlaceDetail } from '../types/google';
 
 type TravelMode = 'WALK' | 'DRIVE';
+type OriginMode = 'gps' | 'pick';
 
 export default function GooglePlaceDetailPage(): ReactElement {
   const { placeId } = useParams();
@@ -28,6 +31,9 @@ export default function GooglePlaceDetailPage(): ReactElement {
   const { run: runNarration, loading: narrationBusy } = useSubmitLock();
   const [route, setRoute] = useState<ComputeRouteResponse | null>(null);
   const [userOrigin, setUserOrigin] = useState<{ lat: number; lng: number } | null>(null);
+  const [originMode, setOriginMode] = useState<OriginMode>('pick');
+  const [pickOriginActive, setPickOriginActive] = useState(false);
+  const [waypoints, setWaypoints] = useState<{ lat: number; lng: number }[]>([]);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALK');
   const { speak, stop, speaking, supported } = useSpeech();
   const [narrationSources, setNarrationSources] = useState<{ title: string; url: string }[]>([]);
@@ -75,37 +81,61 @@ export default function GooglePlaceDetailPage(): ReactElement {
     };
   }, [placeId, stop, loadNarration]);
 
+  const computeFromOrigin = async (origin: { lat: number; lng: number }) => {
+    if (!place) return;
+    setUserOrigin(origin);
+    const result = await computeGoogleRoute({
+      origin_lat: origin.lat,
+      origin_lng: origin.lng,
+      dest_lat: place.lat,
+      dest_lng: place.lng,
+      travel_mode: travelMode,
+      waypoints,
+    });
+    setRoute(result);
+  };
+
   const handleRoute = () => {
     if (!place) return;
     setRouteError('');
     setRoute(null);
+
+    if (originMode === 'pick') {
+      if (!userOrigin) {
+        setPickOriginActive(true);
+        setRouteError('Haritada başlangıç noktasına dokunun, ardından tekrar deneyin.');
+        return;
+      }
+      void runRoute(async () => {
+        try {
+          await computeFromOrigin(userOrigin);
+        } catch (err) {
+          setRouteError(formatApiError(err));
+        }
+      });
+      return;
+    }
+
     if (!navigator.geolocation) {
       setRouteError('Konum servisi desteklenmiyor.');
       return;
     }
     void runRoute(async () => {
-      await new Promise<void>((resolve, reject) => {
+      await new Promise<void>((resolve) => {
         navigator.geolocation.getCurrentPosition(
           async (pos) => {
-            const origin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-            setUserOrigin(origin);
             try {
-              const result = await computeGoogleRoute({
-                origin_lat: origin.lat,
-                origin_lng: origin.lng,
-                dest_lat: place.lat,
-                dest_lng: place.lng,
-                travel_mode: travelMode,
+              await computeFromOrigin({
+                lat: pos.coords.latitude,
+                lng: pos.coords.longitude,
               });
-              setRoute(result);
-              resolve();
             } catch (err) {
               setRouteError(formatApiError(err));
-              resolve();
             }
+            resolve();
           },
           () => {
-            setRouteError('Konum izni gerekli. Tarayıcı ayarlarından konuma izin verin.');
+            setRouteError('Konum izni gerekli. Haritadan başlangıç seçmeyi deneyin.');
             resolve();
           },
           { enableHighAccuracy: true, timeout: 15000 },
@@ -168,6 +198,14 @@ export default function GooglePlaceDetailPage(): ReactElement {
     <article className="mx-auto max-w-2xl space-y-4 pb-6 sm:space-y-6">
       <BackButton to={backTo} label="Geri" />
 
+      <div className="overflow-hidden rounded-[22px] border border-stone-900/10 dark:border-white/10">
+        <img
+          src={resolveGooglePlaceImage(place.photo_url, place.name)}
+          alt={place.name}
+          className="aspect-[16/10] w-full object-cover"
+        />
+      </div>
+
       <header className="rounded-[22px] border border-stone-900/10 bg-white/90 p-4 sm:p-6 dark:border-white/10 dark:bg-zinc-900/95">
         <h1 className="font-display text-2xl font-extrabold text-heritage-ink sm:text-3xl dark:text-stone-50">
           {place.name}
@@ -225,6 +263,15 @@ export default function GooglePlaceDetailPage(): ReactElement {
         ))}
       </section>
 
+      <AddToActiveRouteButton
+        title={place.name}
+        latitude={place.lat}
+        longitude={place.lng}
+        description={story}
+        googlePlaceId={place.place_id}
+        className="mb-2"
+      />
+
       <section className="space-y-3 rounded-[22px] border border-stone-900/10 bg-white/90 p-4 dark:border-white/10 dark:bg-zinc-900/95">
         <h2 className="font-display text-lg font-bold">Rota</h2>
         <div className="flex flex-wrap gap-2">
@@ -241,6 +288,56 @@ export default function GooglePlaceDetailPage(): ReactElement {
             </button>
           ))}
         </div>
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
+              originMode === 'pick' ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
+            }`}
+            onClick={() => {
+              setOriginMode('pick');
+              setPickOriginActive(true);
+            }}
+          >
+            Haritadan başlangıç
+          </button>
+          <button
+            type="button"
+            className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
+              originMode === 'gps' ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
+            }`}
+            onClick={() => setOriginMode('gps')}
+          >
+            GPS konumum
+          </button>
+        </div>
+        {pickOriginActive && originMode === 'pick' ? (
+          <p className="text-xs text-stone-600 dark:text-stone-400">
+            Önizleme haritasına dokunarak başlangıç seçin.
+            {userOrigin ? ` Seçili: ${userOrigin.lat.toFixed(4)}, ${userOrigin.lng.toFixed(4)}` : ''}
+          </p>
+        ) : null}
+        <div className="flex flex-wrap gap-2">
+          <button
+            type="button"
+            className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
+            onClick={() => {
+              if (userOrigin) setWaypoints((w) => [...w, userOrigin]);
+            }}
+            disabled={!userOrigin}
+          >
+            Ara durak ekle (başlangıç)
+          </button>
+          {waypoints.length > 0 ? (
+            <button
+              type="button"
+              className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
+              onClick={() => setWaypoints([])}
+            >
+              Ara durakları temizle ({waypoints.length})
+            </button>
+          ) : null}
+        </div>
         <LoadingButton
           className="w-full"
           type="button"
@@ -249,12 +346,26 @@ export default function GooglePlaceDetailPage(): ReactElement {
           onClick={handleRoute}
         >
           <Navigation className="h-5 w-5" aria-hidden="true" />
-          Konumumdan rotayı çiz
+          {originMode === 'gps' ? 'Konumumdan rotayı çiz' : 'Seçilen başlangıçtan rotayı çiz'}
         </LoadingButton>
         {routeError ? (
           <p className="text-sm font-medium text-red-700" role="alert">
             {routeError}
           </p>
+        ) : null}
+        {originMode === 'pick' && !route?.encoded_polyline ? (
+          <RoutePreviewMap
+            dest={{ lat: place.lat, lng: place.lng, title: place.name }}
+            encodedPolyline=""
+            origin={userOrigin}
+            pickOrigin={pickOriginActive}
+            waypoints={waypoints}
+            onPickOrigin={(lat, lng) => {
+              setUserOrigin({ lat, lng });
+              setPickOriginActive(false);
+              setRouteError('');
+            }}
+          />
         ) : null}
         {route?.encoded_polyline ? (
           <>
@@ -265,6 +376,13 @@ export default function GooglePlaceDetailPage(): ReactElement {
               dest={{ lat: place.lat, lng: place.lng, title: place.name }}
               encodedPolyline={route.encoded_polyline}
               origin={userOrigin}
+              pickOrigin={pickOriginActive && originMode === 'pick'}
+              waypoints={waypoints}
+              onPickOrigin={(lat, lng) => {
+                setUserOrigin({ lat, lng });
+                setPickOriginActive(false);
+                setRouteError('');
+              }}
             />
             {route.steps.length > 0 ? (
               <ol className="max-h-40 space-y-1 overflow-auto text-xs text-stone-600 dark:text-stone-400">

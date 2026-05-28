@@ -2,7 +2,12 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, Field
 
 from app.api.auth_deps import get_current_user_id
-from app.api.dependencies import get_guide_profile_service, get_poi_sync_service, get_user_repository
+from app.api.dependencies import (
+    get_guide_profile_service,
+    get_image_sync_service,
+    get_poi_sync_service,
+    get_user_repository,
+)
 from app.core.exceptions import GuideNotFoundError
 from app.repositories.user_repository import UserRepository
 from app.api.dependencies import get_moderation_service
@@ -43,6 +48,15 @@ class PoiSyncResponse(BaseModel):
     fetched: int
     created: int
     skipped_duplicates: int
+
+
+class ImageSyncResponse(BaseModel):
+    cities_updated: int = 0
+    districts_updated: int = 0
+    places_updated: int = 0
+    cities_failed: int = 0
+    districts_failed: int = 0
+    places_failed: int = 0
 
 
 class PremiumToggle(BaseModel):
@@ -111,6 +125,31 @@ async def sync_poi(
         created=result.created,
         skipped_duplicates=result.skipped_duplicates,
     )
+
+
+@router.post('/images/sync', response_model=ImageSyncResponse)
+async def sync_images(
+    scope: str = 'all',
+    city_id: int | None = None,
+    force: bool = False,
+    places_limit: int = 200,
+    user_id: int = Depends(get_current_user_id),
+    service=Depends(get_image_sync_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> ImageSyncResponse:
+    """Wikipedia küçük resimlerini cities/districts/places.image_url alanına yazar."""
+    await _require_admin(user_id, user_repo)
+    if scope == 'cities':
+        r = await service.sync_cities(force=force)
+        return ImageSyncResponse(cities_updated=r.updated, cities_failed=r.failed)
+    if scope == 'districts':
+        r = await service.sync_districts(city_id=city_id, force=force)
+        return ImageSyncResponse(districts_updated=r.updated, districts_failed=r.failed)
+    if scope == 'places':
+        r = await service.sync_places(limit=places_limit, force=force)
+        return ImageSyncResponse(places_updated=r.updated, places_failed=r.failed)
+    stats = await service.sync_all(city_id=city_id, places_limit=places_limit, force=force)
+    return ImageSyncResponse(**stats)
 
 
 @router.get('/routes/pending', response_model=list[AdminPendingRoute])

@@ -1,5 +1,5 @@
 import type { ReactElement, ReactNode } from 'react';
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import en from '../locales/en.json';
 import tr from '../locales/tr.json';
@@ -40,6 +40,18 @@ export function I18nProvider({ children }: { children: ReactNode }): ReactElemen
     if (storeLang === 'en') return 'en';
     return 'tr';
   });
+
+  useEffect(() => {
+    const fromUser = user?.preferred_language;
+    if (fromUser === 'en' || fromUser === 'tr') {
+      setLocaleState(fromUser);
+      useOnboardingStore.getState().setPreferredLanguage(fromUser);
+    }
+  }, [user?.preferred_language]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
 
   const setLocale = useCallback(
     (next: AppLocale) => {

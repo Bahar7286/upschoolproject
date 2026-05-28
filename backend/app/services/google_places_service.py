@@ -28,12 +28,12 @@ CATEGORY_TO_GOOGLE_TYPES: dict[str, list[str]] = {
 
 NEARBY_FIELD_MASK = (
     'places.id,places.displayName,places.formattedAddress,places.location,'
-    'places.rating,places.userRatingCount,places.types,places.googleMapsUri'
+    'places.rating,places.userRatingCount,places.types,places.googleMapsUri,places.photos'
 )
 
 DETAIL_FIELD_MASK = (
     'id,displayName,formattedAddress,location,rating,userRatingCount,'
-    'websiteUri,googleMapsUri,editorialSummary,regularOpeningHours,types'
+    'websiteUri,googleMapsUri,editorialSummary,regularOpeningHours,types,photos'
 )
 
 _cache: dict[str, tuple[float, Any]] = {}
@@ -92,11 +92,39 @@ def _location(place: dict) -> tuple[float, float]:
     return float(loc.get('latitude', 0)), float(loc.get('longitude', 0))
 
 
-def _summarize(place: dict) -> GooglePlaceSummary:
+def _photo_media_url(place: dict) -> str:
+    photos = place.get('photos') or []
+    if not photos:
+        return ''
+    name = str((photos[0] or {}).get('name', ''))
+    if not name:
+        return ''
+    return (
+        f'https://places.googleapis.com/v1/{name}/media'
+        f'?maxHeightPx=480&maxWidthPx=720&key={_api_key()}'
+    )
+
+
+def _infer_category(types: list[str], requested: str | None = None) -> str:
+    if requested and requested in CATEGORY_TO_GOOGLE_TYPES:
+        return requested
+    lowered = {t.lower() for t in types}
+    if lowered & {'restaurant', 'cafe', 'bakery', 'meal_takeaway', 'food', 'bar'}:
+        return 'restaurant'
+    if lowered & {'lodging', 'hotel', 'hostel', 'guest_house', 'bed_and_breakfast'}:
+        return 'accommodation'
+    if lowered & {'museum', 'art_gallery', 'tourist_attraction', 'historical_landmark'}:
+        return 'museum'
+    return requested or 'museum'
+
+
+def _summarize(place: dict, *, category: str | None = None) -> GooglePlaceSummary:
     lat, lng = _location(place)
     pid = str(place.get('id', ''))
     if pid.startswith('places/'):
         pid = pid.split('/')[-1]
+    types = list(place.get('types') or [])
+    cat = _infer_category(types, category)
     return GooglePlaceSummary(
         place_id=pid,
         name=_display_name(place),
@@ -105,34 +133,31 @@ def _summarize(place: dict) -> GooglePlaceSummary:
         address=str(place.get('formattedAddress', '')),
         rating=place.get('rating'),
         user_rating_count=place.get('userRatingCount'),
-        types=list(place.get('types') or []),
+        types=types,
         google_maps_uri=str(place.get('googleMapsUri', '')),
+        photo_url=_photo_media_url(place),
+        category=cat,
     )
 
 
+# Google Nearby Search (New) allows max 20 results per HTTP request (no pagination).
+_NEARBY_MULTI_TYPE_GROUPS: list[list[str]] = [
+    ['tourist_attraction', 'museum', 'historical_landmark'],
+    ['restaurant', 'cafe', 'bakery'],
+    ['lodging', 'hotel', 'shopping_mall'],
+]
+
+
 class GooglePlacesService:
-    async def search_nearby(
+    async def _fetch_nearby_types(
         self,
         *,
         lat: float,
         lng: float,
         radius_m: float,
-        category: str | None,
-        client_key: str = 'global',
-    ) -> tuple[list[GooglePlaceSummary], bool]:
-        if not google_places_enabled:
-            return [], False
-        if not _rate_ok(client_key):
-            raise ValueError('Çok fazla istek. Lütfen biraz bekleyin.')
-
-        types = CATEGORY_TO_GOOGLE_TYPES.get(category or '', ['tourist_attraction'])
-        cache_key = hashlib.sha256(
-            f'nearby:{lat:.4f}:{lng:.4f}:{radius_m:.0f}:{",".join(sorted(types))}'.encode()
-        ).hexdigest()
-        cached = _cache_get(cache_key)
-        if cached is not None:
-            return cached, True
-
+        types: list[str],
+        category: str | None = None,
+    ) -> list[GooglePlaceSummary]:
         body = {
             'includedTypes': types[:1] if len(types) == 1 else types[:3],
             'maxResultCount': 20,
@@ -158,9 +183,52 @@ class GooglePlacesService:
         if resp.status_code >= 400:
             logger.warning('Places nearby %s: %s', resp.status_code, resp.text[:300])
             raise ValueError('Google Places araması başarısız')
-
         data = resp.json()
-        places = [_summarize(p) for p in data.get('places', []) if _display_name(p)]
+        return [
+            _summarize(p, category=category)
+            for p in data.get('places', [])
+            if _display_name(p)
+        ]
+
+    async def search_nearby(
+        self,
+        *,
+        lat: float,
+        lng: float,
+        radius_m: float,
+        category: str | None,
+        client_key: str = 'global',
+    ) -> tuple[list[GooglePlaceSummary], bool]:
+        if not google_places_enabled:
+            return [], False
+        if not _rate_ok(client_key):
+            raise ValueError('Çok fazla istek. Lütfen biraz bekleyin.')
+
+        types = CATEGORY_TO_GOOGLE_TYPES.get(category or '', ['tourist_attraction'])
+        cache_key = hashlib.sha256(
+            f'nearby:{lat:.4f}:{lng:.4f}:{radius_m:.0f}:{category or "multi"}:{",".join(sorted(types))}'.encode()
+        ).hexdigest()
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached, True
+
+        if category:
+            places = await self._fetch_nearby_types(
+                lat=lat, lng=lng, radius_m=radius_m, types=types, category=category
+            )
+        else:
+            merged: dict[str, GooglePlaceSummary] = {}
+            for group in _NEARBY_MULTI_TYPE_GROUPS:
+                try:
+                    batch = await self._fetch_nearby_types(
+                        lat=lat, lng=lng, radius_m=radius_m, types=group
+                    )
+                except ValueError:
+                    continue
+                for place in batch:
+                    merged[place.place_id] = place
+            places = list(merged.values())[:60]
+
         _cache_set(cache_key, places)
         return places, False
 
@@ -199,6 +267,7 @@ class GooglePlacesService:
             elif isinstance(t, str):
                 editorial_text = t
 
+        types = list(p.get('types') or [])
         detail = GooglePlaceDetailResponse(
             place_id=place_id.split('/')[-1],
             name=_display_name(p),
@@ -211,8 +280,10 @@ class GooglePlacesService:
             google_maps_uri=str(p.get('googleMapsUri', '')),
             editorial_summary=editorial_text,
             opening_hours=hours,
-            types=list(p.get('types') or []),
+            types=types,
             sources=[],
+            photo_url=_photo_media_url(p),
+            category=_infer_category(types),
         )
         _cache_set(cache_key, detail)
         return detail

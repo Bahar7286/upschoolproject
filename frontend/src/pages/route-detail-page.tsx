@@ -13,6 +13,7 @@ import { saveOfflineRoutePackage } from '../lib/offline-package';
 import { listPurchasesByUser } from '../services/purchase-service';
 import { getRoute } from '../services/route-service';
 import { listStops } from '../services/stop-service';
+import { listTripExtraStops } from '../services/trip-extra-stop-service';
 import { fetchCurrentUser } from '../services/auth-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 import { useAuthStore } from '../stores/auth-store';
@@ -130,9 +131,17 @@ export default function RouteDetailPage(): ReactElement {
     });
   };
 
-  const handleStartRoute = () => {
+  const handleStartRoute = async () => {
     if (!route) return;
-    setActiveRoute(route.route_id, route.title, stops);
+    let extras: Awaited<ReturnType<typeof listTripExtraStops>> = [];
+    if (accessToken) {
+      try {
+        extras = await listTripExtraStops(route.route_id, accessToken);
+      } catch {
+        extras = [];
+      }
+    }
+    setActiveRoute(route.route_id, route.title, stops, extras);
     navigate(`/map?route=${route.route_id}&active=1`);
   };
 

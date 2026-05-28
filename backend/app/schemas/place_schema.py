@@ -26,6 +26,7 @@ class PlaceResponse(BaseModel):
     description: str
     tags: list[str]
     is_partner: bool
+    image_url: str | None = None
 
 
 class PlaceNearbyResponse(PlaceResponse):

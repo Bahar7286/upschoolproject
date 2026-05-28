@@ -39,6 +39,8 @@
 
 **`relation cities already exists`:** Render Postgres’te eski şema var, `alembic_version` yok. `app.db.migrate_on_start` otomatik stamp + upgrade yapar; bu kodu push edip redeploy edin.
 
+**`disks are not supported for free tier`:** `render.yaml` içinde `disk:` bloğu kaldırıldı. Free planda rehber belge yüklemeleri geçicidir (container yeniden başlayınca silinebilir). Kalıcı upload için Starter plan + disk veya harici depolama gerekir.
+
 ### historial-go-web → Environment
 
 | Key | Değer |

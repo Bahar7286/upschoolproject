@@ -22,9 +22,12 @@ async def geo_center(
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='İlçe bulunamadı')
         city = await cities.get_by_id(d.city_id)
         city_name = city.name_tr if city else ''
+        lat, lng = d.center_lat, d.center_lng
+        if lat == 0.0 and lng == 0.0 and city:
+            lat, lng = city.center_lat, city.center_lng
         return GeoCenterResponse(
-            lat=d.center_lat,
-            lng=d.center_lng,
+            lat=lat,
+            lng=lng,
             city_name=city_name,
             district_name=d.name_tr,
         )

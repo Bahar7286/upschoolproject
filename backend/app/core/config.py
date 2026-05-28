@@ -31,12 +31,12 @@ class Settings:
         if o.strip()
     ]
 
-    # LLM — OpenRouter (önerilen) veya Google Gemini
+    # LLM — OpenRouter (önerilen, örn. Gemma) veya doğrudan Google Gemini API
     llm_provider: str = os.getenv('LLM_PROVIDER', 'openrouter').strip().lower()
     openrouter_api_key: str = os.getenv('OPENROUTER_API_KEY', '')
     openrouter_model: str = os.getenv(
         'OPENROUTER_MODEL',
-        'google/gemini-2.0-flash-001',
+        'google/gemma-4-31b-it:free',
     )
     openrouter_base_url: str = os.getenv(
         'OPENROUTER_BASE_URL',

@@ -10,4 +10,5 @@ class DistrictResponse(BaseModel):
     slug: str = Field(min_length=1, max_length=120)
     center_lat: float
     center_lng: float
+    image_url: str | None = None
 

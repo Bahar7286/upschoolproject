@@ -1,21 +1,27 @@
 import { useQuery } from '@tanstack/react-query';
-import { ChevronRight, Map, UtensilsCrossed } from 'lucide-react';
+import { MapPin } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { DistrictRowCard } from '../components/explore/district-row-card';
 import { BackButton } from '../components/ui/back-button';
+import { RegionInlineMap } from '../features/map/region-inline-map';
 
+import { useI18n } from '../lib/i18n';
 import { listCities, listDistrictsByCity } from '../services/city-service';
+import { listPlaces } from '../services/place-service';
 import type { PlaceCategory } from '../types/place';
+import { PLACE_CATEGORY_LABELS } from '../types/place';
 
-const CATEGORIES: { id: PlaceCategory; label: string; Icon: typeof Map }[] = [
-  { id: 'museum', label: 'Gezilecek', Icon: Map },
-  { id: 'restaurant', label: 'Yeme-İçme', Icon: UtensilsCrossed },
-  { id: 'accommodation', label: 'Konaklama', Icon: Map },
+const CATEGORIES: { id: PlaceCategory; label: string; emoji: string }[] = [
+  { id: 'museum', label: 'Gezilecek', emoji: '🏛️' },
+  { id: 'restaurant', label: 'Yeme-İçme', emoji: '🍽️' },
+  { id: 'accommodation', label: 'Konaklama', emoji: '🛏️' },
 ];
 
 export default function CityDetailPage(): ReactElement {
+  const { t } = useI18n();
   const { cityId } = useParams();
   const id = Number(cityId);
 
@@ -27,12 +33,29 @@ export default function CityDetailPage(): ReactElement {
 
   const city = useMemo(() => cities.find((c) => c.city_id === id) ?? null, [cities, id]);
 
-  const { data: districts = [], isPending, isError } = useQuery({
+  const { data: districts = [], isPending, isError, refetch } = useQuery({
     queryKey: ['districts', id],
     queryFn: () => listDistrictsByCity(id),
     enabled: Number.isFinite(id) && id > 0,
     staleTime: 60 * 60 * 1000,
   });
+
+  const { data: cityPlaces = [] } = useQuery({
+    queryKey: ['city-places-all', city?.name_tr],
+    queryFn: () => listPlaces({ city: city!.name_tr, limit: 500 }),
+    enabled: Boolean(city?.name_tr),
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+    throwOnError: false,
+  });
+
+  const placeCountByDistrict = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of cityPlaces) {
+      m.set(p.district, (m.get(p.district) ?? 0) + 1);
+    }
+    return m;
+  }, [cityPlaces]);
 
   if (!Number.isFinite(id) || id <= 0) {
     return (
@@ -43,58 +66,107 @@ export default function CityDetailPage(): ReactElement {
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="city-title">
+    <section className="mx-auto max-w-3xl space-y-5 pb-6" aria-labelledby="city-title">
       <BackButton to="/cities" />
-      <header className="space-y-2">
-        <p className="text-xs font-bold uppercase tracking-[0.16em] text-theme-muted">
-          {city ? `Plaka ${city.plate_code}` : 'Şehir'}
-        </p>
+
+      <header className="space-y-1 px-1">
+        {city?.plate_code ? (
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Plaka {city.plate_code}</p>
+        ) : null}
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="city-title">
           {city?.name_tr ?? 'Yükleniyor…'}
         </h1>
         <p className="text-sm text-theme-muted">İlçe seç → mekanları gör</p>
       </header>
 
-      <div className="flex flex-wrap gap-2">
-        {CATEGORIES.map(({ id: catId, label, Icon }) => (
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+        {CATEGORIES.map(({ id: catId, label, emoji }) => (
           <Link
             key={catId}
-            to={`/cities/${id}/places?category=${encodeURIComponent(catId)}`}
-            className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full border border-stone-900/10 bg-white px-4 text-sm font-semibold text-stone-800 dark:border-white/10 dark:bg-zinc-900 dark:text-stone-100"
+            to={`/cities/${id}/places?category=${catId}`}
+            className="tap-scale flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-2xl border border-stone-900/10 bg-white px-2 py-3 text-center text-sm font-semibold shadow-sm dark:border-white/10 dark:bg-zinc-900"
           >
-            <Icon className="h-4 w-4" aria-hidden="true" />
+            <span aria-hidden="true">{emoji}</span>
             {label}
           </Link>
         ))}
         <Link
-          to={`/map?cityId=${id}&city=${encodeURIComponent(city?.name_tr ?? 'Istanbul')}`}
-          className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-full bg-primary px-4 text-sm font-bold text-white"
+          to={`/map?cityId=${id}&city=${encodeURIComponent(city?.name_tr ?? '')}`}
+          className="tap-scale col-span-2 flex min-h-[52px] items-center justify-center rounded-2xl bg-primary px-4 text-center text-sm font-bold text-white shadow-sm sm:col-span-4"
         >
-          <Map className="h-4 w-4" aria-hidden="true" />
           Haritada aç
         </Link>
       </div>
 
-      {isPending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
-      {isError ? (
-        <p className="alert-error rounded-xl px-3 py-2 text-sm" role="alert">
-          İlçeler yüklenemedi.
-        </p>
+      <div className="space-y-3" aria-labelledby="districts-heading">
+        <div className="flex flex-wrap items-center justify-between gap-2 px-1">
+          <h2 className="font-display text-lg font-bold text-theme" id="districts-heading">
+            {t('city.districts', 'İlçeler')}
+          </h2>
+          <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-xs font-bold text-primary">
+            <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+            {t('city.districtCount', '{count} İlçe').replace('{count}', String(districts.length))}
+          </span>
+        </div>
+
+        {isPending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
+        {isError ? (
+          <div className="alert-error space-y-2 rounded-xl px-3 py-2 text-sm" role="alert">
+            <p>İlçe listesi API&apos;den alınamadı; yerel liste deneniyor…</p>
+            <button
+              type="button"
+              className="font-bold text-primary underline"
+              onClick={() => void refetch()}
+            >
+              {t('city.retry', 'Yeniden dene')}
+            </button>
+          </div>
+        ) : null}
+        {!isPending && districts.length === 0 ? (
+          <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
+            Bu il için ilçe bulunamadı. Backend&apos;i yeniden başlatıp sayfayı yenileyin.
+          </p>
+        ) : null}
+
+        <div className="flex flex-col gap-2">
+          {districts.map((d) => (
+            <DistrictRowCard
+              key={d.district_id}
+              citySlug={city?.slug ?? ''}
+              districtId={d.district_id}
+              districtSlug={d.slug}
+              name={d.name_tr}
+              placeCount={placeCountByDistrict.get(d.name_tr) ?? 0}
+              imageUrl={d.image_url}
+              to={`/cities/${id}/districts/${d.district_id}`}
+            />
+          ))}
+        </div>
+      </div>
+
+      {city ? (
+        <section className="space-y-2" aria-labelledby="map-heading">
+          <h2 className="sr-only" id="map-heading">
+            Harita özeti
+          </h2>
+          <RegionInlineMap
+            cityId={city.city_id}
+            cityName={city.name_tr}
+            fallbackCenter={{ lat: city.center_lat, lng: city.center_lng }}
+            showDbCount
+          />
+        </section>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {districts.map((d) => (
-          <Link
-            key={d.district_id}
-            to={`/cities/${id}/districts/${d.district_id}`}
-            className="theme-card tap-scale flex items-center justify-between rounded-2xl px-4 py-3 hover:shadow-lift"
-          >
-            <span className="font-semibold text-theme">{d.name_tr}</span>
-            <ChevronRight className="h-5 w-5 text-theme-muted" aria-hidden="true" />
-          </Link>
-        ))}
-      </div>
+      <section className="space-y-2 px-1" aria-labelledby="categories-heading">
+        <h2 className="font-display text-sm font-bold text-theme-muted" id="categories-heading">
+          Şehir geneli · {PLACE_CATEGORY_LABELS.museum} / {PLACE_CATEGORY_LABELS.restaurant} /{' '}
+          {PLACE_CATEGORY_LABELS.accommodation}
+        </h2>
+        <p className="text-xs text-theme-muted">
+          İlçe seçmeden şehir genelinde aramak için yukarıdaki kategori düğmelerini kullanın.
+        </p>
+      </section>
     </section>
   );
 }
-

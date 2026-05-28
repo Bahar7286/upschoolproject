@@ -238,6 +238,15 @@ html[data-mode='light'] .dark\:text-amber-200 {
   max-width: 100vw;
 }
 
+/* GEZİYOR tarzı keşif başlığı */
+.explore-hero {
+  background: linear-gradient(135deg, #6d28d9 0%, #7c3aed 35%, #a855f7 70%, #ec4899 100%);
+}
+
+.venue-hero__bar {
+  background: linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%);
+}
+
 .app-header,
 .app-bottom-nav {
   background: var(--hg-header) !important;

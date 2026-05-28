@@ -21,7 +21,7 @@ router = APIRouter()
 
 @router.get('/status', response_model=AIStatusResponse)
 async def ai_status() -> AIStatusResponse:
-    """LLM (OpenRouter/Gemini) yapılandırması — demo ve deploy doğrulaması için."""
+    """LLM (OpenRouter) yapılandırması — demo ve deploy doğrulaması için."""
     return AIService.status()
 
 
