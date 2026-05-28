@@ -31,6 +31,7 @@ _USER_MIGRATIONS: list[tuple[str, str]] = [
     ('last_active_date', 'TEXT'),
     ('password_reset_token', 'TEXT'),
     ('password_reset_expires', 'TEXT'),
+    ('is_premium', 'INTEGER NOT NULL DEFAULT 0'),
 ]
 
 
@@ -56,6 +57,7 @@ _PG_COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
     ('purchases', 'stripe_session_id', 'VARCHAR(255)'),
     ('users', 'password_reset_token', 'VARCHAR(64)'),
     ('users', 'password_reset_expires', 'VARCHAR(30)'),
+    ('users', 'is_premium', 'BOOLEAN NOT NULL DEFAULT FALSE'),
 ]
 
 

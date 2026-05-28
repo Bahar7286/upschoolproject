@@ -1,7 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Clock, MapPin, Sparkles, Star } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
 import { fetchAiStatus, recommendWithAi, type AIRecommendationItem } from '../services/ai-service';
@@ -35,6 +35,18 @@ export default function DiscoverPage(): ReactElement {
   const effectiveInterests = interests.length ? interests : user?.interests?.length ? user.interests : ['history', 'art', 'food'];
   const effectiveDuration = durationMinutes || user?.duration_minutes || 120;
   const effectiveBudget = budget || user?.budget || 150;
+  const [premiumMsg, setPremiumMsg] = useState('');
+
+  const canUseAi = () => {
+    if (user?.is_premium) return true;
+    const uid = user?.user_id ?? 0;
+    const day = new Date().toISOString().slice(0, 10);
+    const key = `hg_ai_daily_${uid}_${day}`;
+    const used = Number(localStorage.getItem(key) ?? '0');
+    if (used >= 3) return false;
+    localStorage.setItem(key, String(used + 1));
+    return true;
+  };
 
   const recommendMutation = useMutation({
     mutationFn: async () => {
@@ -144,7 +156,14 @@ export default function DiscoverPage(): ReactElement {
               className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary px-5 font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-60 sm:w-auto"
               type="button"
               disabled={recommendMutation.isPending}
-              onClick={() => recommendMutation.mutate()}
+              onClick={() => {
+                setPremiumMsg('');
+                if (!canUseAi()) {
+                  setPremiumMsg('Ücretsiz planda günlük AI öneri limiti doldu. Premium ile sınırsız kullanabilirsin.');
+                  return;
+                }
+                recommendMutation.mutate();
+              }}
             >
               {recommendMutation.isPending ? 'AI hesaplıyor…' : 'Kişisel önerileri getir'}
             </button>
@@ -160,6 +179,12 @@ export default function DiscoverPage(): ReactElement {
           </div>
         </div>
       </div>
+
+      {premiumMsg ? (
+        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-950 dark:text-amber-100" role="status">
+          {premiumMsg} <Link className="font-bold text-primary underline" to="/premium">Premium</Link>
+        </div>
+      ) : null}
 
       {bannerError ? (
         <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100" role="alert">

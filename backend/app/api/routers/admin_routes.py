@@ -35,6 +35,10 @@ class PoiSyncResponse(BaseModel):
     skipped_duplicates: int
 
 
+class PremiumToggle(BaseModel):
+    is_premium: bool
+
+
 async def _require_admin(user_id: int, user_repo: UserRepository) -> None:
     user = await user_repo.get_by_id(user_id)
     if not user or user.role != 'admin':
@@ -97,3 +101,21 @@ async def sync_poi(
         created=result.created,
         skipped_duplicates=result.skipped_duplicates,
     )
+
+
+@router.patch('/users/{target_user_id}/premium', response_model=dict[str, str])
+async def set_user_premium(
+    target_user_id: int,
+    payload: PremiumToggle,
+    user_id: int = Depends(get_current_user_id),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> dict[str, str]:
+    await _require_admin(user_id, user_repo)
+    if target_user_id <= 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid user id')
+    user = await user_repo.get_by_id(target_user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+    user.is_premium = payload.is_premium
+    await user_repo.save(user)
+    return {'status': 'ok'}

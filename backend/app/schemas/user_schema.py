@@ -119,3 +119,4 @@ class UserResponse(BaseModel):
     xp: int = 0
     streak_days: int = 0
     badges: list[str] = Field(default_factory=list)
+    is_premium: bool = False

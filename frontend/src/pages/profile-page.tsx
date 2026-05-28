@@ -1,6 +1,7 @@
 import {
   Award,
   BookOpen,
+  Crown,
   Flame,
   History,
   LogOut,
@@ -201,6 +202,16 @@ export default function ProfilePage(): ReactElement {
               <span className="badge-pill mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold">
                 {user?.role === 'guide' ? 'Rehber' : 'Turist'}
               </span>
+              {user?.is_premium ? (
+                <span className="badge-pill ml-2 mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-100">
+                  <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+                  Premium
+                </span>
+              ) : (
+                <Link className="ml-2 mt-1 inline-flex text-xs font-bold text-primary underline" to="/premium">
+                  Premium’a geç
+                </Link>
+              )}
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">

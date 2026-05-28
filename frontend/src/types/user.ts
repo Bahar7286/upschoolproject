@@ -24,6 +24,7 @@ export interface UserResponse {
   xp: number;
   streak_days: number;
   badges: string[];
+  is_premium?: boolean;
 }
 
 export interface UserPreferencesPayload {

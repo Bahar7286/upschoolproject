@@ -29,3 +29,6 @@ class User(Base):
     redeemed_rewards: Mapped[str] = mapped_column(String(1000), default='', nullable=False)
     password_reset_token: Mapped[str | None] = mapped_column(String(64), nullable=True)
     password_reset_expires: Mapped[str | None] = mapped_column(String(30), nullable=True)
+
+    # Premium (admin flag) — ödeme olmadan feature gating
+    is_premium: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)

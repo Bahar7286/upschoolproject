@@ -74,6 +74,7 @@ def user_to_response(user: User) -> UserResponse:
         xp=user.xp,
         streak_days=user.streak_days,
         badges=_split_csv(user.badges),
+        is_premium=bool(getattr(user, 'is_premium', False)),
     )
 
 
