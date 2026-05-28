@@ -19,9 +19,9 @@ export default function AssistantPage(): ReactElement {
   const [city, setCity] = useState('Istanbul');
   const [district, setDistrict] = useState('');
   const [input, setInput] = useState('');
-  const [msgs, setMsgs] = useState<AssistantMessage[]>([
+  const [msgs, setMsgs] = useState<AssistantMessage[]>(() => [
     {
-      role: 'assistant',
+      role: 'assistant' as const,
       content: 'Merhaba! Şehir/ilçe ve ilgi alanına göre plan yapabilirim. Nereye gideceksin, kaç günün var?',
     },
   ]);
@@ -47,7 +47,7 @@ export default function AssistantPage(): ReactElement {
     const text = input.trim();
     if (!text) return;
 
-    const next = [...msgs, { role: 'user', content: text }];
+    const next: AssistantMessage[] = [...msgs, { role: 'user', content: text }];
     setMsgs(next);
     setInput('');
     mut.mutate(next);
