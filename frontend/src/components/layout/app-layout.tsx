@@ -4,9 +4,12 @@ import {
   CalendarDays,
   Compass,
   Headphones,
+  Heart,
   LayoutDashboard,
   LogOut,
   Map as MapIcon,
+  MapPin,
+  MessageCircle,
   Palette,
   Settings,
   ShoppingBag,
@@ -103,6 +106,10 @@ export function AppLayout(): ReactElement {
                   <Compass className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
                   Keşfet
                 </NavLink>
+                <NavLink className={({ isActive }) => navClass(isActive)} to="/cities">
+                  <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
+                  İller
+                </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/rehberler">
                   <Users className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
                   Rehberler
@@ -118,6 +125,14 @@ export function AppLayout(): ReactElement {
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/talepler">
                   <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
                   Taleplerim
+                </NavLink>
+                <NavLink className={({ isActive }) => navClass(isActive)} to="/assistant">
+                  <MessageCircle className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
+                  Asistan
+                </NavLink>
+                <NavLink className={({ isActive }) => navClass(isActive)} to="/favorites">
+                  <Heart className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
+                  Favori
                 </NavLink>
               </>
             )}
