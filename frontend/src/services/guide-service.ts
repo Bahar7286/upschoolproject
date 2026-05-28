@@ -133,6 +133,26 @@ export async function deleteGuideRoute(guideId: number, routeId: number): Promis
   });
 }
 
+export async function submitGuideRouteReview(
+  accessToken: string,
+  guideId: number,
+  routeId: number,
+): Promise<RouteResponse> {
+  return requestJsonWithAuth(`/guides/${guideId}/routes/${routeId}/submit-review`, accessToken, {
+    method: 'POST',
+  });
+}
+
+export async function publishGuideRoute(
+  accessToken: string,
+  guideId: number,
+  routeId: number,
+): Promise<RouteResponse> {
+  return requestJsonWithAuth(`/guides/${guideId}/routes/${routeId}/publish`, accessToken, {
+    method: 'POST',
+  });
+}
+
 export async function getGuideEarnings(guideId: number): Promise<GuideEarningsResponse> {
   return requestJson<GuideEarningsResponse>(`/guides/${guideId}/earnings`, {
     method: 'GET',

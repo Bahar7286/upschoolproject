@@ -1,7 +1,14 @@
 import { BadgeCheck } from 'lucide-react';
 import type { ReactElement } from 'react';
 
-export function VerifiedGuideBadge({ compact = false }: { compact?: boolean }): ReactElement {
+export function VerifiedGuideBadge({
+  compact = false,
+  verified = true,
+}: {
+  compact?: boolean;
+  verified?: boolean;
+}): ReactElement | null {
+  if (!verified) return null;
   return (
     <span
       className={`inline-flex items-center gap-1 rounded-full bg-primary/15 font-bold text-primary-dark dark:text-primary ${

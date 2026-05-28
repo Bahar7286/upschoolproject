@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { GuideRoutesPanel } from '../components/guide/guide-routes-panel';
 import { MiniBarChart } from '../components/ui/mini-bar-chart';
 import { StatCard } from '../components/ui/stat-card';
 import { ButtonLink } from '../components/ui/button';
@@ -175,6 +176,8 @@ export default function GuideDashboardPage(): ReactElement {
           </ul>
         ) : null}
       </div>
+
+      <GuideRoutesPanel />
 
       <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-6 dark:border-white/10 dark:bg-zinc-900/95">
         <p className="font-semibold">Ödeme talebi</p>

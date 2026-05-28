@@ -22,7 +22,13 @@ export default function NotFoundPage(): ReactElement {
           <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">Aradığın rota başka bir sokakta olabilir.</p>
           <div className="mt-6 flex flex-col gap-3">
             <ButtonLink to="/discover">Keşfe dön</ButtonLink>
-            <ButtonLink variant="secondary" to="/">
+            <ButtonLink variant="secondary" to="/cities">
+              İlleri keşfet
+            </ButtonLink>
+            <ButtonLink variant="secondary" to="/map">
+              Harita
+            </ButtonLink>
+            <ButtonLink variant="ghost" to="/">
               Ana sayfa
             </ButtonLink>
           </div>

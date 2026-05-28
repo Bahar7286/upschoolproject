@@ -41,7 +41,12 @@ export default function GuidePublicPage(): ReactElement {
       <header className="rounded-[22px] border border-stone-900/10 bg-white/90 p-6 dark:border-white/10 dark:bg-zinc-900/95">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="font-display text-2xl font-extrabold">{guide.full_name}</h1>
-          <VerifiedGuideBadge />
+          <VerifiedGuideBadge verified={guide.verification_status === 'verified' || guide.is_verified} />
+          {guide.verification_status !== 'verified' && !guide.is_verified ? (
+            <span className="rounded-full bg-stone-200 px-2.5 py-1 text-xs font-semibold text-stone-600 dark:bg-zinc-800 dark:text-stone-400">
+              Doğrulama sürecinde
+            </span>
+          ) : null}
         </div>
         <p className="mt-3 text-sm leading-relaxed text-stone-700 dark:text-stone-300">{guide.bio}</p>
         <dl className="mt-4 grid gap-2 text-sm sm:grid-cols-2">

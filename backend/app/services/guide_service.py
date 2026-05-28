@@ -110,7 +110,7 @@ class GuideService:
     async def list_guide_routes(self, guide_id: int) -> GuideRouteListResponse:
         await self._get_guide_user(guide_id)
         routes = await self.routes.list_all(guide_id=guide_id)
-        items = [self._route_service._to_response(r) for r in routes]
+        items = [self._route_service._to_response(r, include_moderation=True) for r in routes]
         return GuideRouteListResponse(guide_id=guide_id, items=items, total=len(items))
 
     async def create_guide_route(self, guide_id: int, payload: GuideRouteCreate) -> RouteResponse:
@@ -130,7 +130,7 @@ class GuideService:
         route = await self.routes.get_by_id(route_id)
         if not route or route.guide_id != guide_id:
             raise RouteNotFoundError(route_id)
-        return self._route_service._to_response(route)
+        return self._route_service._to_response(route, include_moderation=True)
 
     async def update_guide_route(
         self,
@@ -142,6 +142,8 @@ class GuideService:
         route = await self.routes.get_by_id(route_id)
         if not route or route.guide_id != guide_id:
             raise RouteNotFoundError(route_id)
+        if route.status not in ('draft', 'changes_requested'):
+            raise ValueError('Published routes cannot be edited; unpublish or request changes first')
         return await self._route_service.update_route(route_id, payload)
 
     async def delete_guide_route(self, guide_id: int, route_id: int) -> None:

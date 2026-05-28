@@ -10,6 +10,8 @@ class RouteRepository(BaseRepository):
         *,
         city: str | None = None,
         guide_id: int | None = None,
+        status: str | None = None,
+        published_only: bool = False,
         offset: int = 0,
         limit: int = 500,
     ) -> list[Route]:
@@ -18,7 +20,17 @@ class RouteRepository(BaseRepository):
             stmt = stmt.where(func.lower(Route.city) == city.lower())
         if guide_id is not None:
             stmt = stmt.where(Route.guide_id == guide_id)
+        if status:
+            stmt = stmt.where(Route.status == status)
+        elif published_only:
+            stmt = stmt.where(Route.status == 'published')
         result = await self.db.execute(stmt)
+        return list(result.scalars().all())
+
+    async def list_by_status(self, status: str, *, limit: int = 100) -> list[Route]:
+        result = await self.db.execute(
+            select(Route).where(Route.status == status).order_by(Route.submitted_at.desc()).limit(limit)
+        )
         return list(result.scalars().all())
 
     async def get_by_id(self, route_id: int) -> Route | None:

@@ -1,16 +1,18 @@
-import type { FormEvent, ReactElement } from 'react';
-import { useState } from 'react';
-import { ArrowLeft, ArrowRight, Landmark, Monitor, Moon, Sun } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import type { ReactElement } from 'react';
+import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ArrowRight, Clock, MapPin, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 
+import { DiscoverLoading } from '../components/loading/discover-loading';
+import { ListSkeleton } from '../components/loading/page-skeleton';
 import { formatApiError } from '../lib/api';
-import { THEME_META } from '../lib/theme-meta';
+import { listCities } from '../services/city-service';
 import { updatePreferences } from '../services/profile-service';
+import { recommendRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
-import type { ThemePreference } from '../stores/theme-store';
-import { THEME_LABELS } from '../stores/theme-store';
-import { useThemeStore } from '../stores/theme-store';
+import type { RouteResponse } from '../types/route';
 
 const INTERESTS = [
   { id: 'history', label: 'Tarih', icon: '🏛' },
@@ -23,8 +25,8 @@ const INTERESTS = [
 ];
 
 const DURATIONS = [
-  { value: 60, label: '1 sa' },
-  { value: 120, label: '2 sa' },
+  { value: 60, label: '1 saat' },
+  { value: 120, label: '2 saat' },
   { value: 240, label: 'Yarım gün' },
   { value: 480, label: 'Tam gün' },
 ];
@@ -35,40 +37,55 @@ const BUDGETS = [
   { value: 150, label: '₺100+' },
 ];
 
-function iconForTheme(id: ThemePreference): typeof Sun {
-  if (id === 'light') return Sun;
-  if (id === 'dark') return Moon;
-  if (id === 'system') return Monitor;
-  return Landmark;
-}
+const POPULAR_CITIES = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Kapadokya', 'Trabzon', 'Gaziantep'];
 
-const THEMES: { id: ThemePreference; label: string; desc: string; Icon: typeof Sun }[] = THEME_META.map((t) => ({
-  id: t.id,
-  label: THEME_LABELS[t.id],
-  desc: `${t.tagline} · ${t.mood}`,
-  Icon: iconForTheme(t.id),
-}));
+const TOTAL_STEPS = 5;
+const RECOMMEND_TIMEOUT_MS = 10_000;
+
+function filterByCity(routes: RouteResponse[], city: string): RouteResponse[] {
+  const norm = city.trim().toLowerCase();
+  const matched = routes.filter((r) => r.city.trim().toLowerCase().includes(norm));
+  return matched.length > 0 ? matched : routes;
+}
 
 export default function OnboardingPage(): ReactElement {
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const setUser = useAuthStore((s) => s.setUser);
 
+  const preferredCity = useOnboardingStore((s) => s.preferredCity);
   const interests = useOnboardingStore((s) => s.interests);
   const durationMinutes = useOnboardingStore((s) => s.durationMinutes);
   const budget = useOnboardingStore((s) => s.budget);
   const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
+  const setPreferredCity = useOnboardingStore((s) => s.setPreferredCity);
   const setInterests = useOnboardingStore((s) => s.setInterests);
   const setDurationMinutes = useOnboardingStore((s) => s.setDurationMinutes);
   const setBudget = useOnboardingStore((s) => s.setBudget);
   const setPreferredLanguage = useOnboardingStore((s) => s.setPreferredLanguage);
 
-  const themePreference = useThemeStore((s) => s.preference);
-  const setThemePreference = useThemeStore((s) => s.setPreference);
-
   const [step, setStep] = useState(1);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [recommended, setRecommended] = useState<RouteResponse[]>([]);
+  const [loadingRoutes, setLoadingRoutes] = useState(false);
+  const [slowFallback, setSlowFallback] = useState(false);
+
+  const { data: cities = [] } = useQuery({
+    queryKey: ['cities', 'onboarding'],
+    queryFn: listCities,
+    staleTime: 300_000,
+  });
+
+  const cityOptions = useMemo(() => {
+    const names = new Set<string>(POPULAR_CITIES);
+    for (const c of cities) {
+      if (c.name_tr) names.add(c.name_tr);
+    }
+    return Array.from(names);
+  }, [cities]);
+
+  const progressPct = step <= TOTAL_STEPS ? Math.round((step / (TOTAL_STEPS + 1)) * 100) : 100;
 
   const toggleInterest = (id: string) => {
     if (interests.includes(id)) {
@@ -78,12 +95,35 @@ export default function OnboardingPage(): ReactElement {
     }
   };
 
-  const finish = async (event?: FormEvent) => {
-    event?.preventDefault();
-    if (interests.length < 2) {
-      setError('En az 2 ilgi alanı seçmelisiniz.');
-      return;
+  const loadRecommendations = async () => {
+    setLoadingRoutes(true);
+    setSlowFallback(false);
+    setError('');
+    const timer = window.setTimeout(() => setSlowFallback(true), RECOMMEND_TIMEOUT_MS);
+    try {
+      const routes = await recommendRoutes({
+        interests,
+        duration_minutes: durationMinutes,
+        budget,
+      });
+      const filtered = filterByCity(routes, preferredCity).slice(0, 3);
+      setRecommended(filtered);
+      setStep(6);
+    } catch (err) {
+      setError(formatApiError(err));
+    } finally {
+      window.clearTimeout(timer);
+      setLoadingRoutes(false);
     }
+  };
+
+  useEffect(() => {
+    if (step !== 6 || recommended.length > 0 || loadingRoutes) return;
+    void loadRecommendations();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  const completeOnboarding = async (goDiscover: boolean) => {
     setBusy(true);
     setError('');
     try {
@@ -92,13 +132,15 @@ export default function OnboardingPage(): ReactElement {
           interests,
           duration_minutes: durationMinutes,
           budget,
-          theme_preference: themePreference,
+          theme_preference: 'system',
           preferred_language: preferredLanguage,
+          preferred_city: preferredCity,
           onboarding_completed: true,
         });
         setUser(updated);
       }
-      navigate('/discover', { replace: true });
+      const cityQuery = encodeURIComponent(preferredCity);
+      navigate(goDiscover ? `/discover?city=${cityQuery}` : '/discover', { replace: true });
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -106,7 +148,20 @@ export default function OnboardingPage(): ReactElement {
     }
   };
 
-  const progressPct = step === 1 ? 33 : step === 2 ? 66 : 100;
+  const goNext = () => {
+    setError('');
+    if (step === 3 && interests.length < 2) {
+      setError('En az 2 ilgi alanı seçmelisin.');
+      return;
+    }
+    if (step === 5) {
+      setStep(6);
+      return;
+    }
+    setStep(step + 1);
+  };
+
+  const cityCta = `${preferredCity} Rotalarını Keşfet`;
 
   return (
     <section className="mx-auto max-w-lg space-y-6 px-1 py-4" aria-labelledby="onb-title">
@@ -114,13 +169,17 @@ export default function OnboardingPage(): ReactElement {
         <div className="flex items-center justify-between text-sm font-semibold text-stone-600 dark:text-stone-400">
           <button
             type="button"
-            className="tap-scale inline-flex items-center gap-1 rounded-lg px-2 py-1 hover:bg-stone-900/5 dark:hover:bg-white/5"
-            onClick={() => (step > 1 ? setStep(step - 1) : navigate(-1))}
+            className="tap-scale inline-flex min-h-[44px] items-center gap-1 rounded-lg px-2 py-1 hover:bg-stone-900/5 dark:hover:bg-white/5"
+            onClick={() => {
+              if (step > 1 && step < 6) setStep(step - 1);
+              else if (step === 6) setStep(5);
+              else navigate(-1);
+            }}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             {step > 1 ? 'Geri' : 'Çık'}
           </button>
-          <span>{step}/3</span>
+          <span>{step <= TOTAL_STEPS ? `${step}/${TOTAL_STEPS}` : 'Sonuç'}</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800">
           <div
@@ -130,11 +189,94 @@ export default function OnboardingPage(): ReactElement {
         </div>
       </div>
 
+      {error ? (
+        <p
+          className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+
       {step === 1 && (
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="onb-title">
-              Seni en çok ne ilgilendiriyor?
+              Hangi şehirde gezeceksin?
+            </h1>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">Rotalarını bu şehre göre özelleştireceğiz</p>
+          </header>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Şehir seçimi">
+            {cityOptions.map((name) => (
+              <button
+                key={name}
+                type="button"
+                className={`tap-scale min-h-[44px] rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
+                  preferredCity === name
+                    ? 'border-primary bg-primary/10 text-primary-dark dark:text-primary'
+                    : 'border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
+                }`}
+                aria-pressed={preferredCity === name}
+                onClick={() => setPreferredCity(name)}
+              >
+                <MapPin className="mr-1 inline h-3.5 w-3.5" aria-hidden="true" />
+                {name}
+              </button>
+            ))}
+          </div>
+          <button
+            className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark"
+            type="button"
+            onClick={goNext}
+          >
+            Süreyi seç <ArrowRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {step === 2 && (
+        <div className="space-y-5 animate-fade-in-up">
+          <header>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
+              Ne kadar zamanın var?
+            </h1>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+              <Clock className="mr-1 inline h-4 w-4" aria-hidden="true" />
+              {preferredCity} için gezi süren
+            </p>
+          </header>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Süre">
+            {DURATIONS.map((d) => (
+              <button
+                key={d.value}
+                type="button"
+                className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold ${
+                  durationMinutes === d.value
+                    ? 'bg-primary text-white'
+                    : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
+                }`}
+                aria-pressed={durationMinutes === d.value}
+                onClick={() => setDurationMinutes(d.value)}
+              >
+                {d.label}
+              </button>
+            ))}
+          </div>
+          <button
+            className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark"
+            type="button"
+            onClick={goNext}
+          >
+            İlgi alanlarını seç <ArrowRight className="h-5 w-5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {step === 3 && (
+        <div className="space-y-5 animate-fade-in-up">
+          <header>
+            <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
+              İlgi alanın ne?
             </h1>
             <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">En az 2 seç · AI önerilerin buna göre şekillenir</p>
           </header>
@@ -145,7 +287,7 @@ export default function OnboardingPage(): ReactElement {
                 <button
                   key={item.id}
                   type="button"
-                  className={`tap-scale rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
+                  className={`tap-scale min-h-[44px] rounded-full border-2 px-4 py-2.5 text-sm font-semibold transition ${
                     active
                       ? 'border-primary bg-primary/10 text-primary-dark dark:text-primary'
                       : 'border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
@@ -163,134 +305,150 @@ export default function OnboardingPage(): ReactElement {
             className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-50"
             type="button"
             disabled={interests.length < 2}
-            onClick={() => setStep(2)}
+            onClick={goNext}
           >
-            Devam <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            Bütçeni belirle <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
 
-      {step === 2 && (
+      {step === 4 && (
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-              Nasıl gezmek istersin?
+              Bütçen nedir?
             </h1>
           </header>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-semibold">Süre</legend>
-            <div className="flex flex-wrap gap-2">
-              {DURATIONS.map((d) => (
-                <button
-                  key={d.value}
-                  type="button"
-                  className={`tap-scale rounded-full px-4 py-2 text-sm font-semibold ${
-                    durationMinutes === d.value
-                      ? 'bg-primary text-white'
-                      : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
-                  }`}
-                  onClick={() => setDurationMinutes(d.value)}
-                >
-                  {d.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-semibold">Bütçe</legend>
-            <div className="flex flex-wrap gap-2">
-              {BUDGETS.map((b) => (
-                <button
-                  key={b.value}
-                  type="button"
-                  className={`tap-scale rounded-full px-4 py-2 text-sm font-semibold ${
-                    budget === b.value
-                      ? 'bg-primary text-white'
-                      : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
-                  }`}
-                  onClick={() => setBudget(b.value)}
-                >
-                  {b.label}
-                </button>
-              ))}
-            </div>
-          </fieldset>
-          <fieldset className="space-y-2">
-            <legend className="text-sm font-semibold">Tercih dili</legend>
-            <div className="flex flex-wrap gap-2">
-              {(['tr', 'en', 'de'] as const).map((lang) => (
-                <button
-                  key={lang}
-                  type="button"
-                  className={`tap-scale rounded-full px-4 py-2 text-sm font-semibold uppercase ${
-                    preferredLanguage === lang
-                      ? 'bg-primary text-white'
-                      : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
-                  }`}
-                  onClick={() => setPreferredLanguage(lang)}
-                >
-                  {lang}
-                </button>
-              ))}
-            </div>
-          </fieldset>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Bütçe">
+            {BUDGETS.map((b) => (
+              <button
+                key={b.value}
+                type="button"
+                className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold ${
+                  budget === b.value
+                    ? 'bg-primary text-white'
+                    : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
+                }`}
+                aria-pressed={budget === b.value}
+                onClick={() => setBudget(b.value)}
+              >
+                {b.label}
+              </button>
+            ))}
+          </div>
           <button
             className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark"
             type="button"
-            onClick={() => setStep(3)}
+            onClick={goNext}
           >
-            Devam <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            Dil tercihini seç <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
 
-      {step === 3 && (
-        <form className="space-y-5 animate-fade-in-up" onSubmit={finish}>
+      {step === 5 && (
+        <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-              Görünümünü seç
+              Dil tercihin nedir?
             </h1>
-            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">İstediğinde profilden değiştirebilirsin</p>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">Sesli rehber ve arayüz dili</p>
           </header>
-          <div className="space-y-3">
-            {THEMES.map(({ id, label, desc, Icon }) => (
-              <label
-                key={id}
-                className={`tap-scale flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition ${
-                  themePreference === id
-                    ? 'border-primary bg-primary/8'
-                    : 'border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Dil">
+            {(
+              [
+                { id: 'tr' as const, label: 'Türkçe' },
+                { id: 'en' as const, label: 'English' },
+              ] as const
+            ).map((lang) => (
+              <button
+                key={lang.id}
+                type="button"
+                className={`tap-scale min-h-[44px] rounded-full px-5 py-2 text-sm font-semibold ${
+                  preferredLanguage === lang.id
+                    ? 'bg-primary text-white'
+                    : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
                 }`}
+                aria-pressed={preferredLanguage === lang.id}
+                onClick={() => setPreferredLanguage(lang.id)}
               >
-                <input
-                  type="radio"
-                  name="theme"
-                  value={id}
-                  checked={themePreference === id}
-                  onChange={() => setThemePreference(id)}
-                  className="sr-only"
-                />
-                <Icon className="mt-0.5 h-6 w-6 shrink-0 text-amber-700 dark:text-amber-300" aria-hidden="true" />
-                <div>
-                  <p className="font-bold">{label}</p>
-                  <p className="text-sm text-stone-600 dark:text-stone-400">{desc}</p>
-                </div>
-              </label>
+                {lang.label}
+              </button>
             ))}
           </div>
-          {error ? (
-            <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100" role="alert">
-              {error}
-            </p>
-          ) : null}
           <button
             className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-60"
-            type="submit"
-            disabled={busy}
+            type="button"
+            disabled={loadingRoutes}
+            onClick={goNext}
           >
-            {busy ? 'Kaydediliyor…' : 'Keşfe Başla!'}
+            <Sparkles className="h-5 w-5" aria-hidden="true" />
+            Kişisel rotalarımı hazırla
           </button>
-        </form>
+        </div>
+      )}
+
+      {step === 6 && (
+        <div className="space-y-5 animate-fade-in-up">
+          {loadingRoutes ? (
+            <div className="space-y-4">
+              <DiscoverLoading />
+              <ListSkeleton count={3} />
+              {slowFallback ? (
+                <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
+                  Öneriler biraz uzun sürdü. Hazır olunca burada göreceksin; istersen keşfe de geçebilirsin.
+                </p>
+              ) : null}
+            </div>
+          ) : (
+            <>
+              <header className="text-center">
+                <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
+                  Sana en uygun 3 rota hazırlandı
+                </h1>
+                <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
+                  {preferredCity} · {interests.length} ilgi alanı · {durationMinutes} dk
+                </p>
+              </header>
+              <ul className="space-y-3">
+                {recommended.map((route) => (
+                  <li key={route.route_id}>
+                    <Link
+                      to={`/routes/${route.route_id}`}
+                      className="tap-scale block rounded-2xl border border-stone-900/10 bg-white p-4 shadow-sm transition hover:border-primary/40 dark:border-white/10 dark:bg-zinc-900"
+                    >
+                      <p className="font-bold text-heritage-ink dark:text-stone-50">{route.title}</p>
+                      <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+                        {route.city} · {route.estimated_minutes} dk · ₺{route.price}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+              {recommended.length === 0 ? (
+                <p className="text-center text-sm text-stone-600 dark:text-stone-400">
+                  Bu şehir için henüz özel eşleşme yok; keşifte tüm rotalara bakabilirsin.
+                </p>
+              ) : null}
+              <button
+                className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-60"
+                type="button"
+                disabled={busy}
+                onClick={() => void completeOnboarding(true)}
+              >
+                {busy ? 'Kaydediliyor…' : cityCta}
+              </button>
+              <button
+                className="tap-scale w-full min-h-[44px] text-sm font-semibold text-primary underline-offset-4 hover:underline"
+                type="button"
+                disabled={busy}
+                onClick={() => setStep(1)}
+              >
+                Tercihlerimi düzenle
+              </button>
+            </>
+          )}
+        </div>
       )}
     </section>
   );

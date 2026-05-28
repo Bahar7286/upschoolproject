@@ -4,8 +4,12 @@ import { ArrowLeft, Lock, LogIn } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { BrandLogo } from '../components/brand/brand-logo';
+import { PageMeta } from '../components/seo/page-meta';
 import { ThemeToggle } from '../components/theme/theme-toggle';
+import { LoadingButton } from '../components/ui/loading-button';
+import { useSubmitLock } from '../hooks/use-submit-lock';
 import { formatApiError } from '../lib/api';
+import { inputErrorClass, validateEmail, validatePassword, type FieldErrors } from '../lib/validation';
 import { fetchCurrentUser, loginUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
@@ -17,34 +21,45 @@ export default function LoginPage(): ReactElement {
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const { run, loading } = useSubmitLock();
 
   const redirectTarget = (location.state as { from?: string } | null)?.from;
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setBusy(true);
     setError('');
-    try {
-      const tokens = await loginUser({ email, password });
-      const me = await fetchCurrentUser(tokens.access_token);
-      setSession(tokens.access_token, me);
-      useOnboardingStore.getState().hydrateFromUser(me);
-      const fallback =
-        me.role === 'admin' ? '/admin' : me.role === 'guide' ? '/guide' : '/discover';
-      navigate(redirectTarget && redirectTarget !== '/login' ? redirectTarget : fallback, {
-        replace: true,
-      });
-    } catch (err) {
-      setError(formatApiError(err));
-    } finally {
-      setBusy(false);
-    }
+    const errs: FieldErrors = {};
+    const emailErr = validateEmail(email);
+    const passErr = validatePassword(password);
+    if (emailErr) errs.email = emailErr;
+    if (passErr) errs.password = passErr;
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    await run(async () => {
+      try {
+        const tokens = await loginUser({ email: email.trim(), password });
+        const me = await fetchCurrentUser(tokens.access_token);
+        setSession(tokens.access_token, me);
+        useOnboardingStore.getState().hydrateFromUser(me);
+        let fallback = '/discover';
+        if (me.role === 'admin') fallback = '/admin';
+        else if (me.role === 'guide') fallback = '/guide';
+        else if (!me.onboarding_completed) fallback = '/onboarding';
+        navigate(redirectTarget && redirectTarget !== '/login' ? redirectTarget : fallback, {
+          replace: true,
+        });
+      } catch (err) {
+        setError(formatApiError(err));
+      }
+    });
   };
 
   return (
     <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] px-4 py-8 text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
+      <PageMeta title="Giriş" description="Historial GO hesabınıza giriş yapın." path="/login" noindex />
       <div
         className="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40"
         aria-hidden="true"
@@ -106,15 +121,24 @@ export default function LoginPage(): ReactElement {
               </label>
               <input
                 id="login-email"
-                className="focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500"
+                className={`focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500 ${fieldErrors.email ? inputErrorClass : ''}`}
                 type="email"
                 autoComplete="email"
                 inputMode="email"
                 placeholder="ornek@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: '' }));
+                }}
+                aria-invalid={Boolean(fieldErrors.email)}
+                aria-describedby={fieldErrors.email ? 'login-email-err' : undefined}
               />
+              {fieldErrors.email ? (
+                <p id="login-email-err" className="text-sm font-medium text-red-700 dark:text-red-300" role="alert">
+                  {fieldErrors.email}
+                </p>
+              ) : null}
             </div>
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
@@ -130,15 +154,23 @@ export default function LoginPage(): ReactElement {
               </div>
               <input
                 id="login-password"
-                className="focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500"
+                className={`focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500 ${fieldErrors.password ? inputErrorClass : ''}`}
                 type="password"
                 autoComplete="current-password"
                 placeholder="••••••••"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: '' }));
+                }}
+                aria-invalid={Boolean(fieldErrors.password)}
+                aria-describedby={fieldErrors.password ? 'login-pass-err' : undefined}
               />
+              {fieldErrors.password ? (
+                <p id="login-pass-err" className="text-sm font-medium text-red-700 dark:text-red-300" role="alert">
+                  {fieldErrors.password}
+                </p>
+              ) : null}
             </div>
 
             {error ? (
@@ -150,14 +182,9 @@ export default function LoginPage(): ReactElement {
               </p>
             ) : null}
 
-            <button
-              className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-md transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
-              type="submit"
-              disabled={busy}
-            >
-              <LogIn className="h-5 w-5 shrink-0" aria-hidden="true" strokeWidth={2} />
-              {busy ? 'Giriş yapılıyor…' : 'Devam et'}
-            </button>
+            <LoadingButton className="w-full" type="submit" loading={loading} loadingLabel="Giriş yapılıyor…">
+              Devam et
+            </LoadingButton>
           </form>
 
           <div className="mt-6 space-y-3 border-t border-stone-900/10 pt-5 text-center text-sm text-stone-600 dark:border-white/10 dark:text-stone-400">

@@ -3,7 +3,8 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 
 from app.api.auth_deps import get_current_user_id
-from app.api.dependencies import get_guide_profile_service, get_guide_service
+from app.api.dependencies import get_guide_profile_service, get_guide_service, get_moderation_service
+from app.services.moderation_service import ModerationService
 from app.core.config import settings
 from app.core.exceptions import (
     EmailAlreadyExistsError,
@@ -280,6 +281,54 @@ async def update_guide_route(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Guide not found') from exc
     except RouteNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Route not found') from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post('/{guide_id}/routes/{route_id}/submit-review', response_model=RouteResponse)
+async def submit_guide_route_review(
+    guide_id: int,
+    route_id: int,
+    user_id: int = Depends(get_current_user_id),
+    service: GuideService = Depends(get_guide_service),
+    moderation: ModerationService = Depends(get_moderation_service),
+) -> RouteResponse:
+    if guide_id <= 0 or route_id <= 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid id')
+    if user_id != guide_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Not your guide account')
+    try:
+        await service.get_guide_route(guide_id, route_id)
+        return await moderation.submit_route_for_review(route_id, guide_id)
+    except GuideNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Guide not found') from exc
+    except RouteNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Route not found') from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.post('/{guide_id}/routes/{route_id}/publish', response_model=RouteResponse)
+async def publish_guide_route(
+    guide_id: int,
+    route_id: int,
+    user_id: int = Depends(get_current_user_id),
+    service: GuideService = Depends(get_guide_service),
+    moderation: ModerationService = Depends(get_moderation_service),
+) -> RouteResponse:
+    if guide_id <= 0 or route_id <= 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid id')
+    if user_id != guide_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Not your guide account')
+    try:
+        await service.get_guide_route(guide_id, route_id)
+        return await moderation.publish_route(route_id, guide_id)
+    except GuideNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Guide not found') from exc
+    except RouteNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Route not found') from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
 
 
 @router.delete('/{guide_id}/routes/{route_id}', response_model=dict[str, str])

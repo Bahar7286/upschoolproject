@@ -13,7 +13,7 @@ const variants: Record<Variant, string> = {
 };
 
 const base =
-  'tap-scale inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 focus-ring';
+  'tap-scale inline-flex min-h-[48px] cursor-pointer items-center justify-center gap-2 rounded-xl px-5 text-sm font-bold transition disabled:cursor-not-allowed disabled:opacity-60 focus-ring';
 
 export function Button({
   variant = 'primary',

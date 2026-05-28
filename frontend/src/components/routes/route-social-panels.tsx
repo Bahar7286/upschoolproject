@@ -3,8 +3,11 @@ import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
+import { EmptyState } from '../ui/empty-state';
+import { ErrorAlert } from '../ui/error-alert';
 import { Button } from '../ui/button';
-import { formatApiError } from '../../lib/api';
+import { EMPTY_STATES } from '../../content/empty-states';
+import { mapError } from '../../lib/user-errors';
 import {
   createRouteReview,
   deleteMyRouteNote,
@@ -82,7 +85,7 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
       setNote(saved);
       setSuccess('Kişisel not kaydedildi. Yalnızca siz görebilirsiniz.');
     } catch (err) {
-      setError(formatApiError(err));
+      setError(mapError(err).message);
     } finally {
       setBusy(false);
     }
@@ -97,7 +100,7 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
       setDraft('');
       setSuccess('Not silindi.');
     } catch (err) {
-      setError(formatApiError(err));
+      setError(mapError(err).message);
     } finally {
       setBusy(false);
     }
@@ -218,7 +221,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
       setSuccess('Yorumunuz yayınlandı.');
       await load();
     } catch (err) {
-      setError(formatApiError(err));
+      setError(mapError(err).message);
     } finally {
       setBusy(false);
     }
@@ -232,7 +235,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
       setSuccess('Yorumunuz silindi.');
       await load();
     } catch (err) {
-      setError(formatApiError(err));
+      setError(mapError(err).message);
     } finally {
       setBusy(false);
     }
@@ -276,7 +279,12 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
           </li>
         ))}
         {reviews.length === 0 ? (
-          <li className="text-sm text-stone-600 dark:text-stone-400">Henüz yorum yok. İlk yorumu siz yapın!</li>
+          <li>
+            <EmptyState
+              {...EMPTY_STATES.reviews}
+              actionTo={`/routes/${routeId}`}
+            />
+          </li>
         ) : null}
       </ul>
 

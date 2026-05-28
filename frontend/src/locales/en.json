@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "discover": "Discover",
+    "cities": "Cities",
+    "map": "Map",
+    "profile": "Profile",
+    "assistant": "Assistant"
+  },
+  "onboarding": {
+    "cityTitle": "Which city will you explore?",
+    "durationTitle": "How much time do you have?",
+    "interestsTitle": "What are you interested in?",
+    "budgetTitle": "What is your budget?",
+    "languageTitle": "Preferred language?",
+    "resultsTitle": "Your top 3 routes are ready"
+  },
+  "errors": {
+    "network": "Check your internet connection and try again.",
+    "recommendations": "We cannot load route recommendations right now."
+  },
+  "loading": {
+    "discover": "Preparing routes for you…",
+    "map": "Loading map…"
+  }
+}

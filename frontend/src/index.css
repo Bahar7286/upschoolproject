@@ -465,3 +465,20 @@ html[data-font='sans'] {
   --hg-body-font: 'DM Sans', 'Plus Jakarta Sans', system-ui, sans-serif;
   --hg-display-font: 'Sora', 'Nunito', system-ui, sans-serif;
 }
+
+/* UX: tıklanabilirlik ve kontrast */
+button:not(:disabled),
+[role='button']:not([aria-disabled='true']),
+a[href],
+label[for],
+.tap-scale {
+  cursor: pointer;
+}
+button:disabled {
+  cursor: not-allowed;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-spin {
+    animation: none;
+  }
+}

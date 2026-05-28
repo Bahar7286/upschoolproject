@@ -3,7 +3,10 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Users } from 'lucide-react';
 
-import { formatApiError } from '../lib/api';
+import { EmptyState } from '../components/ui/empty-state';
+import { ErrorAlert } from '../components/ui/error-alert';
+import { EMPTY_STATES } from '../content/empty-states';
+import { mapError } from '../lib/user-errors';
 import {
   listMyTripRequests,
   listOpenTripRequests,
@@ -34,7 +37,7 @@ export default function TripRequestsPage(): ReactElement {
       setRequests(data);
       setError('');
     } catch (err) {
-      setError(formatApiError(err));
+      setError(mapError(err).message);
     }
   };
 
@@ -70,7 +73,7 @@ export default function TripRequestsPage(): ReactElement {
       setOfferMessage('');
       await load();
     } catch (err) {
-      setError(formatApiError(err));
+      setError(mapError(err).message);
     } finally {
       setBusy(false);
     }
@@ -112,16 +115,20 @@ export default function TripRequestsPage(): ReactElement {
         ) : null}
       </header>
 
-      {error ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100" role="alert">
-          {error}
-        </p>
-      ) : null}
+      {error ? <ErrorAlert error={{ kind: 'api', message: error }} /> : null}
 
       {requests.length === 0 ? (
-        <p className="rounded-[22px] border border-dashed border-stone-900/15 px-4 py-10 text-center text-sm text-stone-500 dark:border-white/15">
-          {isGuide ? 'Şu an açık talep yok.' : 'Henüz talep yok. Keşfetten bir rota seçip talep oluşturabilirsiniz.'}
-        </p>
+        <EmptyState
+          {...(isGuide ? EMPTY_STATES.search : EMPTY_STATES.tripHistory)}
+          title={isGuide ? 'Şu an açık talep yok' : EMPTY_STATES.tripHistory.title}
+          description={
+            isGuide
+              ? 'Yeni turist talepleri geldiğinde burada listelenecek.'
+              : EMPTY_STATES.tripHistory.description
+          }
+          actionLabel={isGuide ? 'Keşfe git' : EMPTY_STATES.tripHistory.actionLabel}
+          actionTo={isGuide ? '/discover' : '/talepler/yeni'}
+        />
       ) : (
         <ul className="space-y-4">
           {requests.map((req) => (

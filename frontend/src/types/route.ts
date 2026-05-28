@@ -30,4 +30,7 @@ export interface RouteResponse {
   price: number;
   tags: string[];
   guide_id: number;
+  status?: string;
+  seo_description?: string;
+  moderation_note?: string;
 }

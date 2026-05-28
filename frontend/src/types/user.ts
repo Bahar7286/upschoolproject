@@ -20,6 +20,7 @@ export interface UserResponse {
   budget: number;
   theme_preference: string;
   preferred_language: string;
+  preferred_city?: string | null;
   onboarding_completed: boolean;
   xp: number;
   streak_days: number;
@@ -33,6 +34,7 @@ export interface UserPreferencesPayload {
   budget: number;
   theme_preference: string;
   preferred_language: string;
+  preferred_city?: string | null;
   onboarding_completed: boolean;
 }
 

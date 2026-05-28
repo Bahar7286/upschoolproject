@@ -26,6 +26,14 @@ import PurchasesPage from '../pages/purchases-page';
 import RegisterPage from '../pages/register-page';
 import TermsPage from '../pages/terms-page';
 import PrivacyPage from '../pages/privacy-page';
+import KvkkPage from '../pages/kvkk-page';
+import CookiesPage from '../pages/cookies-page';
+import RefundPage from '../pages/refund-page';
+import GuideTrustPage from '../pages/guide-trust-page';
+import PaymentSecurityPage from '../pages/payment-security-page';
+import ContactPage from '../pages/contact-page';
+import AboutPage from '../pages/about-page';
+import FaqPage from '../pages/faq-page';
 import RouteDetailPage from '../pages/route-detail-page';
 import PlaceDetailPage from '../pages/place-detail-page';
 import GooglePlaceDetailPage from '../pages/google-place-detail-page';
@@ -48,6 +56,14 @@ export function AppRouter(): ReactElement {
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/kvkk" element={<KvkkPage />} />
+      <Route path="/cerezler" element={<CookiesPage />} />
+      <Route path="/iade" element={<RefundPage />} />
+      <Route path="/rehber-guven" element={<GuideTrustPage />} />
+      <Route path="/odeme-guvenlik" element={<PaymentSecurityPage />} />
+      <Route path="/iletisim" element={<ContactPage />} />
+      <Route path="/hakkimizda" element={<AboutPage />} />
+      <Route path="/sss" element={<FaqPage />} />
 
       <Route element={<AppLayout />}>
         <Route path="/home" element={<Navigate to="/discover" replace />} />

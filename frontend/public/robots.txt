@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /profile
+Disallow: /odeme
+Disallow: /guide
+Disallow: /login
+Disallow: /register
+Disallow: /onboarding
+Disallow: /audio
+Disallow: /talepler
+Disallow: /planner
+Disallow: /purchases
+Disallow: /teklifler
+Disallow: /quotes
+
+Sitemap: https://historial-go-web.onrender.com/sitemap.xml

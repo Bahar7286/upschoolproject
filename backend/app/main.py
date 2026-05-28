@@ -1,9 +1,11 @@
+import logging
 import time
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
@@ -11,6 +13,8 @@ from fastapi.responses import JSONResponse
 
 from app.api.routers import (
     admin_routes,
+    report_routes,
+    seo_routes,
     ai_routes,
     auth_routes,
     city_routes,
@@ -41,14 +45,14 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
     log = logging.getLogger(__name__)
     try:
-        async with engine.begin() as connection:
-            await connection.run_sync(Base.metadata.create_all)
+        if not settings.is_production:
+            async with engine.begin() as connection:
+                await connection.run_sync(Base.metadata.create_all)
 
         async with SessionLocal() as session:
             await seed_initial_data(session)
     except Exception as exc:
-        # DB geç bağlansa bile API ayağa kalksın (Render port taraması)
-        log.exception('Startup DB bootstrap failed (API still listening): %s', exc)
+        log.exception('Startup DB seed failed (API still listening): %s', exc)
 
     yield
 
@@ -128,6 +132,25 @@ app.add_middleware(
     allow_methods=['*'],
     allow_headers=['*'],
 )
+app.add_middleware(RateLimitMiddleware)
+
+_log = logging.getLogger(__name__)
+
+
+@app.exception_handler(Exception)
+async def unhandled_exception_handler(request: Request, exc: Exception):
+    _log.exception('Unhandled error on %s %s', request.method, request.url.path)
+    if settings.is_production:
+        return JSONResponse(
+            status_code=500,
+            content={'detail': 'Şu anda isteğinizi işleyemiyoruz. Lütfen biraz sonra tekrar deneyin.'},
+        )
+    return JSONResponse(status_code=500, content={'detail': str(exc)})
+
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_: Request, exc: RequestValidationError):
+    return JSONResponse(status_code=422, content={'detail': exc.errors()})
 
 app.include_router(auth_routes.router, prefix='/auth', tags=['auth'])
 app.include_router(user_routes.router, prefix='/users', tags=['users'])
@@ -151,6 +174,8 @@ app.include_router(google_routes.router, prefix='/google', tags=['google'])
 app.include_router(favorite_routes.router, prefix='/favorites', tags=['favorites'])
 app.include_router(trip_request_routes.router, prefix='/trip-requests', tags=['trip-requests'])
 app.include_router(admin_routes.router, prefix='/admin', tags=['admin'])
+app.include_router(report_routes.router, prefix='/reports', tags=['reports'])
+app.include_router(seo_routes.router, prefix='/seo', tags=['seo'])
 
 _uploads = settings.upload_dir
 _uploads.mkdir(parents=True, exist_ok=True)

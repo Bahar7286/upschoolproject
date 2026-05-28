@@ -28,6 +28,11 @@ import type { GamificationResponse } from '../types/user';
 import { BADGE_LABELS } from '../types/user';
 import type { NoteResponse } from '../types/social';
 import type { PlanResponse } from '../types/plan';
+import { LanguageSwitcher } from '../lib/i18n';
+import { ProfileQuickLinks } from '../components/profile/profile-quick-links';
+import { SiteFooter } from '../components/legal/site-footer';
+import { ErrorAlert } from '../components/ui/error-alert';
+import { mapError } from '../lib/user-errors';
 import { ThemePreviewCard } from '../components/theme/theme-preview-card';
 import { FONT_META, THEME_META } from '../lib/theme-meta';
 import {
@@ -95,7 +100,7 @@ export default function ProfilePage(): ReactElement {
           setLeaderboard(board);
         }
       } catch (err) {
-        if (!cancelled) setError(formatApiError(err));
+        if (!cancelled) setError(mapError(err).message);
       }
     })();
     return () => {
@@ -121,6 +126,7 @@ export default function ProfilePage(): ReactElement {
         budget: user?.budget ?? 150,
         theme_preference: theme,
         preferred_language: user?.preferred_language ?? 'tr',
+        preferred_city: user?.preferred_city ?? useOnboardingStore.getState().preferredCity,
         onboarding_completed: user?.onboarding_completed ?? true,
       });
       setUser(updated);
@@ -164,9 +170,7 @@ export default function ProfilePage(): ReactElement {
       </header>
 
       {error ? (
-        <p className="alert-error rounded-xl px-3 py-2 text-sm font-semibold" role="alert">
-          {error}
-        </p>
+        <ErrorAlert error={{ kind: 'api', message: error, actionLabel: 'Keşfe dön', actionTo: '/discover' }} />
       ) : null}
       {saved ? (
         <p className="alert-success rounded-xl px-3 py-2 text-sm font-semibold" role="status">
@@ -214,6 +218,15 @@ export default function ProfilePage(): ReactElement {
               )}
             </div>
           </div>
+          <ProfileQuickLinks />
+          <div className="theme-card space-y-3 p-5" id="settings">
+            <h2 className="font-display text-lg font-bold text-theme">Tercihler</h2>
+            <p className="text-sm text-theme-muted">Dil ve bildirim tercihleri</p>
+            <LanguageSwitcher />
+            <p className="text-xs text-theme-muted">
+              Tema ve font için <button type="button" className="font-bold text-primary underline" onClick={() => setTab('look')}>Görünüm</button> sekmesine geçin.
+            </p>
+          </div>
           <div className="grid grid-cols-3 gap-3">
             <StatCard icon={Zap} value={String(xp)} label="XP" />
             <StatCard icon={Flame} value={String(streak)} label="Streak" />
@@ -240,7 +253,11 @@ export default function ProfilePage(): ReactElement {
         <div className="space-y-4">
           <SectionTitle title="Tamamlanan rotalar" />
           {completedPlans.length === 0 ? (
-            <EmptyHint text="Henüz tamamlanan plan yok. Bir rota bitirince burada görünür." />
+            <EmptyHint
+              text="Henüz tamamlanan gezi yok."
+              link="/discover"
+              linkLabel="Kişisel rotanı oluştur"
+            />
           ) : (
             <ul className="space-y-2">
               {completedPlans.map((plan) => (
@@ -495,6 +512,8 @@ export default function ProfilePage(): ReactElement {
           </button>
         </div>
       ) : null}
+
+      <SiteFooter className="mt-10" />
     </section>
   );
 }

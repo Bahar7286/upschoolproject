@@ -5,7 +5,16 @@ import { Link, useNavigate } from 'react-router-dom';
 
 import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
+import { LoadingButton } from '../components/ui/loading-button';
+import { useSubmitLock } from '../hooks/use-submit-lock';
 import { formatApiError } from '../lib/api';
+import {
+  inputErrorClass,
+  validateEmail,
+  validatePassword,
+  validateRequired,
+  type FieldErrors,
+} from '../lib/validation';
 import { THEME_META } from '../lib/theme-meta';
 import { fetchCurrentUser, registerUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
@@ -40,28 +49,43 @@ export default function RegisterPage(): ReactElement {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<Role>('tourist');
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
+  const { run, loading } = useSubmitLock();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setBusy(true);
     setError('');
-    try {
-      const res = await registerUser({ full_name: fullName, email, password, role });
-      const me = await fetchCurrentUser(res.access_token);
-      setSession(res.access_token, me);
-      useOnboardingStore.getState().hydrateFromUser(me);
-      if (role === 'guide') {
-        navigate('/guide/dogrulama', { replace: true });
-      } else {
-        navigate('/onboarding', { replace: true });
+    const errs: FieldErrors = {};
+    const nameErr = validateRequired(fullName, 'Ad soyad');
+    const emailErr = validateEmail(email);
+    const passErr = validatePassword(password);
+    if (nameErr) errs.fullName = nameErr;
+    if (emailErr) errs.email = emailErr;
+    if (passErr) errs.password = passErr;
+    setFieldErrors(errs);
+    if (Object.keys(errs).length > 0) return;
+
+    await run(async () => {
+      try {
+        const res = await registerUser({
+          full_name: fullName.trim(),
+          email: email.trim(),
+          password,
+          role,
+        });
+        const me = await fetchCurrentUser(res.access_token);
+        setSession(res.access_token, me);
+        useOnboardingStore.getState().hydrateFromUser(me);
+        if (role === 'guide') {
+          navigate('/guide/dogrulama', { replace: true });
+        } else {
+          navigate('/onboarding', { replace: true });
+        }
+      } catch (err) {
+        setError(formatApiError(err));
       }
-    } catch (err) {
-      setError(formatApiError(err));
-    } finally {
-      setBusy(false);
-    }
+    });
   };
 
   return (
@@ -112,13 +136,21 @@ export default function RegisterPage(): ReactElement {
               </label>
               <input
                 id="reg-name"
-                className="focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500"
+                className={`focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500 ${fieldErrors.fullName ? inputErrorClass : ''}`}
                 autoComplete="name"
                 placeholder="Adınız Soyadınız"
                 value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
+                onChange={(e) => {
+                  setFullName(e.target.value);
+                  if (fieldErrors.fullName) setFieldErrors((f) => ({ ...f, fullName: '' }));
+                }}
+                aria-invalid={Boolean(fieldErrors.fullName)}
               />
+              {fieldErrors.fullName ? (
+                <p className="text-sm font-medium text-red-700 dark:text-red-300" role="alert">
+                  {fieldErrors.fullName}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -127,15 +159,23 @@ export default function RegisterPage(): ReactElement {
               </label>
               <input
                 id="reg-email"
-                className="focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500"
+                className={`focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500 ${fieldErrors.email ? inputErrorClass : ''}`}
                 type="email"
                 inputMode="email"
                 autoComplete="email"
                 placeholder="ornek@email.com"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors((f) => ({ ...f, email: '' }));
+                }}
+                aria-invalid={Boolean(fieldErrors.email)}
               />
+              {fieldErrors.email ? (
+                <p className="text-sm font-medium text-red-700 dark:text-red-300" role="alert">
+                  {fieldErrors.email}
+                </p>
+              ) : null}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -145,15 +185,22 @@ export default function RegisterPage(): ReactElement {
               </label>
               <input
                 id="reg-password"
-                className="focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500"
+                className={`focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500 ${fieldErrors.password ? inputErrorClass : ''}`}
                 type="password"
                 autoComplete="new-password"
                 placeholder="••••••••"
-                minLength={6}
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors((f) => ({ ...f, password: '' }));
+                }}
+                aria-invalid={Boolean(fieldErrors.password)}
               />
+              {fieldErrors.password ? (
+                <p className="text-sm font-medium text-red-700 dark:text-red-300" role="alert">
+                  {fieldErrors.password}
+                </p>
+              ) : null}
             </div>
 
             <fieldset className="flex flex-col gap-2">
@@ -230,14 +277,9 @@ export default function RegisterPage(): ReactElement {
               </p>
             ) : null}
 
-            <button
-              className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white shadow-md transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
-              type="submit"
-              disabled={busy}
-            >
-              <UserPlus className="h-5 w-5 shrink-0" aria-hidden="true" strokeWidth={2} />
-              {busy ? 'Hesap oluşturuluyor…' : 'Hesap oluştur'}
-            </button>
+            <LoadingButton className="w-full" type="submit" loading={loading} loadingLabel="Hesap oluşturuluyor…">
+              Hesap oluştur
+            </LoadingButton>
           </form>
 
           <div className="mt-6 space-y-3 border-t border-stone-900/10 pt-5 text-center text-sm text-stone-600 dark:border-white/10 dark:text-stone-400">
@@ -262,9 +304,9 @@ export default function RegisterPage(): ReactElement {
 
         <p className="text-center text-[11px] leading-relaxed text-stone-500 dark:text-stone-500">
           Kayıt olarak{' '}
-          <a href="/terms" className="underline underline-offset-2">Kullanım Koşulları</a>'nı{' '}
-          ve{' '}
-          <a href="/privacy" className="underline underline-offset-2">Gizlilik Politikası</a>'nı kabul etmiş olursunuz.
+          <a href="/terms" className="underline underline-offset-2">Kullanım Koşulları</a>,{' '}
+          <a href="/privacy" className="underline underline-offset-2">Gizlilik</a> ve{' '}
+          <a href="/kvkk" className="underline underline-offset-2">KVKK aydınlatma</a> metnini kabul etmiş olursunuz.
         </p>
       </div>
     </div>

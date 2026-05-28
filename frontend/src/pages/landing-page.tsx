@@ -11,7 +11,11 @@ import { Link } from 'react-router-dom';
 
 import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
+import { SiteFooter } from '../components/legal/site-footer';
+import { JsonLd } from '../components/seo/json-ld';
+import { PageMeta, getDefaultDescription } from '../components/seo/page-meta';
 import { ButtonLink } from '../components/ui/button';
+import { absoluteUrl } from '../lib/site-url';
 
 const FEATURES = [
   {
@@ -46,8 +50,8 @@ const FEATURES = [
   },
   {
     icon: Compass,
-    title: 'Rehber paneli',
-    text: 'Kokart doğrulama, teklif kutusu ve grup fiyatlandırması.',
+    title: 'Rehber içerikleri',
+    text: 'Onaylı rehberler dijital rota oluşturur; erken aşama pazaryeri.',
     to: '/rehberler',
   },
 ] as const;
@@ -55,6 +59,28 @@ const FEATURES = [
 export default function LandingPage(): ReactElement {
   return (
     <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
+      <PageMeta
+        title="İstanbul Tarihi Rotaları ve Sesli Rehber"
+        description={getDefaultDescription()}
+        path="/"
+      />
+      <JsonLd
+        data={[
+          {
+            '@context': 'https://schema.org',
+            '@type': 'WebSite',
+            name: 'Historial GO',
+            url: absoluteUrl('/'),
+            description: getDefaultDescription(),
+          },
+          {
+            '@context': 'https://schema.org',
+            '@type': 'Organization',
+            name: 'Historial GO',
+            url: absoluteUrl('/'),
+          },
+        ]}
+      />
       <div
         className="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40"
         aria-hidden="true"
@@ -116,17 +142,7 @@ export default function LandingPage(): ReactElement {
           ))}
         </section>
 
-        <footer className="mt-16 border-t border-stone-900/10 py-8 text-center text-sm text-stone-500 dark:border-white/10">
-          <p>Historial-GO — turizmde deneyim ekonomisi</p>
-          <div className="mt-3 flex justify-center gap-4">
-            <Link className="font-semibold hover:text-primary" to="/terms">
-              Kullanım Koşulları
-            </Link>
-            <Link className="font-semibold hover:text-primary" to="/privacy">
-              Gizlilik
-            </Link>
-          </div>
-        </footer>
+        <SiteFooter className="mt-16" />
       </div>
     </div>
   );

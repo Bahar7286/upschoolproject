@@ -9,7 +9,7 @@ class RouteService:
         self.repository = repository
 
     @staticmethod
-    def _to_response(route: Route) -> RouteResponse:
+    def _to_response(route: Route, *, include_moderation: bool = False) -> RouteResponse:
         tags = [tag.strip() for tag in route.tags.split(',') if tag.strip()]
         return RouteResponse(
             route_id=route.route_id,
@@ -19,17 +19,28 @@ class RouteService:
             price=route.price,
             tags=tags,
             guide_id=route.guide_id,
+            status=route.status,
+            seo_description=route.seo_description or '',
+            moderation_note=route.moderation_note if include_moderation else '',
         )
 
-    async def list_routes(self) -> list[RouteResponse]:
-        routes = await self.repository.list_all()
+    async def list_routes(self, *, published_only: bool = True) -> list[RouteResponse]:
+        routes = await self.repository.list_all(published_only=published_only)
         return [self._to_response(r) for r in routes]
 
-    async def get_route_by_id(self, route_id: int) -> RouteResponse:
+    async def get_route_by_id(
+        self,
+        route_id: int,
+        *,
+        allow_unpublished: bool = False,
+        include_moderation: bool = False,
+    ) -> RouteResponse:
         route = await self.repository.get_by_id(route_id)
         if not route:
             raise RouteNotFoundError(route_id)
-        return self._to_response(route)
+        if not allow_unpublished and route.status != 'published':
+            raise RouteNotFoundError(route_id)
+        return self._to_response(route, include_moderation=include_moderation)
 
     async def route_exists(self, route_id: int) -> bool:
         route = await self.repository.get_by_id(route_id)
@@ -43,6 +54,7 @@ class RouteService:
             price=payload.price,
             tags=','.join(payload.tags),
             guide_id=payload.guide_id,
+            status='draft',
         )
         created = await self.repository.create(route)
         return self._to_response(created)
@@ -70,7 +82,7 @@ class RouteService:
         if not normalized_interests:
             return []
 
-        routes = await self.list_routes()
+        routes = await self.list_routes(published_only=True)
         matched = [
             route
             for route in routes

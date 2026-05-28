@@ -3,7 +3,11 @@ import { HeartOff } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
-import { formatApiError } from '../lib/api';
+import { ListSkeleton } from '../components/loading/page-skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { ErrorAlert } from '../components/ui/error-alert';
+import { EMPTY_STATES } from '../content/empty-states';
+import { mapError } from '../lib/user-errors';
 import { listFavorites, removeFavorite } from '../services/favorite-service';
 import { useAuthStore } from '../stores/auth-store';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
@@ -48,20 +52,11 @@ export default function FavoritesPage(): ReactElement {
         <p className="text-sm text-theme-muted">Kaydettiğin mekanlar</p>
       </header>
 
-      {isPending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
-      {isError ? (
-        <p className="alert-error rounded-xl px-3 py-2 text-sm" role="alert">
-          {formatApiError(error)}
-        </p>
-      ) : null}
+      {isPending ? <ListSkeleton count={3} /> : null}
+      {isError ? <ErrorAlert error={mapError(error)} /> : null}
 
-      {items.length === 0 && !isPending ? (
-        <div className="theme-card rounded-2xl p-6 text-center">
-          <p className="text-sm text-theme-muted">Henüz favorin yok.</p>
-          <Link className="mt-3 inline-flex font-bold text-primary" to="/cities">
-            İlleri keşfet
-          </Link>
-        </div>
+      {items.length === 0 && !isPending && !isError ? (
+        <EmptyState {...EMPTY_STATES.favorites} />
       ) : null}
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">

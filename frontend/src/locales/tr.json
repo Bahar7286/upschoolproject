@@ -1,0 +1,25 @@
+{
+  "nav": {
+    "discover": "Keşfet",
+    "cities": "İller",
+    "map": "Harita",
+    "profile": "Profil",
+    "assistant": "Asistan"
+  },
+  "onboarding": {
+    "cityTitle": "Hangi şehirde gezeceksin?",
+    "durationTitle": "Ne kadar zamanın var?",
+    "interestsTitle": "İlgi alanın ne?",
+    "budgetTitle": "Bütçen nedir?",
+    "languageTitle": "Dil tercihin nedir?",
+    "resultsTitle": "Sana en uygun 3 rota hazırlandı"
+  },
+  "errors": {
+    "network": "İnternet bağlantını kontrol edip tekrar deneyebilirsin.",
+    "recommendations": "Rota önerilerini şu anda getiremiyoruz."
+  },
+  "loading": {
+    "discover": "Sana uygun rotalar hazırlanıyor…",
+    "map": "Harita yükleniyor…"
+  }
+}

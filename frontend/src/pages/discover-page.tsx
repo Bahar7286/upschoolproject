@@ -4,9 +4,14 @@ import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 
+import { DiscoverLoading } from '../components/loading/discover-loading';
+import { ListSkeleton } from '../components/loading/page-skeleton';
+import { EmptyState } from '../components/ui/empty-state';
+import { ErrorAlert } from '../components/ui/error-alert';
+import { EMPTY_STATES } from '../content/empty-states';
 import { fetchAiStatus, recommendWithAi, type AIRecommendationItem } from '../services/ai-service';
 import { useRoutesQuery } from '../hooks/use-routes-query';
-import { formatApiError } from '../lib/api';
+import { mapError } from '../lib/user-errors';
 import { recommendRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
@@ -31,11 +36,17 @@ export default function DiscoverPage(): ReactElement {
   const interests = useOnboardingStore((s) => s.interests);
   const durationMinutes = useOnboardingStore((s) => s.durationMinutes);
   const budget = useOnboardingStore((s) => s.budget);
+  const preferredCity = useOnboardingStore((s) => s.preferredCity);
+  const cityFilter = searchParams.get('city')?.trim();
 
   const effectiveInterests = interests.length ? interests : user?.interests?.length ? user.interests : ['history', 'art', 'food'];
   const effectiveDuration = durationMinutes || user?.duration_minutes || 120;
   const effectiveBudget = budget || user?.budget || 150;
   const [premiumMsg, setPremiumMsg] = useState('');
+  const [slowRecommend, setSlowRecommend] = useState(false);
+
+  const effectiveCity =
+    cityFilter || user?.preferred_city || preferredCity || 'İstanbul';
 
   const canUseAi = () => {
     if (user?.is_premium) return true;
@@ -50,38 +61,47 @@ export default function DiscoverPage(): ReactElement {
 
   const recommendMutation = useMutation({
     mutationFn: async () => {
-      const [aiItems, fallbackRoutes] = await Promise.all([
-        recommendWithAi({
-          interests: effectiveInterests,
-          duration_minutes: effectiveDuration,
-          budget: effectiveBudget,
-          max_results: 12,
-        }).catch(() => [] as AIRecommendationItem[]),
-        recommendRoutes({
-          interests: effectiveInterests,
-          duration_minutes: effectiveDuration,
-          budget: effectiveBudget,
-        }),
-      ]);
-      const byId = new Map(routes.map((r) => [r.route_id, r]));
-      const scored: ScoredRoute[] = [];
-      const seen = new Set<number>();
+      setSlowRecommend(false);
+      const slowTimer = window.setTimeout(() => setSlowRecommend(true), 10_000);
+      try {
+        const [aiItems, fallbackRoutes] = await Promise.all([
+          recommendWithAi({
+            interests: effectiveInterests,
+            duration_minutes: effectiveDuration,
+            budget: effectiveBudget,
+            max_results: 12,
+          }).catch(() => [] as AIRecommendationItem[]),
+          recommendRoutes({
+            interests: effectiveInterests,
+            duration_minutes: effectiveDuration,
+            budget: effectiveBudget,
+          }),
+        ]);
+        const byId = new Map(routes.map((r) => [r.route_id, r]));
+        const scored: ScoredRoute[] = [];
+        const seen = new Set<number>();
 
-      for (const item of aiItems) {
-        const route = byId.get(item.route_id);
-        if (route && !seen.has(route.route_id)) {
-          seen.add(route.route_id);
-          scored.push({ ...route, aiScore: item.score, aiReason: item.reason });
+        for (const item of aiItems) {
+          const route = byId.get(item.route_id);
+          if (route && !seen.has(route.route_id)) {
+            seen.add(route.route_id);
+            scored.push({ ...route, aiScore: item.score, aiReason: item.reason });
+          }
         }
-      }
-      for (const route of fallbackRoutes) {
-        if (!seen.has(route.route_id)) {
-          seen.add(route.route_id);
-          scored.push(route);
+        for (const route of fallbackRoutes) {
+          if (!seen.has(route.route_id)) {
+            seen.add(route.route_id);
+            scored.push(route);
+          }
         }
+        if (scored.length === 0) return routes;
+        const cityNorm = effectiveCity.toLowerCase();
+        const cityFiltered = scored.filter((r) => r.city.toLowerCase().includes(cityNorm));
+        return cityFiltered.length > 0 ? cityFiltered : scored;
+      } finally {
+        window.clearTimeout(slowTimer);
+        setSlowRecommend(false);
       }
-      if (scored.length === 0) return routes;
-      return scored;
     },
   });
 
@@ -95,13 +115,17 @@ export default function DiscoverPage(): ReactElement {
   }, [searchParams.get('ai'), routes.length]);
 
   const display = useMemo(() => {
-    if (recommendMutation.data?.length) return recommendMutation.data;
-    return routes;
-  }, [recommendMutation.data, routes]);
+    const base = recommendMutation.data?.length ? recommendMutation.data : routes;
+    if (!cityFilter) return base;
+    const norm = cityFilter.toLowerCase();
+    const filtered = base.filter((r) => r.city.toLowerCase().includes(norm));
+    return filtered.length > 0 ? filtered : base;
+  }, [recommendMutation.data, routes, cityFilter]);
 
-  const bannerError =
-    (isError ? formatApiError(error) : '') ||
-    (recommendMutation.isError ? formatApiError(recommendMutation.error) : '');
+  const listError = isError ? mapError(error, 'discover') : null;
+  const recommendError = recommendMutation.isError
+    ? mapError(recommendMutation.error, 'route-recommendations')
+    : null;
 
   const firstName = user?.full_name?.split(/\s+/)[0];
 
@@ -123,11 +147,22 @@ export default function DiscoverPage(): ReactElement {
             </span>
           )}
         </p>
-        {!user?.onboarding_completed && interests.length === 0 ? (
+        {user?.onboarding_completed ? (
+          <p className="mt-2 inline-flex flex-wrap items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 text-xs font-semibold text-stone-700 dark:text-stone-300">
+            <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+            {effectiveCity}
+            <span className="text-stone-400">·</span>
+            {effectiveInterests.slice(0, 3).join(', ')}
+            {effectiveInterests.length > 3 ? '…' : ''}
+            <Link className="text-primary underline-offset-2 hover:underline" to="/onboarding">
+              Tercihleri düzenle
+            </Link>
+          </p>
+        ) : (
           <Link className="inline-flex text-sm font-bold text-primary underline-offset-4 hover:underline" to="/onboarding">
-            → İlgi alanlarını ayarla
+            Kişisel rotanı oluştur →
           </Link>
-        ) : null}
+        )}
       </header>
 
       <div
@@ -165,7 +200,7 @@ export default function DiscoverPage(): ReactElement {
                 recommendMutation.mutate();
               }}
             >
-              {recommendMutation.isPending ? 'AI hesaplıyor…' : 'Kişisel önerileri getir'}
+              {recommendMutation.isPending ? 'Kişisel öneriler hazırlanıyor…' : 'Kişisel Rotanı Oluştur'}
             </button>
             {recommendMutation.data ? (
               <button
@@ -186,22 +221,25 @@ export default function DiscoverPage(): ReactElement {
         </div>
       ) : null}
 
-      {bannerError ? (
-        <p className="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm font-semibold text-red-800 dark:border-red-500/35 dark:bg-red-950/40 dark:text-red-100" role="alert">
-          {bannerError}
+      {recommendMutation.isPending ? <DiscoverLoading /> : null}
+      {slowRecommend && recommendMutation.isPending ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
+          Öneriler biraz uzun sürdü. Popüler rotaları aşağıda inceleyebilirsin.
         </p>
       ) : null}
 
+      {listError ? <ErrorAlert error={listError} /> : null}
+      {recommendError ? (
+        <ErrorAlert
+          error={recommendError}
+          onRetry={() => recommendMutation.mutate()}
+        />
+      ) : null}
+
       {isPending ? (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3" aria-busy="true">
-          {[1, 2, 3, 4, 5, 6].map((k) => (
-            <div key={k} className="h-72 animate-pulse rounded-[22px] bg-stone-200 dark:bg-zinc-800" />
-          ))}
-        </div>
+        <ListSkeleton count={6} />
       ) : display.length === 0 ? (
-        <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-8 text-center dark:border-white/10 dark:bg-zinc-900/95">
-          <p className="font-semibold">Henüz rota yok</p>
-        </div>
+        <EmptyState {...EMPTY_STATES.search} />
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {display.map((route) => (
@@ -247,7 +285,7 @@ export default function DiscoverPage(): ReactElement {
                   className="tap-scale inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border-2 border-stone-300 font-semibold hover:border-primary dark:border-zinc-600"
                   to={`/routes/${route.route_id}`}
                 >
-                  Detay ve duraklar
+                  Rotayı İncele
                 </Link>
               </div>
             </article>

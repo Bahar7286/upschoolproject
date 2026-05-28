@@ -15,6 +15,12 @@ class Purchase(Base):
     status: Mapped[str] = mapped_column(String(20), nullable=False, default='confirmed')
     transaction_ref: Mapped[str] = mapped_column(String(64), default='', nullable=False)
     payment_method: Mapped[str] = mapped_column(String(20), default='card', nullable=False)
-    offer_id: Mapped[int | None] = mapped_column(nullable=True)
-    trip_request_id: Mapped[int | None] = mapped_column(nullable=True)
+    offer_id: Mapped[int | None] = mapped_column(
+        ForeignKey('guide_offers.offer_id', ondelete='SET NULL'),
+        nullable=True,
+    )
+    trip_request_id: Mapped[int | None] = mapped_column(
+        ForeignKey('trip_requests.request_id', ondelete='SET NULL'),
+        nullable=True,
+    )
     stripe_session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)

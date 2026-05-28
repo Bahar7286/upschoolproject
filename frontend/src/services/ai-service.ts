@@ -61,13 +61,14 @@ export interface NarrationAudioResponse {
 export interface NarrationPreviewPayload {
   stop_title: string;
   description?: string;
-  language: 'tr' | 'en' | 'de';
+  languages?: ('tr' | 'en' | 'de')[];
 }
 
 export interface NarrationPreviewResponse {
-  script: string;
-  language: string;
-  source?: string;
+  stop_title: string;
+  scripts: Record<string, string>;
+  note?: string;
+  sources?: { title: string; url: string }[];
 }
 
 export async function fetchNarrationPreview(
@@ -75,7 +76,10 @@ export async function fetchNarrationPreview(
 ): Promise<NarrationPreviewResponse> {
   return requestJson<NarrationPreviewResponse>('/ai/narration/preview', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      languages: ['tr'],
+      ...payload,
+    }),
   });
 }
 
@@ -124,6 +128,8 @@ export interface AssistantChatPayload {
   district?: string;
   interests?: string[];
   messages: AssistantMessage[];
+  location_lat?: number;
+  location_lng?: number;
 }
 
 export interface AssistantChatResponse {

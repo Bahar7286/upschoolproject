@@ -19,6 +19,7 @@ class User(Base):
     budget: Mapped[float] = mapped_column(Float, default=150.0, nullable=False)
     theme_preference: Mapped[str] = mapped_column(String(20), default='system', nullable=False)
     preferred_language: Mapped[str] = mapped_column(String(5), default='tr', nullable=False)
+    preferred_city: Mapped[str | None] = mapped_column(String(80), nullable=True)
     onboarding_completed: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     # Gamification

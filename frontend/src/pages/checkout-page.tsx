@@ -144,6 +144,16 @@ export default function CheckoutPage(): ReactElement {
         </Link>
         <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-theme">Güvenli ödeme</h1>
         <p className="mt-1 text-sm text-theme-muted">{state.title}</p>
+        <p className="mt-2 text-xs text-theme-muted">
+          {stripeEnabled ? 'Gerçek ödeme: Stripe Checkout.' : 'Demo mod: gerçek tahsilat yapılmaz.'}{' '}
+          <Link className="font-semibold text-primary underline" to="/odeme-guvenlik">
+            Ödeme güvenliği
+          </Link>
+          {' · '}
+          <Link className="font-semibold text-primary underline" to="/iade">
+            İade politikası
+          </Link>
+        </p>
       </header>
 
       <div className="theme-card p-5">

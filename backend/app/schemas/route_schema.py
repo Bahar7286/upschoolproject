@@ -41,3 +41,6 @@ class RouteResponse(BaseModel):
     price: float
     tags: list[str]
     guide_id: int
+    status: str = 'published'
+    seo_description: str = ''
+    moderation_note: str = ''

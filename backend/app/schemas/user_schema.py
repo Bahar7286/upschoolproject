@@ -35,6 +35,7 @@ class UserPreferencesUpdate(BaseModel):
         pattern='^(system|light|dark|heritage|ocean|sunset|forest|classic)$',
     )
     preferred_language: str = Field(default='tr', pattern='^(tr|en|de)$')
+    preferred_city: str | None = Field(default=None, max_length=80)
     onboarding_completed: bool = False
 
 
@@ -115,6 +116,7 @@ class UserResponse(BaseModel):
     budget: float = 150.0
     theme_preference: str = 'system'
     preferred_language: str = 'tr'
+    preferred_city: str | None = None
     onboarding_completed: bool = False
     xp: int = 0
     streak_days: int = 0

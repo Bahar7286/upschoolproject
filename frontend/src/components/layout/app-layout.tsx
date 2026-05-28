@@ -18,8 +18,10 @@ import {
 } from 'lucide-react';
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
+import { OnboardingGate } from '../onboarding/onboarding-gate';
 import { BrandLogo } from '../brand/brand-logo';
 import { MobileBottomNav } from './mobile-bottom-nav';
+import { MobileHeaderMenu } from './mobile-header-menu';
 import { ThemeToggle } from '../theme/theme-toggle';
 import { fetchCurrentUser } from '../../services/auth-service';
 import { useAuthStore } from '../../stores/auth-store';
@@ -79,7 +81,7 @@ export function AppLayout(): ReactElement {
         <div className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
           <BrandLogo size="sm" className="min-w-0 shrink" />
 
-          <nav className="hidden flex-1 flex-wrap items-center justify-center gap-1 lg:flex" aria-label="Ana menü">
+          <nav className="hidden flex-1 flex-wrap items-center justify-center gap-1 md:flex" aria-label="Ana menü">
             {isAdmin ? (
               <NavLink className={({ isActive }) => navClass(isActive)} to="/admin">
                 <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
@@ -143,7 +145,7 @@ export function AppLayout(): ReactElement {
             {isTourist ? (
               <NavLink className={({ isActive }) => navClass(isActive)} to="/onboarding">
                 <Palette className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                İlgi alanları
+                Gezi tercihleri
               </NavLink>
             ) : null}
             {isTourist ? (
@@ -159,6 +161,7 @@ export function AppLayout(): ReactElement {
           </nav>
 
           <div className="ml-auto flex items-center gap-2">
+            <MobileHeaderMenu isAdmin={isAdmin} isGuide={isGuide} />
             <NavLink
               className="app-chip tap-scale focus-ring hidden min-h-[44px] min-w-[44px] items-center justify-center rounded-full md:inline-flex"
               to="/profile#settings"
@@ -214,9 +217,11 @@ export function AppLayout(): ReactElement {
       </header>
 
       <main className="app-main mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 py-5 pb-[calc(4.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
-        <div className="animate-fade-in-up">
-          <Outlet />
-        </div>
+        <OnboardingGate>
+          <div className="animate-fade-in-up">
+            <Outlet />
+          </div>
+        </OnboardingGate>
       </main>
 
       <MobileBottomNav isAdmin={isAdmin} isGuide={isGuide} />

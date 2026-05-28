@@ -32,9 +32,12 @@ export default function GuidesMarketplacePage(): ReactElement {
           Onaylı rehberler
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-stone-600 dark:text-stone-400">
-          Yalnızca kokart doğrulaması tamamlanmış profesyonel turist rehberleri listelenir. Teklif ve mesajlaşma
-          platform üzerinden yapılır — iletişim bilgisi paylaşımı gerekmez.
+          Rehberlerin dijital rota içerikleri oluşturabildiği erken aşama platform. Listede yalnızca kokart doğrulaması
+          tamamlanmış rehberler yer alır.
         </p>
+        <Link className="mt-2 inline-block text-sm font-bold text-primary hover:underline" to="/rehber-guven">
+          Doğrulama süreci nasıl işler? →
+        </Link>
       </header>
 
       {error ? (
@@ -62,7 +65,7 @@ export default function GuidesMarketplacePage(): ReactElement {
             >
               <div className="flex min-w-0 items-start justify-between gap-2">
                 <h2 className="min-w-0 flex-1 truncate font-display text-lg font-bold">{g.full_name}</h2>
-                <VerifiedGuideBadge compact />
+                <VerifiedGuideBadge compact verified={g.is_verified || g.verification_status === 'verified'} />
               </div>
               <p className="mt-2 line-clamp-3 text-sm text-stone-600 dark:text-stone-400">{g.bio}</p>
               <div className="mt-3 flex flex-wrap gap-1">

@@ -15,6 +15,7 @@ from app.repositories.district_repository import DistrictRepository
 from app.repositories.favorite_repository import FavoriteRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.repositories.review_repository import ReviewRepository
+from app.repositories.content_report_repository import ContentReportRepository
 from app.repositories.route_repository import RouteRepository
 from app.repositories.trip_request_repository import TripRequestRepository
 from app.repositories.stop_repository import StopRepository
@@ -32,6 +33,7 @@ from app.services.favorite_service import FavoriteService
 from app.services.plan_service import PlanService
 from app.services.quote_service import QuoteService
 from app.services.review_service import ReviewService
+from app.services.moderation_service import ModerationService
 from app.services.route_service import RouteService
 from app.services.trip_request_service import TripRequestService
 from app.services.stop_service import StopService
@@ -84,8 +86,28 @@ def get_district_repository(db: AsyncSession = Depends(get_db)) -> DistrictRepos
     return DistrictRepository(db=db)
 
 
+def get_content_report_repository(db: AsyncSession = Depends(get_db)) -> ContentReportRepository:
+    return ContentReportRepository(db=db)
+
+
 def get_route_service(repo: RouteRepository = Depends(get_route_repository)) -> RouteService:
     return RouteService(repository=repo)
+
+
+def get_moderation_service(
+    route_repo: RouteRepository = Depends(get_route_repository),
+    stop_repo: StopRepository = Depends(get_stop_repository),
+    report_repo: ContentReportRepository = Depends(get_content_report_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+    route_service: RouteService = Depends(get_route_service),
+) -> ModerationService:
+    return ModerationService(
+        routes=route_repo,
+        stops=stop_repo,
+        reports=report_repo,
+        users=user_repo,
+        route_service=route_service,
+    )
 
 
 def get_stop_service(

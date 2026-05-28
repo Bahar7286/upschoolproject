@@ -70,6 +70,7 @@ def user_to_response(user: User) -> UserResponse:
         budget=user.budget,
         theme_preference=user.theme_preference,
         preferred_language=user.preferred_language,
+        preferred_city=user.preferred_city,
         onboarding_completed=user.onboarding_completed,
         xp=user.xp,
         streak_days=user.streak_days,
@@ -156,6 +157,7 @@ async def update_preferences(
     user.budget = payload.budget
     user.theme_preference = payload.theme_preference
     user.preferred_language = payload.preferred_language
+    user.preferred_city = (payload.preferred_city or '').strip() or None
     user.onboarding_completed = payload.onboarding_completed
     _touch_streak(user)
     await session.commit()

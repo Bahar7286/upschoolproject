@@ -1,7 +1,7 @@
-from sqlalchemy import select, text
-from sqlalchemy.ext.asyncio import AsyncSession
-
 from datetime import datetime, timezone
+
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
 from app.data.istanbul_places import ISTANBUL_PLACES
@@ -18,74 +18,8 @@ from app.models.user_model import User
 
 _DEMO_PASSWORD = 'demo123'
 
-_USER_MIGRATIONS: list[tuple[str, str]] = [
-    ('interests', "TEXT NOT NULL DEFAULT ''"),
-    ('duration_minutes', 'INTEGER NOT NULL DEFAULT 120'),
-    ('budget', 'REAL NOT NULL DEFAULT 150.0'),
-    ('theme_preference', "TEXT NOT NULL DEFAULT 'system'"),
-    ('preferred_language', "TEXT NOT NULL DEFAULT 'tr'"),
-    ('onboarding_completed', 'INTEGER NOT NULL DEFAULT 0'),
-    ('xp', 'INTEGER NOT NULL DEFAULT 0'),
-    ('streak_days', 'INTEGER NOT NULL DEFAULT 0'),
-    ('badges', "TEXT NOT NULL DEFAULT ''"),
-    ('last_active_date', 'TEXT'),
-    ('password_reset_token', 'TEXT'),
-    ('password_reset_expires', 'TEXT'),
-    ('is_premium', 'INTEGER NOT NULL DEFAULT 0'),
-]
-
-
-async def _ensure_user_columns(session: AsyncSession) -> None:
-    result = await session.execute(text('PRAGMA table_info(users)'))
-    existing = {row[1] for row in result.fetchall()}
-    for column, definition in _USER_MIGRATIONS:
-        if column not in existing:
-            await session.execute(text(f'ALTER TABLE users ADD COLUMN {column} {definition}'))
-    await session.commit()
-
-
-# PostgreSQL: create_all yeni tabloları ekler ama mevcut tablolara sütun eklemez.
-_PG_COLUMN_MIGRATIONS: list[tuple[str, str, str]] = [
-    ('users', 'redeemed_rewards', "VARCHAR(1000) NOT NULL DEFAULT ''"),
-    ('guide_profiles', 'document_path', "VARCHAR(500) NOT NULL DEFAULT ''"),
-    ('trip_requests', 'route_mode', "VARCHAR(20) NOT NULL DEFAULT 'existing'"),
-    ('trip_requests', 'planned_stops', "TEXT NOT NULL DEFAULT '[]'"),
-    ('purchases', 'transaction_ref', "VARCHAR(64) NOT NULL DEFAULT ''"),
-    ('purchases', 'payment_method', "VARCHAR(20) NOT NULL DEFAULT 'card'"),
-    ('purchases', 'offer_id', 'INTEGER'),
-    ('purchases', 'trip_request_id', 'INTEGER'),
-    ('purchases', 'stripe_session_id', 'VARCHAR(255)'),
-    ('users', 'password_reset_token', 'VARCHAR(64)'),
-    ('users', 'password_reset_expires', 'VARCHAR(30)'),
-    ('users', 'is_premium', 'BOOLEAN NOT NULL DEFAULT FALSE'),
-]
-
-
-async def _pg_column_exists(session: AsyncSession, table: str, column: str) -> bool:
-    result = await session.execute(
-        text(
-            'SELECT 1 FROM information_schema.columns '
-            'WHERE table_schema = current_schema() AND table_name = :t AND column_name = :c'
-        ),
-        {'t': table, 'c': column},
-    )
-    return result.first() is not None
-
-
-async def _ensure_postgres_columns(session: AsyncSession) -> None:
-    for table, column, definition in _PG_COLUMN_MIGRATIONS:
-        if not await _pg_column_exists(session, table, column):
-            await session.execute(text(f'ALTER TABLE {table} ADD COLUMN {column} {definition}'))
-    await session.commit()
-
 
 async def seed_initial_data(session: AsyncSession) -> None:
-    bind = session.get_bind()
-    if bind.dialect.name == 'sqlite':
-        await _ensure_user_columns(session)
-    elif bind.dialect.name == 'postgresql':
-        await _ensure_postgres_columns(session)
-
     existing_users = await session.execute(select(User.user_id).limit(1))
     if not existing_users.first():
         demo_hash = hash_password(_DEMO_PASSWORD)
@@ -125,6 +59,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
                 price=9.9,
                 tags='history,museum',
                 guide_id=2,
+                status='published',
             ),
             Route(
                 title='Kadikoy Street Art Trail',
@@ -133,6 +68,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
                 price=7.5,
                 tags='art,food',
                 guide_id=2,
+                status='published',
             ),
         ]
         session.add_all(users + routes)

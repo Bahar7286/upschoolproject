@@ -1,7 +1,5 @@
 import {
-  CalendarDays,
   Compass,
-  Headphones,
   Heart,
   LayoutDashboard,
   Map as MapIcon,
@@ -10,7 +8,6 @@ import {
   ShoppingBag,
   UserRound,
   Users,
-  Wallet,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type { ReactElement } from 'react';
@@ -20,7 +17,7 @@ type NavItem = { to: string; label: string; icon: LucideIcon };
 
 function bottomClass(isActive: boolean): string {
   return [
-    'app-bottom-link flex min-h-[52px] min-w-[4.25rem] shrink-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-bold leading-tight transition-colors tap-scale focus-ring sm:min-w-[4.75rem] sm:text-[11px]',
+    'app-bottom-link flex min-h-[52px] min-w-0 flex-1 flex-col items-center justify-center gap-0.5 rounded-xl px-1 py-1 text-[10px] font-bold leading-tight transition-colors tap-scale focus-ring sm:text-[11px]',
     isActive ? 'app-bottom-link--active' : '',
   ].join(' ');
 }
@@ -38,16 +35,12 @@ function NavItems({ items }: { items: NavItem[] }): ReactElement {
   );
 }
 
+/** Mobil: en fazla 5 sekme — geri kalanlar masaüstü menüde */
 const TOURIST_NAV: NavItem[] = [
   { to: '/discover', label: 'Keşfet', icon: Compass },
   { to: '/cities', label: 'İller', icon: MapPin },
-  { to: '/planner', label: 'Plan', icon: CalendarDays },
-  { to: '/talepler', label: 'Talepler', icon: ShoppingBag },
-  { to: '/audio', label: 'Ses', icon: Headphones },
-  { to: '/assistant', label: 'Asistan', icon: MessageCircle },
-  { to: '/favorites', label: 'Favori', icon: Heart },
-  { to: '/purchases', label: 'Satın alım', icon: Wallet },
   { to: '/map', label: 'Harita', icon: MapIcon },
+  { to: '/assistant', label: 'Asistan', icon: MessageCircle },
   { to: '/profile', label: 'Profil', icon: UserRound },
 ];
 
@@ -81,7 +74,7 @@ export function MobileBottomNav({
 
   return (
     <nav
-      className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex w-full max-w-[100vw] gap-0.5 overflow-x-auto border-t px-1 pb-[calc(8px+env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden"
+      className="app-bottom-nav fixed bottom-0 left-0 right-0 z-50 flex w-full max-w-[100vw] gap-0 border-t px-1 pb-[calc(8px+env(safe-area-inset-bottom))] pt-1.5 backdrop-blur-xl lg:hidden"
       aria-label="Mobil menü"
     >
       <NavItems items={items} />

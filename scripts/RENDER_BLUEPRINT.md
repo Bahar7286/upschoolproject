@@ -52,7 +52,15 @@ https://<API>/ai/status   → llm_enabled: true
 https://<WEB>/            → uygulama açılır
 ```
 
-## 6. Repoda URL güncelleme
+## 6. Render “cold start” (ücretsiz plan)
+
+İlk istek 30–60 sn sürebilir. Ücretsiz uptime ping (ör. [UptimeRobot](https://uptimerobot.com)) ile API’yi uyanık tutabilirsiniz:
+
+- URL: `https://historial-go-api.onrender.com/health`
+- Aralık: **14 dakika** (Render ücretsiz saat limitine dikkat; 10 dk çok agresif olabilir)
+- Web static site cold start yaşamaz; yavaşlık çoğunlukla API’dendir.
+
+## 7. Repoda URL güncelleme
 
 ```powershell
 .\scripts\update-live-urls.ps1 -FrontendUrl "https://..." -ApiUrl "https://..."

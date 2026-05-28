@@ -80,6 +80,8 @@ export default function MapPage(): ReactElement {
   const districtIdParam = Number(searchParams.get('districtId'));
   const categoryParam = (searchParams.get('category') as PlaceCategory | null) ?? null;
   const polylineParam = searchParams.get('polyline');
+  const destLatParam = Number(searchParams.get('destLat'));
+  const destLngParam = Number(searchParams.get('destLng'));
   const [placesRadius, setPlacesRadius] = useState(8000);
   const [googlePlacesError, setGooglePlacesError] = useState('');
 
@@ -114,9 +116,18 @@ export default function MapPage(): ReactElement {
   });
 
   const mapCenter = useMemo(() => {
+    if (Number.isFinite(destLatParam) && Number.isFinite(destLngParam)) {
+      return { lat: destLatParam, lng: destLngParam };
+    }
     if (geoCenter) return { lat: geoCenter.lat, lng: geoCenter.lng };
     return { lat: 41.015137, lng: 28.97953 };
-  }, [geoCenter]);
+  }, [geoCenter, destLatParam, destLngParam]);
+
+  const mapZoom = useMemo(() => {
+    if (Number.isFinite(destLatParam)) return 15;
+    if (districtIdParam > 0) return 14;
+    return 12;
+  }, [destLatParam, districtIdParam]);
 
   const effectiveCategory = categoryFilter ?? categoryParam;
 
@@ -415,13 +426,18 @@ export default function MapPage(): ReactElement {
       ) : null}
 
       {geoError ? (
-
-        <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-950 dark:text-amber-100" role="alert">
-
-          {geoError}
-
+        <div
+          className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-950 dark:text-amber-100"
+          role="alert"
+        >
+          <p>{geoError}</p>
+          <p className="mt-2 text-stone-700 dark:text-stone-300">
+            Konum olmadan da haritayı kullanabilirsin. Şehir seçerek veya listeden mekanlara göz atarak devam et.
+          </p>
+          <Link className="mt-2 inline-flex min-h-[44px] items-center font-bold text-primary underline" to="/cities">
+            İlleri liste görünümünde keşfet
+          </Link>
         </div>
-
       ) : null}
 
 
@@ -469,7 +485,7 @@ export default function MapPage(): ReactElement {
 
           mapCenter={mapCenter}
 
-          mapZoom={districtIdParam > 0 ? 14 : 12}
+          mapZoom={mapZoom}
 
           googlePlaces={googleNearby?.places ?? []}
 

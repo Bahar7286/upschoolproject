@@ -5,8 +5,18 @@ from app.api.auth_deps import get_current_user_id
 from app.api.dependencies import get_guide_profile_service, get_poi_sync_service, get_user_repository
 from app.core.exceptions import GuideNotFoundError
 from app.repositories.user_repository import UserRepository
+from app.api.dependencies import get_moderation_service
+from app.schemas.moderation_schema import (
+    AdminPendingRoute,
+    ContentReportResolve,
+    ContentReportResponse,
+    RouteModerationDecision,
+)
 from app.services.guide_profile_service import GuideProfileService
+from app.services.moderation_service import ModerationService
 from app.services.poi_sync_service import PoiSyncService
+from app.core.exceptions import RouteNotFoundError
+from app.schemas.route_schema import RouteResponse
 
 router = APIRouter()
 
@@ -101,6 +111,58 @@ async def sync_poi(
         created=result.created,
         skipped_duplicates=result.skipped_duplicates,
     )
+
+
+@router.get('/routes/pending', response_model=list[AdminPendingRoute])
+async def list_pending_routes(
+    user_id: int = Depends(get_current_user_id),
+    service: ModerationService = Depends(get_moderation_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> list[AdminPendingRoute]:
+    await _require_admin(user_id, user_repo)
+    return await service.list_pending_routes()
+
+
+@router.post('/moderation/routes/{route_id}/decision', response_model=RouteResponse)
+async def moderate_route_decision(
+    route_id: int,
+    payload: RouteModerationDecision,
+    user_id: int = Depends(get_current_user_id),
+    service: ModerationService = Depends(get_moderation_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> RouteResponse:
+    await _require_admin(user_id, user_repo)
+    try:
+        return await service.moderate_route(route_id, user_id, payload)
+    except RouteNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Route not found') from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.get('/reports', response_model=list[ContentReportResponse])
+async def list_content_reports(
+    user_id: int = Depends(get_current_user_id),
+    service: ModerationService = Depends(get_moderation_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> list[ContentReportResponse]:
+    await _require_admin(user_id, user_repo)
+    return await service.list_open_reports()
+
+
+@router.patch('/reports/{report_id}', response_model=ContentReportResponse)
+async def resolve_content_report(
+    report_id: int,
+    payload: ContentReportResolve,
+    user_id: int = Depends(get_current_user_id),
+    service: ModerationService = Depends(get_moderation_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> ContentReportResponse:
+    await _require_admin(user_id, user_repo)
+    try:
+        return await service.resolve_report(report_id, user_id, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
 
 
 @router.patch('/users/{target_user_id}/premium', response_model=dict[str, str])
