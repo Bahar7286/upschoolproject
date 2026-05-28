@@ -26,6 +26,7 @@ from app.services.payment_service import PaymentService
 from app.services.place_service import PlaceService
 from app.services.city_service import CityService
 from app.services.district_service import DistrictService
+from app.services.poi_sync_service import PoiSyncService
 from app.services.plan_service import PlanService
 from app.services.quote_service import QuoteService
 from app.services.review_service import ReviewService
@@ -125,6 +126,14 @@ def get_city_service(repo: CityRepository = Depends(get_city_repository)) -> Cit
 
 def get_district_service(repo: DistrictRepository = Depends(get_district_repository)) -> DistrictService:
     return DistrictService(repository=repo)
+
+
+def get_poi_sync_service(
+    city_repo: CityRepository = Depends(get_city_repository),
+    district_repo: DistrictRepository = Depends(get_district_repository),
+    place_repo: PlaceRepository = Depends(get_place_repository),
+) -> PoiSyncService:
+    return PoiSyncService(city_repo=city_repo, district_repo=district_repo, place_repo=place_repo)
 
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:

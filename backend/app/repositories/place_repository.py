@@ -14,6 +14,7 @@ class PlaceRepository(BaseRepository):
         self,
         *,
         city: str | None = None,
+        district: str | None = None,
         category: str | None = None,
         query: str | None = None,
         min_lat: float | None = None,
@@ -25,6 +26,8 @@ class PlaceRepository(BaseRepository):
         stmt = select(Place).order_by(Place.name.asc())
         if city:
             stmt = stmt.where(func.lower(Place.city) == city.lower())
+        if district:
+            stmt = stmt.where(func.lower(Place.district) == district.lower())
         if category:
             stmt = stmt.where(Place.category == category)
         if query:
@@ -37,6 +40,29 @@ class PlaceRepository(BaseRepository):
         stmt = stmt.limit(min(limit, 500))
         result = await self.db.execute(stmt)
         return list(result.scalars().all())
+
+    async def likely_duplicate(
+        self,
+        *,
+        name: str,
+        city: str,
+        district: str,
+        lat: float,
+        lng: float,
+        radius_m: float = 60,
+    ) -> bool:
+        # Fast duplicate guard: same name + city/district, and very close coordinates.
+        candidates = await self.list_places(city=city, district=district, query=name, limit=50)
+        for place in candidates:
+            dist = calculate_distance_meters(
+                user_lat=lat,
+                user_lng=lng,
+                target_lat=place.latitude,
+                target_lng=place.longitude,
+            )
+            if dist <= radius_m:
+                return True
+        return False
 
     async def get_by_id(self, place_id: int) -> Place | None:
         return await self.db.get(Place, place_id)

@@ -18,6 +18,7 @@ router = APIRouter()
 @router.get('', response_model=list[PlaceResponse])
 async def list_places(
     city: str | None = Query(default='Istanbul'),
+    district: str | None = Query(default=None, max_length=120),
     category: str | None = Query(default=None),
     q: str | None = Query(default=None, min_length=2),
     min_lat: float | None = None,
@@ -31,6 +32,7 @@ async def list_places(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f'Invalid category. Use: {", ".join(PLACE_CATEGORIES)}')
     return await service.list_places(
         city=city,
+        district=district,
         category=category,
         query=q,
         min_lat=min_lat,

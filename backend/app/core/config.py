@@ -69,6 +69,13 @@ class Settings:
     brevo_api_key: str = os.getenv('BREVO_API_KEY', '').strip()
     brevo_base_url: str = os.getenv('BREVO_BASE_URL', 'https://api.brevo.com').strip().rstrip('/')
 
+    # OSM Overpass (POI sync)
+    overpass_base_url: str = os.getenv('OVERPASS_BASE_URL', 'https://overpass.kumi.systems/api').strip().rstrip('/')
+    overpass_user_agent: str = os.getenv(
+        'OVERPASS_USER_AGENT',
+        'HistorialGO/1.0 (contact: admin@historial-go.local)',
+    ).strip()
+
     @property
     def is_production(self) -> bool:
         return self.environment == 'production'

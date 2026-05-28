@@ -35,6 +35,7 @@ class PlaceService:
         self,
         *,
         city: str | None = None,
+        district: str | None = None,
         category: str | None = None,
         query: str | None = None,
         min_lat: float | None = None,
@@ -45,6 +46,7 @@ class PlaceService:
     ) -> list[PlaceResponse]:
         places = await self.repository.list_places(
             city=city,
+            district=district,
             category=category,
             query=query,
             min_lat=min_lat,
