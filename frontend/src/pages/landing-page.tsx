@@ -95,10 +95,10 @@ export default function LandingPage(): ReactElement {
           <BrandLogo to="/" size="md" />
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <ButtonLink variant="secondary" className="hidden min-h-[44px] sm:inline-flex" to="/login">
+            <ButtonLink variant="secondary" className="min-h-[44px] px-3 text-xs sm:px-4 sm:text-sm" to="/login">
               Giriş
             </ButtonLink>
-            <ButtonLink className="min-h-[44px]" to="/register">
+            <ButtonLink className="min-h-[44px] px-3 text-xs sm:px-4 sm:text-sm" to="/register">
               Kayıt ol
             </ButtonLink>
           </div>
