@@ -158,7 +158,7 @@
 | `ensure_images_seeded` + narration cache (TTL) | Backend startup |
 | PRD, Plan, Checklist, DesignSystem senkron | Teslim dokümanları güncellendi |
 
-**Deploy:** Push sonrası Render manual deploy (web + api); `VITE_API_BASE_URL` build-time zorunlu.
+**Deploy:** Push `659b25d` sonrası Render auto-deploy; canlı JS `index-BSwm78H_.js` (May 2026).
 
 ---
 

@@ -7,8 +7,9 @@
 3. `cd frontend` → `npm run dev`
 4. `.\scripts\verify-local.ps1` → `/health` OK; `/ai/status` → `llm_enabled: true` (anahtar gerekli)
 5. http://localhost:5173 → `tourist@example.com` / `demo123`
-6. Keşfet → Kişisel önerileri getir
-7. Rota detay → sesli rehber / harita
+6. Keşfet → **Kişisel Rotanı Oluştur** (AI chip paneli)
+7. İller → il → ilçe → kategori (ikon kartlar) → mekan → **TR/EN Dinle**
+8. Harita → POI pinleri; `/audio` → `/map` yönlendirmesi
 
 ## Canlı (deploy sonrası)
 
@@ -19,11 +20,12 @@
 | # | Kontrol | Beklenen |
 |---|---------|----------|
 | 1 | Frontend URL | SPA yüklenir |
-| 2 | Giriş demo hesap | Dashboard / keşfet |
-| 3 | AI öneri | LLM aktif etiketi veya `source: llm` |
-| 4 | `https://<api>/ai/status` | `llm_enabled: true` |
-| 5 | `https://<api>/docs` | Swagger |
-| 6 | Rota + sesli rehber | Konum izni verin |
+| 2 | Giriş demo hesap | Keşfet / İller |
+| 3 | AI öneri | Kişisel Rotanı Oluştur; öneri listesi |
+| 4 | Mekan detay | TR/EN toggle + Dinle |
+| 5 | Mobil alt nav | 4 öğe (Profil yok); Ses sekmesi yok |
+| 6 | `https://historial-go-api.onrender.com/ai/status` | `llm_enabled: true` |
+| 7 | `https://historial-go-api.onrender.com/docs` | Swagger |
 
 ## Sık hatalar
 
