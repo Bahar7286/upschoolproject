@@ -93,3 +93,5 @@ Ayrıntı: [`prodocs/testing.md`](prodocs/testing.md).
 ## Lisans / teslim
 
 Tüm kaynak kod bu repoda commit edilir; eğitmen en güncel commit üzerinden değerlendirir. Teslim kontrolü: [`SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md).
+
+**Son teslim commit:** `ea0f588` (main) — keşif/ses UX, API güvenilirliği, doküman senkronu.
