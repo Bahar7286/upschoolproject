@@ -9,6 +9,7 @@ import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-c
 import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { formatApiError } from '../lib/api';
+import { googlePlaceDetailPath } from '../lib/routes';
 import { listCities, listDistrictsByCity } from '../services/city-service';
 import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
 import { listPlaces } from '../services/place-service';
@@ -269,7 +270,6 @@ export default function DistrictPlacesPage(): ReactElement {
         ))}
         {merged.google.map((p) => {
           const cat = (p.category as PlaceCategory) || category;
-          const detailBack = encodeURIComponent(`${base}?category=${category}`);
           return (
             <GoogleVenuePlaceCard
               key={`g-${p.place_id}`}
@@ -282,7 +282,7 @@ export default function DistrictPlacesPage(): ReactElement {
                   : p.address
               }
               photoUrl={p.photo_url}
-              to={`/google/places/${encodeURIComponent(p.place_id)}?back=${detailBack}&cityId=${city_id}`}
+              to={googlePlaceDetailPath(p.place_id, { back: `${base}?category=${category}`, cityId: city_id })}
             />
           );
         })}

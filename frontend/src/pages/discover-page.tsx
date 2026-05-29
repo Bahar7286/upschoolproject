@@ -26,7 +26,7 @@ function isScoredRoute(route: RouteResponse | ScoredRoute): route is ScoredRoute
 export default function DiscoverPage(): ReactElement {
   const [searchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
-  const { data: routes = [], isPending, isError, error } = useRoutesQuery();
+  const { data: routes = [], isPending, isError, error, refetch } = useRoutesQuery();
   const { data: aiStatus } = useQuery({
     queryKey: ['ai', 'status'],
     queryFn: fetchAiStatus,
@@ -45,6 +45,7 @@ export default function DiscoverPage(): ReactElement {
   const [premiumMsg, setPremiumMsg] = useState('');
   const [slowRecommend, setSlowRecommend] = useState(false);
   const [dismissRecommendError, setDismissRecommendError] = useState(false);
+  const [dismissListError, setDismissListError] = useState(false);
 
   const effectiveCity =
     cityFilter || user?.preferred_city || preferredCity || 'İstanbul';
@@ -228,7 +229,25 @@ export default function DiscoverPage(): ReactElement {
         </p>
       ) : null}
 
-      {listError && display.length === 0 ? <ErrorAlert error={listError} /> : null}
+      {listError && display.length === 0 && !dismissListError ? (
+        <ErrorAlert
+          error={{
+            ...listError,
+            message:
+              listError.kind === 'network'
+                ? 'Rota listesi şu an yüklenemedi. İl ve mekan keşfine devam edebilirsin.'
+                : listError.message,
+            alternative: 'Render kullanıyorsan API servisinin uyandığını doğrula (ilk istek yavaş olabilir).',
+            actionLabel: 'İlleri keşfet',
+            actionTo: '/cities',
+          }}
+          onDismiss={() => setDismissListError(true)}
+          onRetry={() => {
+            setDismissListError(false);
+            void refetch();
+          }}
+        />
+      ) : null}
       {recommendError && !dismissRecommendError && display.length === 0 && !recommendMutation.isPending ? (
         <ErrorAlert
           error={{

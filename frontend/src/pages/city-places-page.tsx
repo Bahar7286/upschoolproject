@@ -7,6 +7,7 @@ import { BackButton } from '../components/ui/back-button';
 import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-card';
 import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
+import { googlePlaceDetailPath } from '../lib/routes';
 import { listCities } from '../services/city-service';
 import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
 import { listPlaces } from '../services/place-service';
@@ -120,7 +121,10 @@ export default function CityPlacesPage(): ReactElement {
                 category={(p.category as PlaceCategory) || category}
                 subtitle={p.address}
                 photoUrl={p.photo_url}
-                to={`/google/places/${encodeURIComponent(p.place_id)}?back=${encodeURIComponent(`/cities/${city_id}/places?category=${category}`)}&cityId=${city_id}`}
+                to={googlePlaceDetailPath(p.place_id, {
+                  back: `/cities/${city_id}/places?category=${category}`,
+                  cityId: city_id,
+                })}
               />
             ))
           : null}

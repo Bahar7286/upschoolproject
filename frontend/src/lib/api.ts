@@ -41,10 +41,16 @@ async function requestJsonImpl<T>(
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  const response = await fetch(`${base}${rel}`, {
-    ...init,
-    headers,
-  });
+  let response: Response;
+  try {
+    response = await fetch(`${base}${rel}`, {
+      ...init,
+      headers,
+    });
+  } catch (err) {
+    const msg = err instanceof Error ? err.message : 'Network error';
+    throw new ApiError(msg, 0, '');
+  }
 
   const text = await response.text();
   if (!response.ok) {

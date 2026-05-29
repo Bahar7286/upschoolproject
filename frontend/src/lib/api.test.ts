@@ -43,4 +43,9 @@ describe('formatApiError', () => {
     const err = new Error('Failed to fetch');
     expect(formatApiError(err)).toContain('Sunucuya bağlanılamadı');
   });
+
+  it('FE-01 maps ApiError status 0 as connection failure', () => {
+    const err = new ApiError('Failed to fetch', 0, '');
+    expect(formatApiError(err)).toContain('Sunucuya bağlanılamadı');
+  });
 });
