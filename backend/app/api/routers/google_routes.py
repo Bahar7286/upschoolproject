@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Request, status
+from fastapi import APIRouter, HTTPException, Query, Request, status
 
 from app.core.config import settings
 from app.schemas.google_schema import (
@@ -42,6 +42,41 @@ async def places_nearby(
             lng=lng,
             radius_m=radius_m,
             category=category,
+            client_key=_client_key(request),
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail='Google Places araması başarısız',
+        ) from exc
+    return GooglePlacesNearbyResponse(
+        places=places,
+        cached=cached,
+        radius_m=radius_m,
+    )
+
+
+@router.get('/places/search', response_model=GooglePlacesNearbyResponse)
+async def places_search(
+    request: Request,
+    q: str = Query(min_length=2, max_length=120),
+    lat: float = Query(...),
+    lng: float = Query(...),
+    radius_m: float = Query(default=50000, ge=500, le=50000),
+) -> GooglePlacesNearbyResponse:
+    if not settings.google_places_enabled:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail='Google Places API yapılandırılmamış (GOOGLE_PLACES_API_KEY)',
+        )
+    try:
+        places, cached = await google_places_service.search_text(
+            query=q,
+            lat=lat,
+            lng=lng,
+            radius_m=radius_m,
             client_key=_client_key(request),
         )
     except ValueError as exc:

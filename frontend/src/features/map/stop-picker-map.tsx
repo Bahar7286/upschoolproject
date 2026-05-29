@@ -14,25 +14,19 @@ export interface StopPickerPoint {
   longitude: number;
 }
 
-function FitStopsBounds({ stops }: { stops: StopPickerPoint[] }) {
+function FlyToCenter({
+  center,
+  cityKey,
+  zoom = 12,
+}: {
+  center: { lat: number; lng: number };
+  cityKey: string;
+  zoom?: number;
+}) {
   const map = useMap();
   useEffect(() => {
-    const valid = stops.filter((s) => Number.isFinite(s.latitude) && Number.isFinite(s.longitude));
-    if (valid.length === 0) return;
-    if (valid.length === 1) {
-      map.setView([valid[0].latitude, valid[0].longitude], 14);
-      return;
-    }
-    const lats = valid.map((s) => s.latitude);
-    const lngs = valid.map((s) => s.longitude);
-    map.fitBounds(
-      [
-        [Math.min(...lats), Math.min(...lngs)],
-        [Math.max(...lats), Math.max(...lngs)],
-      ],
-      { padding: [32, 32], maxZoom: 15 },
-    );
-  }, [stops, map]);
+    map.flyTo([center.lat, center.lng], zoom, { duration: 0.85 });
+  }, [center.lat, center.lng, cityKey, zoom, map]);
   return null;
 }
 
@@ -47,11 +41,13 @@ function MapClickHandler({ onPick }: { onPick: (lat: number, lng: number) => voi
 
 export function StopPickerMap({
   center,
+  cityKey,
   stops,
   activeLocalId,
   onPick,
 }: {
   center: { lat: number; lng: number };
+  cityKey: string;
   stops: StopPickerPoint[];
   activeLocalId: string | null;
   onPick: (lat: number, lng: number) => void;
@@ -62,9 +58,9 @@ export function StopPickerMap({
 
   return (
     <div className="h-[min(36vh,280px)] w-full overflow-hidden rounded-2xl border border-stone-900/10 shadow-sm dark:border-white/10">
-      <MapContainer center={[center.lat, center.lng]} zoom={13} className="h-full w-full" scrollWheelZoom>
+      <MapContainer center={[center.lat, center.lng]} zoom={12} className="h-full w-full" scrollWheelZoom>
         <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
-        <FitStopsBounds stops={validStops} />
+        <FlyToCenter center={center} cityKey={cityKey} />
         <MapClickHandler onPick={onPick} />
         {validStops.map((stop) => (
           <CircleMarker

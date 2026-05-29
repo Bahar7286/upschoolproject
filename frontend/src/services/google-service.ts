@@ -31,6 +31,21 @@ export async function fetchGooglePlacesNearby(params: {
   return requestJson<GooglePlacesNearbyResponse>(`/google/places/nearby?${q.toString()}`);
 }
 
+export async function fetchGooglePlacesSearch(params: {
+  q: string;
+  lat: number;
+  lng: number;
+  radius_m?: number;
+}): Promise<GooglePlacesNearbyResponse> {
+  const q = new URLSearchParams({
+    q: params.q,
+    lat: String(params.lat),
+    lng: String(params.lng),
+    radius_m: String(params.radius_m ?? 50000),
+  });
+  return requestJson<GooglePlacesNearbyResponse>(`/google/places/search?${q.toString()}`);
+}
+
 export async function fetchGooglePlaceDetail(placeId: string): Promise<GooglePlaceDetail> {
   return requestJson<GooglePlaceDetail>(`/google/places/${encodeURIComponent(placeId)}`);
 }

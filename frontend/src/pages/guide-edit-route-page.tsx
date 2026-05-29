@@ -1,12 +1,11 @@
 import type { FormEvent, ReactElement } from 'react';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 import {
   createEmptyDraftStop,
   draftStopFromResponse,
-  resolveCityMapCenter,
   RouteStopsBuilder,
   validateDraftStops,
   type DraftStop,
@@ -88,7 +87,6 @@ export default function GuideEditRoutePage(): ReactElement {
     staleTime: 24 * 60 * 60 * 1000,
   });
 
-  const mapCenter = useMemo(() => resolveCityMapCenter(city, cities), [city, cities]);
   const canEdit = EDITABLE_STATUSES.has(status);
 
   useEffect(() => {
@@ -313,9 +311,9 @@ export default function GuideEditRoutePage(): ReactElement {
 
         {canEdit ? (
           <RouteStopsBuilder
+            cities={cities}
             city={city}
             errors={stopErrors}
-            mapCenter={mapCenter}
             stops={stops}
             onChange={setStops}
           />

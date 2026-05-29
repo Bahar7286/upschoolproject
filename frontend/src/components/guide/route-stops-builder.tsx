@@ -1,9 +1,12 @@
 import { ChevronDown, ChevronUp, MapPin, Plus, Search, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { lazy, Suspense, useMemo, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import { fetchGeoCenter, fetchGooglePlacesNearby, fetchGooglePlacesSearch } from '../../services/google-service';
 import { listPlaces } from '../../services/place-service';
+import type { CityResponse } from '../../types/city';
+import type { GooglePlaceSummary } from '../../types/google';
 import type { PlaceResponse } from '../../types/place';
 import { PLACE_CATEGORY_LABELS } from '../../types/place';
 
@@ -34,6 +37,54 @@ function newDraftStop(partial?: Partial<DraftStop>): DraftStop {
 
 function normalizeCityName(value: string): string {
   return value.trim().toLocaleLowerCase('tr-TR');
+}
+
+function foldAscii(value: string): string {
+  return value
+    .replace(/ı/g, 'i')
+    .replace(/İ/g, 'i')
+    .replace(/ş/g, 's')
+    .replace(/Ş/g, 's')
+    .replace(/ğ/g, 'g')
+    .replace(/Ğ/g, 'g')
+    .replace(/ü/g, 'u')
+    .replace(/Ü/g, 'u')
+    .replace(/ö/g, 'o')
+    .replace(/Ö/g, 'o')
+    .replace(/ç/g, 'c')
+    .replace(/Ç/g, 'c');
+}
+
+export function matchCityByName(cityName: string, cities: CityResponse[]): CityResponse | null {
+  const normalized = normalizeCityName(cityName);
+  if (!normalized) return null;
+
+  const exact = cities.find((c) => normalizeCityName(c.name_tr) === normalized);
+  if (exact) return exact;
+
+  const folded = foldAscii(normalized);
+  const byFold = cities.find((c) => foldAscii(normalizeCityName(c.name_tr)) === folded);
+  if (byFold) return byFold;
+
+  return (
+    cities.find((c) => {
+      const name = normalizeCityName(c.name_tr);
+      return name.startsWith(normalized) || normalized.startsWith(name);
+    }) ?? null
+  );
+}
+
+type CatalogPlace =
+  | { kind: 'db'; key: string; name: string; subtitle: string; place: PlaceResponse }
+  | { kind: 'google'; key: string; name: string; subtitle: string; place: GooglePlaceSummary };
+
+function draftStopFromGooglePlace(place: GooglePlaceSummary): DraftStop {
+  return newDraftStop({
+    title: place.name,
+    description: place.address || '',
+    latitude: String(place.lat),
+    longitude: String(place.lng),
+  });
 }
 
 export function createEmptyDraftStop(): DraftStop {
@@ -94,13 +145,13 @@ const fieldClass =
 
 export function RouteStopsBuilder({
   city,
-  mapCenter,
+  cities,
   stops,
   onChange,
   errors = {},
 }: {
   city: string;
-  mapCenter: { lat: number; lng: number };
+  cities: CityResponse[];
   stops: DraftStop[];
   onChange: (stops: DraftStop[]) => void;
   errors?: Record<string, string>;
@@ -108,25 +159,108 @@ export function RouteStopsBuilder({
   const [placeQuery, setPlaceQuery] = useState('');
   const [activeLocalId, setActiveLocalId] = useState<string | null>(stops[0]?.localId ?? null);
 
-  const { data: placeResults = [], isFetching: placesLoading } = useQuery({
-    queryKey: ['guide-route-places', city, placeQuery],
+  const matchedCity = useMemo(() => matchCityByName(city, cities), [city, cities]);
+  const cityKey = String(matchedCity?.city_id ?? city.trim());
+  const cityLabel = matchedCity?.name_tr ?? city.trim();
+
+  const { data: geoCenter } = useQuery({
+    queryKey: ['guide-route-geo', matchedCity?.city_id],
+    queryFn: () => fetchGeoCenter({ cityId: matchedCity!.city_id }),
+    enabled: Boolean(matchedCity?.city_id),
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  const mapCenter = useMemo(() => {
+    if (geoCenter?.lat && geoCenter.lng) {
+      return { lat: geoCenter.lat, lng: geoCenter.lng };
+    }
+    return resolveCityMapCenter(cityLabel, cities);
+  }, [geoCenter, cityLabel, cities]);
+
+  useEffect(() => {
+    setPlaceQuery('');
+  }, [cityKey]);
+
+  const { data: dbPlaces = [], isFetching: dbLoading } = useQuery({
+    queryKey: ['guide-route-places-db', cityLabel, placeQuery],
     queryFn: () =>
       listPlaces({
-        city,
+        city: cityLabel,
         q: placeQuery.trim() || undefined,
-        limit: 12,
+        limit: 20,
       }),
-    enabled: city.trim().length >= 2,
+    enabled: cityLabel.length >= 2,
     staleTime: 60_000,
   });
 
-  const filteredPlaces = useMemo(() => {
-    const q = placeQuery.trim().toLocaleLowerCase('tr-TR');
-    if (!q) return placeResults.slice(0, 8);
-    return placeResults
-      .filter((p) => p.name.toLocaleLowerCase('tr-TR').includes(q))
-      .slice(0, 8);
-  }, [placeResults, placeQuery]);
+  const { data: googleNearby = [], isFetching: googleNearbyLoading } = useQuery({
+    queryKey: ['guide-route-places-nearby', mapCenter.lat, mapCenter.lng, cityKey],
+    queryFn: () =>
+      fetchGooglePlacesNearby({
+        lat: mapCenter.lat,
+        lng: mapCenter.lng,
+        radius_m: 50000,
+      }).then((r) => r.places),
+    enabled: cityLabel.length >= 2 && Number.isFinite(mapCenter.lat) && Number.isFinite(mapCenter.lng),
+    staleTime: 5 * 60_000,
+    retry: false,
+    throwOnError: false,
+  });
+
+  const searchText = placeQuery.trim();
+  const { data: googleSearch = [], isFetching: googleSearchLoading } = useQuery({
+    queryKey: ['guide-route-places-search', cityLabel, searchText, mapCenter.lat, mapCenter.lng],
+    queryFn: () =>
+      fetchGooglePlacesSearch({
+        q: `${searchText} ${cityLabel}`,
+        lat: mapCenter.lat,
+        lng: mapCenter.lng,
+        radius_m: 50000,
+      }).then((r) => r.places),
+    enabled:
+      searchText.length >= 2 &&
+      cityLabel.length >= 2 &&
+      Number.isFinite(mapCenter.lat) &&
+      Number.isFinite(mapCenter.lng),
+    staleTime: 2 * 60_000,
+    retry: false,
+    throwOnError: false,
+  });
+
+  const catalogPlaces = useMemo((): CatalogPlace[] => {
+    const q = searchText.toLocaleLowerCase('tr-TR');
+    const merged = new Map<string, CatalogPlace>();
+
+    for (const place of dbPlaces) {
+      if (q && !place.name.toLocaleLowerCase('tr-TR').includes(q)) continue;
+      merged.set(`db-${place.place_id}`, {
+        kind: 'db',
+        key: `db-${place.place_id}`,
+        name: place.name,
+        subtitle: `${PLACE_CATEGORY_LABELS[place.category]} · ${place.district}`,
+        place,
+      });
+    }
+
+    const googleSource = searchText.length >= 2 ? googleSearch : googleNearby;
+    for (const place of googleSource) {
+      if (merged.has(`google-${place.place_id}`)) continue;
+      const nameKey = place.name.toLocaleLowerCase('tr-TR');
+      if ([...merged.values()].some((item) => item.name.toLocaleLowerCase('tr-TR') === nameKey)) continue;
+      if (q && !nameKey.includes(q) && !place.address.toLocaleLowerCase('tr-TR').includes(q)) continue;
+      merged.set(`google-${place.place_id}`, {
+        kind: 'google',
+        key: `google-${place.place_id}`,
+        name: place.name,
+        subtitle: place.address || 'Google Places',
+        place,
+      });
+    }
+
+    return [...merged.values()].slice(0, 10);
+  }, [dbPlaces, googleNearby, googleSearch, searchText]);
+
+  const placesLoading = dbLoading || googleNearbyLoading || googleSearchLoading;
 
   const updateStop = (localId: string, patch: Partial<DraftStop>) => {
     onChange(stops.map((s) => (s.localId === localId ? { ...s, ...patch } : s)));
@@ -187,40 +321,49 @@ export function RouteStopsBuilder({
 
       <div className="space-y-2">
         <label className="block text-sm font-semibold">
-          Mekan ara ({city || 'şehir seç'})
+          Mekan ara ({cityLabel || 'şehir seç'})
           <div className="relative mt-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
             <input
               className={`${fieldClass} pl-9`}
-              placeholder="Örn. Ayasofya, Topkapı, Kapalıçarşı"
+              placeholder="Örn. Nemrut, Ayasofya, Topkapı"
               value={placeQuery}
               onChange={(e) => setPlaceQuery(e.target.value)}
             />
           </div>
         </label>
+        {!matchedCity && city.trim().length >= 2 ? (
+          <p className="text-xs text-amber-700 dark:text-amber-300">
+            Şehir listeden seçilirse harita ve mekan araması daha doğru çalışır.
+          </p>
+        ) : null}
         {placesLoading ? (
           <p className="text-xs text-stone-500">Mekanlar aranıyor…</p>
-        ) : filteredPlaces.length > 0 ? (
+        ) : catalogPlaces.length > 0 ? (
           <ul className="max-h-44 space-y-1 overflow-y-auto rounded-xl border border-stone-900/10 bg-white p-2 dark:border-white/10 dark:bg-zinc-900">
-            {filteredPlaces.map((place) => (
-              <li key={place.place_id}>
+            {catalogPlaces.map((item) => (
+              <li key={item.key}>
                 <button
                   type="button"
                   className="flex w-full items-start gap-2 rounded-lg px-2 py-2 text-left text-sm hover:bg-primary/10"
-                  onClick={() => addStop(draftStopFromPlace(place))}
+                  onClick={() =>
+                    addStop(
+                      item.kind === 'db'
+                        ? draftStopFromPlace(item.place)
+                        : draftStopFromGooglePlace(item.place),
+                    )
+                  }
                 >
                   <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
                   <span>
-                    <span className="font-semibold">{place.name}</span>
-                    <span className="mt-0.5 block text-xs text-stone-500">
-                      {PLACE_CATEGORY_LABELS[place.category]} · {place.district}
-                    </span>
+                    <span className="font-semibold">{item.name}</span>
+                    <span className="mt-0.5 block text-xs text-stone-500">{item.subtitle}</span>
                   </span>
                 </button>
               </li>
             ))}
           </ul>
-        ) : city.trim().length >= 2 ? (
+        ) : cityLabel.length >= 2 ? (
           <p className="text-xs text-stone-500">Bu şehirde eşleşen mekan bulunamadı; elle durak ekleyebilirsin.</p>
         ) : null}
       </div>
@@ -233,6 +376,7 @@ export function RouteStopsBuilder({
         <StopPickerMap
           activeLocalId={activeLocalId}
           center={mapCenter}
+          cityKey={cityKey}
           stops={pickerStops}
           onPick={handleMapPick}
         />
@@ -368,10 +512,14 @@ export function resolveCityMapCenter(
   cityName: string,
   cities: { name_tr: string; center_lat: number; center_lng: number }[],
 ): { lat: number; lng: number } {
+  const matched = matchCityByName(cityName, cities as CityResponse[]);
+  if (matched?.center_lat && matched.center_lng) {
+    return { lat: matched.center_lat, lng: matched.center_lng };
+  }
   const normalized = normalizeCityName(cityName);
-  const match = cities.find((c) => normalizeCityName(c.name_tr) === normalized);
-  if (match && match.center_lat && match.center_lng) {
-    return { lat: match.center_lat, lng: match.center_lng };
+  const direct = cities.find((c) => normalizeCityName(c.name_tr) === normalized);
+  if (direct?.center_lat && direct.center_lng) {
+    return { lat: direct.center_lat, lng: direct.center_lng };
   }
   return { lat: 39.0, lng: 35.0 };
 }

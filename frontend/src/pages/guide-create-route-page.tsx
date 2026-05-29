@@ -1,11 +1,10 @@
 import type { FormEvent, ReactElement } from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 import {
   createEmptyDraftStop,
-  resolveCityMapCenter,
   RouteStopsBuilder,
   validateDraftStops,
   type DraftStop,
@@ -50,8 +49,6 @@ export default function GuideCreateRoutePage(): ReactElement {
     queryFn: listCities,
     staleTime: 24 * 60 * 60 * 1000,
   });
-
-  const mapCenter = useMemo(() => resolveCityMapCenter(city, cities), [city, cities]);
 
   if (user?.role !== 'guide') {
     return (
@@ -226,9 +223,9 @@ export default function GuideCreateRoutePage(): ReactElement {
         </div>
 
         <RouteStopsBuilder
+          cities={cities}
           city={city}
           errors={stopErrors}
-          mapCenter={mapCenter}
           stops={stops}
           onChange={setStops}
         />

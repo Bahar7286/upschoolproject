@@ -190,6 +190,65 @@ class GooglePlacesService:
             if _display_name(p)
         ]
 
+    async def search_text(
+        self,
+        *,
+        query: str,
+        lat: float,
+        lng: float,
+        radius_m: float = 50000,
+        client_key: str = 'global',
+    ) -> tuple[list[GooglePlaceSummary], bool]:
+        if not google_places_enabled():
+            return [], False
+        if not _rate_ok(client_key):
+            raise ValueError('Çok fazla istek. Lütfen biraz bekleyin.')
+
+        q = query.strip()
+        if len(q) < 2:
+            return [], False
+
+        cache_key = hashlib.sha256(
+            f'text:{q.lower()}:{lat:.4f}:{lng:.4f}:{radius_m:.0f}'.encode()
+        ).hexdigest()
+        cached = _cache_get(cache_key)
+        if cached is not None:
+            return cached, True
+
+        body = {
+            'textQuery': q,
+            'languageCode': 'tr',
+            'maxResultCount': 15,
+            'locationBias': {
+                'circle': {
+                    'center': {'latitude': lat, 'longitude': lng},
+                    'radius': min(float(radius_m), 50000.0),
+                }
+            },
+        }
+        headers = {
+            'Content-Type': 'application/json',
+            'X-Goog-Api-Key': _api_key(),
+            'X-Goog-FieldMask': NEARBY_FIELD_MASK,
+        }
+        async with httpx.AsyncClient(timeout=25.0) as client:
+            resp = await client.post(
+                'https://places.googleapis.com/v1/places:searchText',
+                json=body,
+                headers=headers,
+            )
+        if resp.status_code >= 400:
+            logger.warning('Places text search %s: %s', resp.status_code, resp.text[:300])
+            raise ValueError('Google Places metin araması başarısız')
+
+        places = [
+            _summarize(p)
+            for p in resp.json().get('places', [])
+            if _display_name(p)
+        ]
+        _cache_set(cache_key, places)
+        return places, False
+
     async def search_nearby(
         self,
         *,
@@ -199,7 +258,7 @@ class GooglePlacesService:
         category: str | None,
         client_key: str = 'global',
     ) -> tuple[list[GooglePlaceSummary], bool]:
-        if not google_places_enabled:
+        if not google_places_enabled():
             return [], False
         if not _rate_ok(client_key):
             raise ValueError('Çok fazla istek. Lütfen biraz bekleyin.')
