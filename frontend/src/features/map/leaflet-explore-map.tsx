@@ -10,6 +10,7 @@ import L from 'leaflet';
 
 
 
+import type { GooglePlaceSummary } from '../../types/google';
 import type { PlaceResponse } from '../../types/place';
 
 import { PLACE_CATEGORY_LABELS } from '../../types/place';
@@ -96,6 +97,16 @@ const stopIcon = L.divIcon({
 
 
 
+function FlyToCenter({ lat, lng, zoom }: { lat: number; lng: number; zoom: number }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo([lat, lng], zoom, { duration: 0.85 });
+  }, [lat, lng, zoom, map]);
+  return null;
+}
+
+
+
 export function LeafletExploreMap({
 
   routes,
@@ -109,6 +120,12 @@ export function LeafletExploreMap({
   focusRouteId,
 
   showPlaces = true,
+
+  center,
+
+  zoom = 12,
+
+  googlePlaces = [],
 
 }: {
 
@@ -124,6 +141,12 @@ export function LeafletExploreMap({
 
   showPlaces?: boolean;
 
+  center?: { lat: number; lng: number };
+
+  zoom?: number;
+
+  googlePlaces?: GooglePlaceSummary[];
+
 }): ReactElement {
 
   useEffect(() => {
@@ -138,15 +161,21 @@ export function LeafletExploreMap({
 
   const routeLine = activeStops.map((s) => [s.latitude, s.longitude] as [number, number]);
 
+  const mapCenter: [number, number] = center
+    ? [center.lat, center.lng]
+    : TURKEY_MAP_CENTER;
+
 
 
   return (
 
     <div className="relative h-[min(52vh,400px)] w-full overflow-hidden rounded-2xl border border-stone-900/10 shadow-lift sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] dark:border-white/10 dark:shadow-lift-dark">
 
-      <MapContainer center={TURKEY_MAP_CENTER} zoom={12} className="z-0 h-full w-full" scrollWheelZoom>
+      <MapContainer center={mapCenter} zoom={zoom} className="z-0 h-full w-full" scrollWheelZoom>
 
         <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
+
+        {center ? <FlyToCenter lat={center.lat} lng={center.lng} zoom={zoom} /> : null}
 
         {userLocation ? <FlyToLocation lat={userLocation.lat} lng={userLocation.lng} /> : null}
 
@@ -254,6 +283,32 @@ export function LeafletExploreMap({
 
             ))
 
+          : null}
+
+
+
+        {showPlaces && googlePlaces.length > 0
+          ? googlePlaces.map((gp) => (
+              <CircleMarker
+                key={`gplace-${gp.place_id}`}
+                center={[gp.lat, gp.lng]}
+                radius={8}
+                pathOptions={{ color: '#b45309', fillColor: '#d97706', fillOpacity: 0.88, weight: 2 }}
+              >
+                <Popup>
+                  <div className="min-w-[160px] space-y-1 p-1 font-sans text-sm">
+                    <div className="font-bold">{gp.name}</div>
+                    <div className="text-xs text-stone-600">{gp.address}</div>
+                    <Link
+                      className="mt-1 inline-block font-semibold text-primary underline"
+                      to={`/google-places/${encodeURIComponent(gp.place_id)}`}
+                    >
+                      Detay →
+                    </Link>
+                  </div>
+                </Popup>
+              </CircleMarker>
+            ))
           : null}
 
 

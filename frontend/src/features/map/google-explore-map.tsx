@@ -27,6 +27,7 @@ export interface GoogleExploreMapProps {
   onRequestRoute?: (place: GooglePlaceSummary) => void;
   routingPlaceId?: string | null;
   compact?: boolean;
+  onLoadFailed?: () => void;
 }
 
 export function GoogleExploreMap({
@@ -42,6 +43,7 @@ export function GoogleExploreMap({
   onRequestRoute,
   routingPlaceId = null,
   compact = false,
+  onLoadFailed,
 }: GoogleExploreMapProps): ReactElement {
   const shellHeight = compact
     ? 'h-[min(42vh,360px)]'
@@ -90,10 +92,16 @@ export function GoogleExploreMap({
     [navigate],
   );
 
+  useEffect(() => {
+    if (loadError) {
+      onLoadFailed?.();
+    }
+  }, [loadError, onLoadFailed]);
+
   if (loadError) {
     return (
-      <div className="flex h-[min(52vh,400px)] sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-4 text-center text-sm text-red-800">
-        Harita şu an yüklenemedi. Lütfen daha sonra tekrar deneyin veya listeden mekan seçmeye devam edin.
+      <div className={`flex ${shellHeight} items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 px-4 text-center text-sm text-amber-950`}>
+        Google harita açılamadı; OSM haritasına geçiliyor…
       </div>
     );
   }

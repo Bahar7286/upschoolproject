@@ -100,11 +100,29 @@ export default function MapPage(): ReactElement {
   });
   const resolvedCityId = useMemo(() => {
     if (Number.isFinite(cityIdParam) && cityIdParam > 0) return cityIdParam;
+    const norm = (s: string) =>
+      s
+        .trim()
+        .toLocaleLowerCase('tr-TR')
+        .replace(/ı/g, 'i')
+        .replace(/ğ/g, 'g')
+        .replace(/ü/g, 'u')
+        .replace(/ş/g, 's')
+        .replace(/ö/g, 'o')
+        .replace(/ç/g, 'c');
+    const cityNorm = norm(city);
     const found = cities.find(
-      (c) => c.name_tr.toLowerCase() === city.toLowerCase() || c.slug === city.toLowerCase(),
+      (c) => norm(c.name_tr) === cityNorm || c.slug === city.toLowerCase(),
     );
     return found?.city_id;
   }, [cities, city, cityIdParam]);
+
+  const cityFallbackCenter = useMemo(() => {
+    if (!resolvedCityId) return null;
+    const c = cities.find((x) => x.city_id === resolvedCityId);
+    if (c?.center_lat && c.center_lng) return { lat: c.center_lat, lng: c.center_lng };
+    return null;
+  }, [cities, resolvedCityId]);
 
   const { data: geoCenter } = useQuery({
     queryKey: ['geo-center', resolvedCityId, districtIdParam],
@@ -121,9 +139,10 @@ export default function MapPage(): ReactElement {
     if (Number.isFinite(destLatParam) && Number.isFinite(destLngParam)) {
       return { lat: destLatParam, lng: destLngParam };
     }
-    if (geoCenter) return { lat: geoCenter.lat, lng: geoCenter.lng };
+    if (geoCenter?.lat && geoCenter.lng) return { lat: geoCenter.lat, lng: geoCenter.lng };
+    if (cityFallbackCenter) return cityFallbackCenter;
     return { lat: 41.015137, lng: 28.97953 };
-  }, [geoCenter, destLatParam, destLngParam]);
+  }, [geoCenter, destLatParam, destLngParam, cityFallbackCenter]);
 
   const mapZoom = useMemo(() => {
     if (Number.isFinite(destLatParam)) return 15;
@@ -493,40 +512,25 @@ export default function MapPage(): ReactElement {
 
 
       {isPending ? (
+        <p className="text-xs text-stone-500" role="status">
+          Rota listesi yükleniyor…
+        </p>
+      ) : null}
 
-        <div className="h-[min(52vh,400px)] animate-pulse rounded-2xl bg-stone-200 sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] dark:bg-zinc-800" aria-busy="true" aria-label="Harita yükleniyor" />
-
-      ) : (
-
-        <ExploreMap
-
-          routes={mapRoutes}
-
-          places={places}
-
-          userLocation={userLocation}
-
-          activeStops={mergedStops}
-
-          currentStopIndex={currentStopIndex}
-
-          focusRouteId={focusRouteId ?? undefined}
-
-          showPlaces={showPlaces}
-
-          mapCenter={mapCenter}
-
-          mapZoom={mapZoom}
-
-          googlePlaces={googleNearby?.places ?? []}
-
-          routePolyline={routePolyline}
-
-          preferGoogle
-
-        />
-
-      )}
+      <ExploreMap
+        routes={mapRoutes}
+        places={places}
+        userLocation={userLocation}
+        activeStops={mergedStops}
+        currentStopIndex={currentStopIndex}
+        focusRouteId={focusRouteId ?? undefined}
+        showPlaces={showPlaces}
+        mapCenter={mapCenter}
+        mapZoom={mapZoom}
+        googlePlaces={googleNearby?.places ?? []}
+        routePolyline={routePolyline}
+        preferGoogle={Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY)}
+      />
 
 
 

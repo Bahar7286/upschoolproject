@@ -1,6 +1,6 @@
 import type { ReactElement } from 'react';
 
-import { useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 
 import type { GooglePlaceSummary } from '../../types/google';
 import type { PlaceResponse } from '../../types/place';
@@ -10,6 +10,8 @@ import { GoogleExploreMap } from './google-explore-map';
 import { LeafletExploreMap } from './leaflet-explore-map';
 
 type Engine = 'leaflet' | 'google';
+
+const GOOGLE_LOAD_TIMEOUT_MS = 5_000;
 
 export interface ExploreMapProps {
   routes: RouteResponse[];
@@ -42,19 +44,42 @@ export function ExploreMap({
 }: ExploreMapProps): ReactElement {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const defaultCenter = mapCenter ?? { lat: 41.015137, lng: 28.97953 };
-  const [engine, setEngine] = useState<Engine>(googleKey && preferGoogle ? 'google' : 'leaflet');
+  const canUseGoogle = Boolean(googleKey && preferGoogle);
+  const [engine, setEngine] = useState<Engine>('leaflet');
+  const [googleFailed, setGoogleFailed] = useState(false);
+
+  const fallbackToLeaflet = useCallback(() => {
+    setGoogleFailed(true);
+    setEngine('leaflet');
+  }, []);
+
+  useEffect(() => {
+    if (!canUseGoogle || googleFailed || engine !== 'google') return;
+    const timer = window.setTimeout(() => {
+      fallbackToLeaflet();
+    }, GOOGLE_LOAD_TIMEOUT_MS);
+    return () => window.clearTimeout(timer);
+  }, [canUseGoogle, engine, googleFailed, fallbackToLeaflet, defaultCenter.lat, defaultCenter.lng]);
+
+  const activeEngine = googleFailed ? 'leaflet' : engine;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-stone-600 dark:text-stone-400">
-          {engine === 'google' ? (
+          {activeEngine === 'google' ? (
             <>
               <strong>Google Haritalar</strong> — canlı mekan pinleri.
             </>
           ) : (
             <>
-              <strong>OpenStreetMap</strong> — yerel katalog pinleri.
+              <strong>OpenStreetMap</strong>
+              {googlePlaces.length > 0 ? ' — canlı mekan pinleri.' : ' — yerel katalog pinleri.'}
+              {googleFailed ? (
+                <span className="mt-1 block text-xs text-amber-700 dark:text-amber-300">
+                  Google harita yüklenemedi; OSM haritası gösteriliyor.
+                </span>
+              ) : null}
             </>
           )}
         </p>
@@ -62,11 +87,14 @@ export function ExploreMap({
           <button
             type="button"
             className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition ${
-              engine === 'leaflet'
+              activeEngine === 'leaflet'
                 ? 'bg-heritage-ink text-white shadow dark:bg-stone-100 dark:text-heritage-ink'
                 : 'text-stone-600 dark:text-stone-400'
             }`}
-            onClick={() => setEngine('leaflet')}
+            onClick={() => {
+              setGoogleFailed(false);
+              setEngine('leaflet');
+            }}
           >
             OSM / Leaflet
           </button>
@@ -75,16 +103,20 @@ export function ExploreMap({
             disabled={!googleKey}
             title={googleKey ? 'Google Haritalar' : 'VITE_GOOGLE_MAPS_API_KEY tanımlı değil'}
             className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
-              engine === 'google' ? 'bg-heritage-ink text-white shadow' : 'text-stone-600'
+              activeEngine === 'google' ? 'bg-heritage-ink text-white shadow' : 'text-stone-600'
             }`}
-            onClick={() => googleKey && setEngine('google')}
+            onClick={() => {
+              if (!googleKey) return;
+              setGoogleFailed(false);
+              setEngine('google');
+            }}
           >
             Google
           </button>
         </div>
       </div>
 
-      {engine === 'leaflet' ? (
+      {activeEngine === 'leaflet' ? (
         <LeafletExploreMap
           routes={routes}
           places={places}
@@ -92,9 +124,12 @@ export function ExploreMap({
           activeStops={activeStops}
           focusRouteId={focusRouteId}
           showPlaces={showPlaces}
+          center={defaultCenter}
+          zoom={mapZoom}
+          googlePlaces={googlePlaces}
         />
       ) : null}
-      {engine === 'google' && googleKey ? (
+      {activeEngine === 'google' && googleKey ? (
         <GoogleExploreMap
           routes={routes}
           apiKey={googleKey}
@@ -105,6 +140,7 @@ export function ExploreMap({
           routePolyline={routePolyline}
           activeStops={activeStops}
           currentStopIndex={currentStopIndex}
+          onLoadFailed={fallbackToLeaflet}
         />
       ) : null}
     </div>
