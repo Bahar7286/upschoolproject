@@ -33,11 +33,20 @@ class LLMService:
         self.provider = settings.llm_provider
         self.enabled = settings.llm_enabled
 
-    async def complete_text(self, *, system: str, user: str, temperature: float = 0.5) -> str:
+    async def complete_text(
+        self,
+        *,
+        system: str,
+        user: str,
+        temperature: float = 0.5,
+        max_tokens: int | None = None,
+    ) -> str:
         if not self.enabled:
             raise LLMServiceError('LLM yapılandırılmamış')
         try:
-            return await self._primary_text(system, user, temperature=temperature)
+            return await self._primary_text(
+                system, user, temperature=temperature, max_tokens=max_tokens
+            )
         except LLMServiceError as exc:
             if settings.huggingface_fallback_enabled and self.provider != 'huggingface':
                 logger.warning('Birincil LLM başarısız, Hugging Face deneniyor: %s', exc)
@@ -46,14 +55,24 @@ class LLMService:
                     user,
                     temperature=temperature,
                     json_mode=False,
+                    max_tokens=max_tokens,
                 )
             raise
 
-    async def complete_json(self, *, system: str, user: str, temperature: float = 0.35) -> Any:
+    async def complete_json(
+        self,
+        *,
+        system: str,
+        user: str,
+        temperature: float = 0.35,
+        max_tokens: int | None = None,
+    ) -> Any:
         if not self.enabled:
             raise LLMServiceError('LLM yapılandırılmamış')
         try:
-            raw = await self._primary_json(system, user, temperature=temperature)
+            raw = await self._primary_json(
+                system, user, temperature=temperature, max_tokens=max_tokens
+            )
         except LLMServiceError as exc:
             if settings.huggingface_fallback_enabled and self.provider != 'huggingface':
                 logger.warning('Birincil LLM JSON başarısız, Hugging Face deneniyor: %s', exc)
@@ -62,6 +81,7 @@ class LLMService:
                     user,
                     temperature=temperature,
                     json_mode=True,
+                    max_tokens=max_tokens,
                 )
             else:
                 raise
@@ -70,19 +90,45 @@ class LLMService:
         except json.JSONDecodeError as exc:
             raise LLMServiceError(f'LLM JSON ayrıştırılamadı: {raw[:200]}') from exc
 
-    async def _primary_text(self, system: str, user: str, *, temperature: float) -> str:
+    async def _primary_text(
+        self,
+        system: str,
+        user: str,
+        *,
+        temperature: float,
+        max_tokens: int | None,
+    ) -> str:
         if self.provider == 'gemini':
-            return await self._gemini_complete(system, user, temperature=temperature, json_mode=False)
+            return await self._gemini_complete(
+                system, user, temperature=temperature, json_mode=False, max_tokens=max_tokens
+            )
         if self.provider == 'huggingface':
-            return await self._huggingface_complete(system, user, temperature=temperature, json_mode=False)
-        return await self._openrouter_complete(system, user, temperature=temperature, json_mode=False)
+            return await self._huggingface_complete(
+                system, user, temperature=temperature, json_mode=False, max_tokens=max_tokens
+            )
+        return await self._openrouter_complete(
+            system, user, temperature=temperature, json_mode=False, max_tokens=max_tokens
+        )
 
-    async def _primary_json(self, system: str, user: str, *, temperature: float) -> str:
+    async def _primary_json(
+        self,
+        system: str,
+        user: str,
+        *,
+        temperature: float,
+        max_tokens: int | None,
+    ) -> str:
         if self.provider == 'gemini':
-            return await self._gemini_complete(system, user, temperature=temperature, json_mode=True)
+            return await self._gemini_complete(
+                system, user, temperature=temperature, json_mode=True, max_tokens=max_tokens
+            )
         if self.provider == 'huggingface':
-            return await self._huggingface_complete(system, user, temperature=temperature, json_mode=True)
-        return await self._openrouter_complete(system, user, temperature=temperature, json_mode=True)
+            return await self._huggingface_complete(
+                system, user, temperature=temperature, json_mode=True, max_tokens=max_tokens
+            )
+        return await self._openrouter_complete(
+            system, user, temperature=temperature, json_mode=True, max_tokens=max_tokens
+        )
 
     async def _openrouter_complete(
         self,
@@ -91,6 +137,7 @@ class LLMService:
         *,
         temperature: float,
         json_mode: bool,
+        max_tokens: int | None = None,
     ) -> str:
         payload: dict[str, Any] = {
             'model': settings.openrouter_model,
@@ -100,6 +147,8 @@ class LLMService:
             ],
             'temperature': temperature,
         }
+        if max_tokens is not None:
+            payload['max_tokens'] = max_tokens
         if json_mode:
             payload['response_format'] = {'type': 'json_object'}
 
@@ -130,6 +179,7 @@ class LLMService:
         *,
         temperature: float,
         json_mode: bool,
+        max_tokens: int | None = None,
     ) -> str:
         payload: dict[str, Any] = {
             'model': settings.huggingface_model,
@@ -138,7 +188,7 @@ class LLMService:
                 {'role': 'user', 'content': user},
             ],
             'temperature': temperature,
-            'max_tokens': 1200,
+            'max_tokens': max_tokens if max_tokens is not None else 1200,
         }
         if json_mode:
             payload['response_format'] = {'type': 'json_object'}
@@ -168,16 +218,20 @@ class LLMService:
         *,
         temperature: float,
         json_mode: bool,
+        max_tokens: int | None = None,
     ) -> str:
         model = settings.gemini_model
         url = (
             f'https://generativelanguage.googleapis.com/v1beta/models/'
             f'{model}:generateContent'
         )
+        gen_config: dict[str, Any] = {'temperature': temperature}
+        if max_tokens is not None:
+            gen_config['maxOutputTokens'] = max_tokens
         body: dict[str, Any] = {
             'systemInstruction': {'parts': [{'text': system}]},
             'contents': [{'role': 'user', 'parts': [{'text': user}]}],
-            'generationConfig': {'temperature': temperature},
+            'generationConfig': gen_config,
         }
         if json_mode:
             body['generationConfig']['responseMimeType'] = 'application/json'

@@ -18,6 +18,14 @@ from app.schemas.ai_schema import (
     StopNarrationResponse,
 )
 from app.services.google_places_service import google_places_service
+from app.services.ai_prompts import (
+    SYSTEM_ASSISTANT,
+    SYSTEM_NARRATION,
+    SYSTEM_ROUTE_RECOMMEND,
+    build_assistant_user,
+    build_narration_user,
+    build_route_recommend_user,
+)
 from app.services.llm_service import LLMServiceError, llm_service
 from app.services.tts_service import synthesize_mp3_base64
 from app.services.wikipedia_service import fetch_wikipedia_summary
@@ -40,6 +48,29 @@ _CITY_POI = {
     'Istanbul': (41.0082, 28.9784),
     'Ankara': (39.9334, 32.8597),
 }
+
+_LLM_CATALOG_LIMIT = 30
+_LLM_RECOMMEND_MAX_TOKENS = 700
+_LLM_ASSISTANT_MAX_TOKENS = 900
+_LLM_NARRATION_MAX_TOKENS = 1400
+
+
+def _prefilter_routes_for_llm(routes: list, interests: list[str], limit: int = _LLM_CATALOG_LIMIT) -> list:
+    """LLM'e giden token sayısını düşürmek için ilgi alanına göre ön filtre."""
+    if not interests:
+        return routes[:limit]
+    interest_set = {i.lower().strip() for i in interests if i.strip()}
+    scored: list[tuple[int, object]] = []
+    for route in routes:
+        tags = {t.lower() for t in route.tags}
+        overlap = len(interest_set.intersection(tags))
+        scored.append((overlap, route))
+    scored.sort(key=lambda x: x[0], reverse=True)
+    picked = [r for score, r in scored if score > 0][:limit]
+    if picked:
+        return picked
+    return routes[:limit]
+
 
 _REASON_TEMPLATES = {
     'tag': 'İlgi alanlarınla uyumlu: {tags}',
@@ -90,6 +121,7 @@ class AIService:
     async def _llm_recommendations(
         self, payload: AIRecommendationRequest, routes: list
     ) -> list[AIRecommendationItem]:
+        filtered = _prefilter_routes_for_llm(routes, payload.interests)
         catalog = [
             {
                 'route_id': r.route_id,
@@ -99,21 +131,23 @@ class AIService:
                 'price': r.price,
                 'estimated_minutes': r.estimated_minutes,
             }
-            for r in routes
+            for r in filtered
         ]
-        system = (
-            'Sen Historial-GO turizm uygulamasının rota öneri motorusun. '
-            'Yalnızca geçerli JSON döndür. Şema: '
-            '{"recommendations":[{"route_id":number,"score":0-1,"reason":string,'
-            '"matched_tags":[string],"fits_budget":bool,"fits_duration":bool}]}'
+        user = build_route_recommend_user(
+            interests=payload.interests,
+            budget=payload.budget,
+            duration_minutes=payload.duration_minutes,
+            location_lat=payload.location_lat,
+            location_lng=payload.location_lng,
+            max_results=payload.max_results,
+            catalog=catalog,
         )
-        user = (
-            f'Kullanıcı ilgi alanları: {payload.interests}. '
-            f'Bütçe: {payload.budget} TRY. Süre: {payload.duration_minutes} dk. '
-            f'Konum: lat={payload.location_lat}, lng={payload.location_lng}. '
-            f'En fazla {payload.max_results} rota seç. Mevcut rotalar: {catalog}'
+        data = await llm_service.complete_json(
+            system=SYSTEM_ROUTE_RECOMMEND,
+            user=user,
+            temperature=0.2,
+            max_tokens=_LLM_RECOMMEND_MAX_TOKENS,
         )
-        data = await llm_service.complete_json(system=system, user=user)
         raw_items = data.get('recommendations', data) if isinstance(data, dict) else data
         if not isinstance(raw_items, list):
             raise LLMServiceError('recommendations listesi yok')
@@ -322,36 +356,38 @@ class AIService:
                     category=cat,
                 )
                 if nearby:
-                    names = ', '.join(p.name for p in nearby[:12])
-                    places_hint = f' Yakındaki gerçek mekanlar (Google): {names}.'
+                    names = ', '.join(p.name for p in nearby[:10])
+                    places_hint = names
             except Exception as exc:
                 logger.debug('Assistant places lookup: %s', exc)
 
-        system = (
-            'Sen Historial-GO uygulamasının “Turist AI Asistanı”sın. '
-            'Kısa, net ve uygulanabilir öneriler ver; mümkünse verilen gerçek mekan isimlerini kullan. '
-            'Kullanıcıya 5-8 maddelik bir plan çıkar. Yanıt dili Türkçe.'
+        user = build_assistant_user(
+            where=where,
+            interests=interests,
+            places_hint=places_hint,
+            user_message=last_user,
         )
-        user = (
-            f'Konum: {where}. İlgi alanları: {interests}.{places_hint} '
-            f'Kullanıcının mesajı: {last_user}'
+        text = await llm_service.complete_text(
+            system=SYSTEM_ASSISTANT,
+            user=user,
+            temperature=0.4,
+            max_tokens=_LLM_ASSISTANT_MAX_TOKENS,
         )
-        text = await llm_service.complete_text(system=system, user=user, temperature=0.6)
         return AssistantChatResponse(reply=text.strip()[:2500], source='llm')
 
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']
-        system = (
-            'Sen tarihî sesli rehbersin. Doğru, kaynaklı ve zengin anlatımlar yaz; '
-            'uydurma tarih verme. Yalnızca JSON: {"scripts":{"tr":"...","en":"...","de":"..."}} '
-            'İstenen diller için anahtarları doldur.'
+        user = build_narration_user(
+            stop_title=payload.stop_title,
+            description=payload.description or '',
+            languages=langs,
         )
-        user = (
-            f'Mekan: {payload.stop_title}. Bağlam ve kaynak özeti: '
-            f'{payload.description or "Genel tarihî bilgi"}. '
-            f'Diller: {langs}. Her dilde 150-250 kelime; tarih, kültür ve pratik ipuçları ekle.'
+        data = await llm_service.complete_json(
+            system=SYSTEM_NARRATION,
+            user=user,
+            temperature=0.35,
+            max_tokens=_LLM_NARRATION_MAX_TOKENS,
         )
-        data = await llm_service.complete_json(system=system, user=user)
         scripts_raw = data.get('scripts', data) if isinstance(data, dict) else {}
         scripts: dict[str, str] = {}
         for lang in langs:
