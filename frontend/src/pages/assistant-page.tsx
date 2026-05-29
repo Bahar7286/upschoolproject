@@ -7,12 +7,12 @@ import { useSearchParams } from 'react-router-dom';
 import { AssistantMessageBody } from '../components/ai/assistant-message-body';
 import { BackButton } from '../components/ui/back-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
-import { assistantChat, fetchAiStatus, type AssistantMessage } from '../services/ai-service';
+import { assistantChat, type AssistantMessage } from '../services/ai-service';
 import { listCities } from '../services/city-service';
 import { HelpfulFeedback } from '../components/feedback/helpful-feedback';
 import { ErrorAlert } from '../components/ui/error-alert';
 import { getApiBaseUrl } from '../lib/api';
-import { mapError } from '../lib/user-errors';
+import { mapError, type UserFacingError } from '../lib/user-errors';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 
@@ -31,12 +31,6 @@ export default function AssistantPage(): ReactElement {
     staleTime: 60 * 60 * 1000,
   });
 
-  const { data: aiStatus } = useQuery({
-    queryKey: ['ai-status'],
-    queryFn: fetchAiStatus,
-    staleTime: 60_000,
-  });
-
   const initialCity = searchParams.get('city') ?? 'İstanbul';
   const initialDistrict = searchParams.get('district') ?? '';
   const [city, setCity] = useState(initialCity);
@@ -50,7 +44,7 @@ export default function AssistantPage(): ReactElement {
         'Merhaba! 👋 Ben Historial-GO AI asistanınızım. Tarihi ve kültürel yerler hakkında sorularınızı yanıtlayabilirim. Nereye gideceksiniz, kaç gününüz var?',
     },
   ]);
-  const [error, setError] = useState('');
+  const [errorDetail, setErrorDetail] = useState<UserFacingError | null>(null);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -65,7 +59,7 @@ export default function AssistantPage(): ReactElement {
 
   const handleSend = () => {
     if (sendLoading) return;
-    setError('');
+    setErrorDetail(null);
     const text = input.trim();
     if (!text) return;
     const next: AssistantMessage[] = [...msgs, { role: 'user', content: text }];
@@ -86,7 +80,7 @@ export default function AssistantPage(): ReactElement {
         });
         setMsgs((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       } catch (err) {
-        setError(mapError(err, 'assistant').message);
+        setErrorDetail(mapError(err, 'assistant'));
       }
     });
   };
@@ -103,22 +97,12 @@ export default function AssistantPage(): ReactElement {
 
       {import.meta.env.DEV ? (
         <div className="rounded-xl border border-stone-900/10 bg-stone-50 px-3 py-2 text-xs text-stone-500 dark:border-white/10 dark:bg-zinc-900">
-          Geliştirme: {getApiBaseUrl()}
-          {aiStatus?.llm_enabled ? ' · LLM açık' : ' · LLM kapalı'}
+          Geliştirici: {getApiBaseUrl()}
         </div>
       ) : null}
 
-      {error ? (
-        <ErrorAlert
-          error={{
-            kind: 'api',
-            message: error,
-            alternative: aiStatus?.llm_enabled
-              ? undefined
-              : 'LLM kapalı: backend/.env dosyasına OPENROUTER_API_KEY ekleyin.',
-          }}
-          onRetry={() => setError('')}
-        />
+      {errorDetail ? (
+        <ErrorAlert error={errorDetail} onRetry={() => setErrorDetail(null)} />
       ) : null}
 
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">

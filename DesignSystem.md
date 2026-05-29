@@ -1,7 +1,9 @@
 # DesignSystem.md — Renk, tipografi ve bileşen kuralları
 
-**Ürün:** Historial-GO · **Uygulama:** `frontend/tailwind.config.js`, `frontend/src/index.css`  
-**Detaylı referans:** [docs/design-system/VISUAL_LANGUAGE.md](docs/design-system/VISUAL_LANGUAGE.md)
+**Ürün:** Historial-GO · **Son güncelleme:** Mayıs 2026  
+**Uygulama:** `frontend/tailwind.config.js`, `frontend/src/index.css`  
+**Detaylı referans:** [docs/design-system/VISUAL_LANGUAGE.md](docs/design-system/VISUAL_LANGUAGE.md)  
+**i18n:** `frontend/src/locales/tr.json`, `en.json` — `useI18n()` / `LanguageSwitcher`
 
 ---
 
@@ -97,8 +99,20 @@ focus:ring-2 focus:ring-primary/40
 
 ### Navigasyon
 
-- Mobil alt nav: `mobile-bottom-nav.tsx`, aktif öğe `heritage-gold` / `primary`
+- Mobil alt nav: `mobile-bottom-nav.tsx` — **4 öğe** (Keşfet · İller · Harita · Asistan); `flex-nowrap`
+- Mobil menü: `mobile-header-menu.tsx` — drawer `createPortal` ile `document.body`
 - Masaüstü: `app-layout` sidebar
+- Nav öğeleri: `config/nav-items.tsx` (i18n anahtarları); **Ses sekmesi yok**
+- Giriş CTA (mobil + masaüstü): `auth-header-actions.tsx`
+
+### Keşif ve geri bildirim
+
+- `BackButton` — `min-h-[44px]`, birincil renk link
+- `ErrorAlert` — kullanıcı dostu API hataları (`lib/user-errors.ts`)
+- `PageSkeleton` — liste/detay yükleme iskeleti
+- `ExploreHero`, `DistrictRowCard` — il/ilçe keşif kartları
+- **`CategoryIconCard`** — kategori seçimi (il/ilçe hub): `rounded-2xl border border-stone-900/10 bg-white shadow-sm dark:bg-zinc-900`; grid `grid-cols-2 sm:grid-cols-3`; emoji veya Lucide ikon + label; yeşil gradient kart kullanılmaz
+- **`PlaceNarrationPanel`** — mekan detay sesli anlatım: TR/EN toggle, yükleme iskeleti, `bg-primary/5` vurgu kutusu
 
 ### Rozet / chip
 
@@ -128,9 +142,18 @@ Tema senkronu: `theme-sync.tsx`, meta: `theme-meta.ts`.
 
 ---
 
-## 8. Yeni bileşen eklerken
+## 8. i18n ve metin
+
+- Kullanıcıya görünen sabit metinler `locales/*.json` içinde; bileşende doğrudan uzun TR cümle yazma.
+- `eyebrow` / nav / boş durum metinleri çeviri anahtarı ile (`empty-states.ts` kataloğu).
+- Dil seçimi: profil ve mobil menüde `LanguageSwitcher`.
+
+---
+
+## 9. Yeni bileşen eklerken
 
 1. Önce bu belgedeki token ve yükseklik kurallarına uy.
 2. Renk için yeni hex üretme; `heritage-*` veya `primary` kullan.
 3. Ortak UI’ı `src/components/ui/` altında topla.
-4. Sayfa özelinde tekrar etme; mevcut `button`, `stat-card` genişlet.
+4. Sayfa özelinde tekrar etme; mevcut `button`, `stat-card`, `BackButton` genişlet.
+5. Yeni sayfa metinleri için TR + EN locale güncelle.

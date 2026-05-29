@@ -44,7 +44,7 @@ Repo kökünde [`render.yaml`](render.yaml) → Render Dashboard → New → Blu
 3. `CORS_ORIGINS` = canlı frontend URL (ör. `https://historial-go.vercel.app`)
 4. `FRONTEND_URL` = aynı frontend URL (Stripe redirect)
 
-Health: `https://<api-host>/health`
+Health: `https://<api-host>/health` · Readiness: `https://<api-host>/ready`
 
 ## 3. Frontend (Vercel örneği)
 
@@ -56,10 +56,28 @@ Health: `https://<api-host>/health`
 
 | Kriter | Nasıl kanıtlanır |
 |--------|------------------|
-| Etkileşimli uygulama | Kayıt → onboarding → AI rota önerisi → satın alma → sesli rehber |
+| Etkileşimli uygulama | Kayıt → onboarding → AI rota önerisi → İller → mekan → TR/EN dinle |
 | LLM API entegrasyonu | `/ai/status` + öneri yanıtında `"source": "llm"` |
 | Ayrı FE/BE API | Farklı URL’ler; mobil Capacitor aynı API’yi kullanır |
 | Canlı deploy | README’de **Canlı URL** satırları doldurulmuş |
+
+## 6. Deploy sonrası UX doğrulama
+
+Push ve **Manual Deploy** (Clear build cache önerilir) sonrası kontrol edin:
+
+| Kontrol | Beklenen |
+|---------|----------|
+| `VITE_API_BASE_URL` | `https://historial-go-api.onrender.com` (Render web env, build-time) |
+| `CORS_ORIGINS` | `https://historial-go-web.onrender.com` |
+| Alt nav (mobil) | 4 öğe; Profil yok |
+| `/audio` | `/map` yönlendirmesi |
+| İlçe kategori hub | Beyaz `CategoryIconCard` (yeşil gradient yok) |
+| Mekan detay | TR/EN + Dinle |
+| Hard refresh | `Ctrl+Shift+R` veya gizli pencere (eski cache) |
+
+```powershell
+.\scripts\verify-live.ps1
+```
 
 ## Canlı URL (doldurun)
 

@@ -111,7 +111,7 @@ export default function LoginPage(): ReactElement {
             </span>
             <strong className="font-semibold text-stone-800 dark:text-stone-200">Demo:</strong>{' '}
             <code className="rounded bg-white/80 px-1 font-mono text-[11px] dark:bg-zinc-900">tourist@example.com</code> · şifre{' '}
-            <code className="rounded bg-white/80 px-1 font-mono text-[11px] dark:bg-zinc-900">demo123</code> (backend seed)
+            <code className="rounded bg-white/80 px-1 font-mono text-[11px] dark:bg-zinc-900">demo123</code>
           </div>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>

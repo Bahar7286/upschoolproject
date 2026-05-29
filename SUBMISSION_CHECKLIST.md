@@ -20,6 +20,9 @@
 - [x] Ödeme / satın alma akışı
 - [x] Rehber paneli, gezi talebi & teklif
 - [x] Oyunlaştırma (XP, rozet, liderlik)
+- [x] Türkiye keşif (81 il, ilçe, kategori mekanlar)
+- [x] Google Places proxy + harita (`/google-places/:placeId`)
+- [x] AI asistan sayfası (`/assistant`)
 
 **Problem:** Turist için kişiselleştirilmiş kültür rotası ve sesli rehber; rehber için dijital gelir.
 
@@ -46,7 +49,9 @@
 ## Hızlı demo (jüri)
 
 1. Canlı site → Kayıt / `tourist@example.com` / `demo123`
-2. Keşfet → **Kişisel önerileri getir** (LLM aktif etiketi görünmeli)
-3. Rota detay → Ses / offline indir
-4. `https://<api>/ai/status` → `llm_enabled: true`
-5. `https://<api>/docs` → Swagger
+2. **Keşfet** → AI chip paneli → **Kişisel Rotanı Oluştur**
+3. **İller** → il → ilçe → kategori (ikon kartlar) → mekan → **Sesli anlatım TR/EN Dinle**
+4. **Harita** → POI pinleri; satın alınmış rota varsa aktif rota / geofence
+5. **Asistan** → LLM sohbet
+6. `https://historial-go-api.onrender.com/ai/status` → `llm_enabled: true`
+7. `https://historial-go-api.onrender.com/docs` → Swagger (ayrı FE/BE kanıtı)

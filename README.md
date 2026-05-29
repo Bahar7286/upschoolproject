@@ -13,8 +13,9 @@ B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / g
 | [`.gitignore`](.gitignore) | Gizli dosya, cache, coverage hariç tutma |
 | [`.env.example`](.env.example) | Ortam değişkeni şablonu (gerçek anahtar yok) |
 | [`PRD.md`](PRD.md) | Proje anayasası: problem, kullanıcı, özellikler |
+| [`MVP.md`](MVP.md) | MVP kapsamı, teslim edilenler, doğrulama |
 | [`tech-stack.md`](tech-stack.md) | Teknolojiler, seçim gerekçeleri, geliştirmede AI kullanımı |
-| [`Plan.md`](Plan.md) | PRD’den kullanıcı hikayeleri ve teknik adımlar |
+| [`Plan.md`](Plan.md) | PRD’den kullanıcı hikayeleri ve teknik adımlar (epic’ler) |
 | [`DesignSystem.md`](DesignSystem.md) | Renk, tipografi, bileşen kuralları |
 | [`Progress.md`](Progress.md) | İş kaydı, kararlar ve hatalar |
 

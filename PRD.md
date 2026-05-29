@@ -1,12 +1,16 @@
 # HISTORIAL-GO: ÜRÜN GEREKSİNİMLERİ BELGESİ (PRD)
 
 > **Proje anayasası** — Çözülen problem, hedef kullanıcı ve temel özellikler bu belgede tanımlıdır.  
-> Tamamlayıcı zorunlu dokümanlar: [tech-stack.md](tech-stack.md) · [Plan.md](Plan.md) · [DesignSystem.md](DesignSystem.md) · [Progress.md](Progress.md)
+> **Uygulama durumu (Mayıs 2026):** MVP tamamlandı — [MVP.md](MVP.md) · Canlı: [README.md](README.md#canlı-adresler)  
+> Tamamlayıcı dokümanlar: [tech-stack.md](tech-stack.md) · [Plan.md](Plan.md) · [DesignSystem.md](DesignSystem.md) · [Progress.md](Progress.md)
 
 ## 1. STRATEJİK ÖZET
-**Historial-GO**, turizm sektöründe "Deneyim Ekonomisi" üzerine kurulu bir **B2B2C pazaryeridir.** * **Turistler için:** Şehri keşfetme yolculuğunu kişiselleştirilmiş, etkileşimli ve oyunlaştırılmış bir hikayeye dönüştürür.
-* **Rehberler için:** Sahip oldukları tarihi ve kültürel bilgiyi dijital bir ürün (rota) olarak satıp fiziksel emek harcamadan "pasif gelir" kazanmalarını sağlar.
-* **İşletmeler için:** Turist trafiğini veri odaklı analiz ederek yerel dükkanlara ve müzelere nitelikli müşteri yönlendirir.
+
+**Historial-GO**, turizm sektöründe "Deneyim Ekonomisi" üzerine kurulu bir **B2B2C pazaryeridir.**
+
+- **Turistler için:** Şehri keşfetme yolculuğunu kişiselleştirilmiş, etkileşimli ve oyunlaştırılmış bir hikayeye dönüştürür.
+- **Rehberler için:** Tarihi ve kültürel bilgiyi dijital rota olarak satıp ek gelir elde etmelerini sağlar.
+- **İşletmeler için:** Turist trafiğini veri odaklı yönlendirerek yerel mekânlara nitelikli ziyaretçi çeker.
 
 ## 2. PROBLEM VE ÇÖZÜM ANALİZİ
 
@@ -32,14 +36,21 @@ Uygulama, yapay zeka desteğiyle turisti doğrudan ona en uygun rehberli içerik
 Kullanıcının seçtiği ilgi alanları (Sanat, Tarih, Mimari vb.), ayırabileceği süre ve bütçeye göre en iyi 5 rotayı anlık olarak listeleyen kişiselleştirme motoru.
 
 ### **4.2. İnteraktif Keşif ve Sesli Rehberlik**
-* **GPS Entegrasyonu:** Kullanıcı harita üzerinde adım adım izlenir.
-* **Otomatik Tetikleme:** Belirlenen tarihi noktaya 20 metre yaklaşıldığında sanal rehber devreye girer.
-* **Çoklu Dil Desteği:** İlk aşamada Türkçe, İngilizce ve Almanca dillerinde profesyonel seslendirme.
+* **GPS / harita:** Leaflet veya Google Maps; rota durakları ve yakındaki POI’ler.
+* **Geofence:** Durağa ~20 m yaklaşınca sesli anlatım tetiklenir (harita + `useGeofenceWatch`; ek duraklar dahil).
+* **Sesli anlatım (keşif akışı):** İller → il → ilçe → kategori → mekan detayında TR/EN dinle (`PlaceNarrationPanel`); ayrı `/audio` sayfası yok.
+* **Türkiye keşfi:** 81 il, ilçe listesi, kategori (gezme / yeme-içme / konaklama) — DB `places` + Google Places; kategori seçimi `CategoryIconCard` (beyaz ikon kart).
+* **Dil:** Arayüz kısmi TR/EN (`i18n`); anlatım metni LLM önizleme + TTS (`POST /ai/narration/preview`, `/ai/narration/audio`).
 
-### **4.3. Oyunlaştırma (Kültür Puanı Sistemi)**
+### **4.3. AI Asistan ve Google entegrasyonu**
+* **LLM rota önerisi:** OpenRouter veya Gemini (`POST /ai/recommend`, `GET /ai/status`).
+* **Asistan sayfası:** Gezi soruları; Places ipuçları backend proxy üzerinden.
+* **Google Places / Routes:** API anahtarı yalnızca sunucuda; FE `VITE_GOOGLE_MAPS_API_KEY` harita için.
+
+### **4.4. Oyunlaştırma (Kültür Puanı Sistemi)**
 Kullanıcılar gezdikçe puan kazanır, görevleri tamamladıkça rozetler (Tarih Meraklısı, Şehir Üstadı vb.) elde eder ve haftalık liderlik tablolarında diğer gezginlerle yarışır.
 
-### **4.4. Rehber Yönetim Paneli (B2B Dashboard)**
+### **4.5. Rehber Yönetim Paneli (B2B Dashboard)**
 Rehberlerin kendi rotalarını harita üzerinden oluşturabildiği, içerik (metin, fotoğraf) yükleyebildiği ve satış analitiğini takip edebildiği kapsamlı yönetim arayüzü.
 
 ---
@@ -55,10 +66,12 @@ Platformun sürdürülebilirliği çok katmanlı bir gelir yapısına dayanır:
 
 ## 6. TEKNİK ALTYAPI VE GÜVENLİK
 
-* **Mobil Öncelikli Yaklaşım:** iOS ve Android cihazlarda sorunsuz çalışan hibrit mimari.
-* **Güvenli Ödeme:** Uluslararası standartlarda (Stripe) kredi kartı ve payout yönetimi.
-* **Offline Kullanım:** İnternetin zayıf olduğu bölgeler için rota verilerinin (ses ve harita) önceden cihaza indirilmesi.
-* **Kriptolojik Güvenlik:** Kullanıcı verileri ve ödeme geçmişi en üst düzey şifreleme protokolleriyle korunur.
+* **Mimari:** React + Vite SPA (`frontend/`) + FastAPI REST (`backend/`); Capacitor ile mobil paket iskeleti.
+* **Veritabanı:** PostgreSQL (üretim); şema **Alembic** migration ile versiyonlanır (`alembic upgrade head`).
+* **Güvenli ödeme:** Stripe checkout; anahtar yoksa demo akış.
+* **Üretim güvenliği:** JWT + rol; rate limit (yalnızca `ENVIRONMENT=production`); `/health`, `/ready` (DB ping).
+* **Offline:** Kısmi indirme akışı (v2: tam ses + harita paketi).
+* **Gizlilik:** API anahtarları ve `.env` repoda değil — [prodocs/API_KEYS_TR.md](prodocs/API_KEYS_TR.md).
 
 ---
 
@@ -73,10 +86,12 @@ Platformun sürdürülebilirliği çok katmanlı bir gelir yapısına dayanır:
 
 ## 8. YOL HARİTASI
 
-* **0-3 Ay (MVP):** Temel rota sistemi, sesli rehberlik ve ödeme altyapısının kurulması (İstanbul Lansmanı).
-* **4-6 Ay (Optimizasyon):** Kullanıcı abonelik paketleri, veri analitiği araçlarının rehberlere sunulması.
-* **7-12 Ay (Genişleme):** **AR Avatar** (3D Tarihi Karakterler) entegrasyonu, Ankara ve İzmir şehirlerinin açılması.
-* **2. Yıl ve Sonrası:** Global pazara (Roma, Paris, Barselona) açılım ve kurumsal (B2B) otel iş ortaklıkları.
+| Faz | Hedef | Durum |
+|-----|--------|--------|
+| **MVP (0–3 ay)** | Rota, AI, ödeme, rehber paneli, trip pazaryeri, 81 il keşif, Render deploy | ✅ Tamamlandı |
+| **Optimizasyon (4–6 ay)** | Premium paketler, rehber analitiği derinleştirme, Places DB cache | 🔄 Kısmi (`is_premium` admin flag) |
+| **Genişleme (7–12 ay)** | AR avatar, Ankara/İzmir zengin içerik, PostGIS | 📋 Planlı |
+| **2. yıl+** | Avrupa şehirleri, otel B2B ortaklıkları | 📋 Vizyon |
 
 ---
 
@@ -89,8 +104,9 @@ Platformun sürdürülebilirliği çok katmanlı bir gelir yapısına dayanır:
 
 ## 10. VERİTABANI ŞEMASI (E-R)
 
-**Motor:** PostgreSQL (`historial_go`, Docker: `historial_go_db`) — geliştirmede SQLite yedek dosyası kullanılabilir.  
-**Kaynak:** `backend/app/models/*.py` (SQLAlchemy). Şema değişiklikleri `backend/app/db/bootstrap.py` ile otomatik kolon ekler.
+**Motor:** PostgreSQL (`historial_go`, Docker: `historial_go_db`) — testlerde SQLite.  
+**Kaynak:** `backend/app/models/*.py` (SQLAlchemy).  
+**Şema evrimi:** Alembic (`backend/alembic/versions/`); ilk kurulumda `migrate_on_start` veya `alembic upgrade head`. Seed: `bootstrap.py` (kullanıcılar, 81 il, ilçeler, demo rotalar).
 
 ### 10.1. Notlar
 
@@ -98,6 +114,8 @@ Platformun sürdürülebilirliği çok katmanlı bir gelir yapısına dayanır:
 - `purchases.offer_id` ve `purchases.trip_request_id` uygulama katmanında bağlanır (DB’de FK yok).
 - `quote_requests` **eski** teklif akışıdır; yeni akış: `trip_requests` + `guide_offers`.
 - `places` bağımsız POI kataloğudur; `trip_requests.planned_stops` JSON içinde `place_id` referansı tutulabilir.
+- `cities` / `districts` Türkiye referans verisi (81 il, 973 ilçe); `favorites` kullanıcı favorileri (JWT).
+- `routes.status` taslak / inceleme / yayın akışı; rehber kendi taslağını görebilir.
 
 ### 10.2. E-R diyagramı (Mermaid)
 
@@ -311,3 +329,24 @@ erDiagram
 | `trip_requests` → `guide_offers` | 1 : N | Yeni talep–teklif akışı |
 | `quote_requests` | Turist + Rehber + ops. rota | Eski teklif akışı (deprecated) |
 | `places` | — | Harita POI kataloğu; doğrudan FK yok |
+| `cities` → `districts` | 1 : N | İl / ilçe referansı |
+| `users` → `favorites` | 1 : N | Mekan veya rota favorisi |
+
+---
+
+## 11. MEVCUT UYGULAMA ÖZETİ (Mayıs 2026)
+
+Aşağıdaki tablo, PRD’deki vizyon ile **repodaki gerçek durum** arasındaki köprüdür. Ayrıntılı epic listesi: [Plan.md](Plan.md).
+
+| PRD alanı | Uygulama |
+|-----------|----------|
+| AI rota sihirbazı | ✅ `POST /ai/recommend` |
+| Sesli rehber / geofence | ✅ Mekan detay TR/EN, harita geofence |
+| Oyunlaştırma | ✅ XP, rozet, liderlik |
+| Rehber paneli | ✅ `/guide`, doğrulama, moderasyon |
+| Trip pazaryeri | ✅ `trip_requests` (eski `quote_requests` deprecated) |
+| 81 il keşif | ✅ `/cities`, ilçe, kategori mekanlar |
+| Google Places | ✅ `/google/*` proxy |
+| AR avatar | ❌ v2 |
+| Tam offline paket | ⚠️ kısmi |
+| Canlı deploy | ✅ Render URL’leri README’de |

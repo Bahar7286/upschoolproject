@@ -26,7 +26,8 @@ export default function KvkkPage(): ReactElement {
       </p>
       <h2 className="font-bold text-heritage-ink dark:text-stone-100">Aktarım</h2>
       <p>
-        Harita ve mekan verileri Google API&apos;leri üzerinden; yapay zekâ anlatımları OpenRouter üzerinden işlenebilir.
+        Harita ve mekan verileri harita hizmet sağlayıcıları üzerinden; yapay zekâ destekli anlatımlar güvenli sunucu
+        altyapısı ile işlenebilir.
         Ödeme Stripe kullanıldığında kart verileri doğrudan Stripe&apos;a gider, platform kart numarasını saklamaz.
       </p>
       <h2 className="font-bold text-heritage-ink dark:text-stone-100">Haklarınız</h2>

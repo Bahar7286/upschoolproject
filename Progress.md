@@ -104,8 +104,10 @@
 |------|--------|
 | Canlı deploy URL’leri | ✅ Frontend: https://historial-go-web.onrender.com · API: https://historial-go-api.onrender.com |
 | `OPENROUTER_API_KEY` (yerel) | `backend/.env` içine siz ekleyin → `llm_enabled: true` |
-| Alembic migration | PRD yol haritası; henüz yok |
+| Alembic migration | ✅ `backend/alembic/versions/` |
 | AR avatar | v2 |
+| Google Places proxy + keşif sayfaları | ✅ Mayıs 2026 |
+| Backend rate limit / `/ready` | ✅ prod-only limit, 141 pytest |
 
 ---
 
@@ -133,13 +135,40 @@
 
 ---
 
+## Faz 9 — Türkiye keşif, Google, dokümantasyon senkronu
+
+| Yapılan | Karar |
+|---------|--------|
+| `google_routes`, `geo_routes`, city/district/places FE akışı | API anahtarı backend’de |
+| i18n TR/EN, `nav-items`, mobil login görünürlüğü | `AuthHeaderActions` |
+| Rate limit yalnızca production; testlerde `TESTING=1` | 141 pytest yeşil |
+| PRD, MVP, Plan, DesignSystem güncellemesi | Eski RN/Node taslakları düzeltildi |
+
+---
+
+## Faz 10 — Keşif, ses ve bağlantı UX (Mayıs 2026)
+
+| Yapılan | Karar |
+|---------|--------|
+| Mobil alt nav 4 öğe; drawer `createPortal`; scroll/overlap düzeltmesi | Profil header’da; Ses nav kaldırıldı |
+| `CategoryIconCard` — il/ilçe kategori seçimi (beyaz ikon kart) | Yeşil gradient hub kaldırıldı |
+| `PlaceNarrationPanel` — mekan detay TR/EN prefetch + Dinle | `/audio` → `/map` redirect |
+| `api.ts` retry/backoff + startup `/health` ping | Render cold start |
+| Aktif rota: Google map polyline, watchPosition, geofence ek duraklar | `useGeofenceWatch` istemci tarafı |
+| `ensure_images_seeded` + narration cache (TTL) | Backend startup |
+| PRD, Plan, Checklist, DesignSystem senkron | Teslim dokümanları güncellendi |
+
+**Deploy:** Push sonrası Render manual deploy (web + api); `VITE_API_BASE_URL` build-time zorunlu.
+
+---
+
 ## Komut özeti (doğrulanmış)
 
 ```powershell
 docker compose up -d
 cd backend; uv run uvicorn app.main:app --reload
 cd frontend; npm run dev
-cd backend; uv run pytest -q
+cd backend; uv run pytest -q    # 141 passed
 cd frontend; npm test
 ```
 

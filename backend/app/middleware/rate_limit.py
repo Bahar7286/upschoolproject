@@ -1,3 +1,4 @@
+import os
 import time
 from collections import defaultdict
 
@@ -36,9 +37,18 @@ def _allow(key: str, limit: int) -> bool:
     return True
 
 
+def _rate_limit_enabled() -> bool:
+    if os.getenv('TESTING') == '1' or os.getenv('PYTEST_CURRENT_TEST'):
+        return False
+    return settings.is_production
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in ('/health', '/docs', '/redoc', '/openapi.json'):
+        if not _rate_limit_enabled():
+            return await call_next(request)
+
+        if request.url.path in ('/health', '/ready', '/docs', '/redoc', '/openapi.json'):
             return await call_next(request)
 
         path = request.url.path

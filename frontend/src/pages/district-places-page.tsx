@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
+import { CategoryIconCard } from '../components/explore/category-icon-card';
 import { BackButton } from '../components/ui/back-button';
 import { ExploreHero } from '../components/explore/explore-hero';
 import { useI18n } from '../lib/i18n';
@@ -174,19 +175,15 @@ export default function DistrictPlacesPage(): ReactElement {
         <p className="px-1 text-sm text-theme-muted">
           {t('district.pickCategoryHint', 'Gezilecek yerler, yeme-içme ve konaklama mekanlarını görmek için bir kategori seçin.')}
         </p>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {districtCategories.map(({ id, label, description, icon: Icon }) => (
-            <Link
+            <CategoryIconCard
               key={id}
               to={`${base}?category=${id}`}
-              className="tap-scale flex flex-col overflow-hidden rounded-2xl border border-stone-900/8 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900"
-            >
-              <div className="flex aspect-[4/3] flex-col items-center justify-center gap-2 bg-gradient-to-br from-primary/90 to-primary/60 p-4 text-white">
-                <Icon className="h-10 w-10" aria-hidden="true" />
-                <p className="font-display text-lg font-extrabold">{label}</p>
-              </div>
-              <p className="p-3 text-xs text-theme-muted">{description}</p>
-            </Link>
+              label={label}
+              description={description}
+              icon={Icon}
+            />
           ))}
         </div>
       </section>

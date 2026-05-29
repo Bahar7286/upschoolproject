@@ -211,24 +211,32 @@ async def seed_initial_data(session: AsyncSession) -> None:
         session.add_all(places)
         await session.commit()
 
-    existing_cities = await session.execute(select(City.city_id).limit(1))
-    if not existing_cities.first():
-        session.add_all(
-            [
-                City(
-                    city_id=item['id'],
-                    name_tr=item['name'],
-                    slug=item['slug'],
-                    plate_code=item['plate'],
-                    center_lat=item.get('lat', 0.0),
-                    center_lng=item.get('lng', 0.0),
-                )
-                for item in TR_CITIES
-            ]
-        )
-        await session.commit()
-
+    await ensure_cities_seeded(session)
     await ensure_districts_seeded(session)
+
+
+async def ensure_cities_seeded(session: AsyncSession) -> None:
+    """81 il — eksik kayıtları tamamla (kısmi seed sonrası)."""
+    existing_ids = set(
+        (await session.execute(select(City.city_id))).scalars().all()
+    )
+    to_add: list[City] = []
+    for item in TR_CITIES:
+        if item['id'] in existing_ids:
+            continue
+        to_add.append(
+            City(
+                city_id=item['id'],
+                name_tr=item['name'],
+                slug=item['slug'],
+                plate_code=item['plate'],
+                center_lat=item.get('lat', 0.0),
+                center_lng=item.get('lng', 0.0),
+            )
+        )
+    if to_add:
+        session.add_all(to_add)
+        await session.commit()
 
 
 async def ensure_districts_seeded(session: AsyncSession) -> None:
@@ -271,3 +279,27 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
             patched = True
     if patched:
         await session.commit()
+
+
+async def ensure_images_seeded(session: AsyncSession) -> None:
+    """Fill missing city image_url from Wikipedia when DB has few images."""
+    import logging
+
+    from sqlalchemy import func
+
+    from app.services.image_sync_service import ImageSyncService
+
+    log = logging.getLogger(__name__)
+    count_result = await session.execute(
+        select(func.count())
+        .select_from(City)
+        .where(City.image_url.isnot(None), City.image_url != '')
+    )
+    if (count_result.scalar() or 0) >= 20:
+        return
+    try:
+        svc = ImageSyncService(session)
+        result = await svc.sync_cities(limit=81, force=False)
+        log.info('Wikipedia image sync: %s cities updated', result.updated)
+    except Exception as exc:
+        log.warning('Wikipedia image sync skipped: %s', exc)

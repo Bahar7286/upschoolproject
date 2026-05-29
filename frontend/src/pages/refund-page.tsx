@@ -20,9 +20,9 @@ export default function RefundPage(): ReactElement {
         Rehberle yüz yüze gezi talepleri için iptal koşulları teklif kabulünden önce gösterilir. Kabul sonrası iptal,
         rehber ve platform kurallarına tabidir.
       </p>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Demo ödeme</h2>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Test ödemeleri</h2>
       <p>
-        Stripe anahtarı yapılandırılmamış ortamlarda gerçek para tahsil edilmez; demo işlemler iade gerektirmez.
+        Deneme amaçlı yapılan ödemelerde gerçek para tahsil edilmez; bu işlemler için iade talebi gerekmez.
       </p>
       <p>
         Talep için{' '}

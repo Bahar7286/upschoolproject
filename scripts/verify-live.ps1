@@ -22,4 +22,9 @@ try {
 }
 
 Write-Host ""
-Write-Host "Manuel: giriş -> Keşfet -> AI öneri -> rota detay sesli rehber"
+Write-Host "Manuel UX (mobil 375px veya DevTools):"
+Write-Host "  1. Giris -> Keşfet -> Kişisel Rotani Olustur"
+Write-Host "  2. Iller -> il -> ilce -> kategori (ikon kartlar) -> mekan -> TR/EN Dinle"
+Write-Host "  3. Harita -> POI pinleri"
+Write-Host "  4. /audio -> /map yonlendirmesi"
+Write-Host "  5. Alt nav: 4 oge (Profil yok); ust menude Ses yok"

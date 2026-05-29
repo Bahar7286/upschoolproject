@@ -1,7 +1,6 @@
 import {
   CalendarDays,
   Compass,
-  Headphones,
   Heart,
   LayoutDashboard,
   Map as MapIcon,
@@ -28,7 +27,6 @@ export function useTouristBottomNav(): NavItem[] {
       { to: '/cities', label: t('nav.cities', 'İller'), icon: MapPin },
       { to: '/map', label: t('nav.map', 'Harita'), icon: MapIcon },
       { to: '/assistant', label: t('nav.assistant', 'Asistan'), icon: MessageCircle },
-      { to: '/profile', label: t('nav.profile', 'Profil'), icon: UserRound },
     ],
     [t],
   );
@@ -42,7 +40,6 @@ export function useGuideBottomNav(): NavItem[] {
       { to: '/cities', label: t('nav.cities', 'İller'), icon: MapPin },
       { to: '/assistant', label: t('nav.assistant', 'Asistan'), icon: MessageCircle },
       { to: '/talepler', label: t('nav.trips', 'Talepler'), icon: ShoppingBag },
-      { to: '/profile', label: t('nav.profile', 'Profil'), icon: UserRound },
     ],
     [t],
   );
@@ -56,7 +53,6 @@ export function useAdminBottomNav(): NavItem[] {
       { to: '/discover', label: t('nav.discover', 'Keşfet'), icon: Compass },
       { to: '/cities', label: t('nav.cities', 'İller'), icon: MapPin },
       { to: '/assistant', label: t('nav.assistant', 'Asistan'), icon: MessageCircle },
-      { to: '/profile', label: t('nav.profile', 'Profil'), icon: UserRound },
     ],
     [t],
   );
@@ -70,7 +66,6 @@ export function useTouristMobileMenuExtras(): NavItem[] {
       { to: '/planner', label: t('nav.plan', 'Plan'), icon: CalendarDays },
       { to: '/talepler', label: t('nav.trips', 'Taleplerim'), icon: ShoppingBag },
       { to: '/favorites', label: t('nav.favorites', 'Favoriler'), icon: Heart },
-      { to: '/audio', label: t('nav.audioGuide', 'Sesli rehber'), icon: Headphones },
       { to: '/purchases', label: t('nav.purchases', 'Satın alımlar'), icon: Wallet },
       { to: '/onboarding', label: t('nav.interests', 'İlgi alanları'), icon: Palette },
     ],

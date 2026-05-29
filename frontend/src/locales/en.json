@@ -31,7 +31,15 @@
   },
   "discover": {
     "offlineDemo": "Cannot reach server — showing sample routes.",
-    "offlineDemoHint": "Refresh when back online, or continue from the Cities tab."
+    "offlineDemoHint": "Refresh when back online, or continue from the Cities tab.",
+    "aiWizard": "AI Route Wizard",
+    "aiWizardHint": "Match score combines budget fit, duration, and proximity.",
+    "interests": "Interests",
+    "minutes": "min",
+    "aiLimit": "Daily AI limit reached on the free plan. Go Premium for unlimited use.",
+    "aiLoading": "Preparing personal recommendations…",
+    "aiCta": "Build My Route",
+    "allRoutes": "All routes"
   },
   "district": {
     "pickCategory": "Choose a category",
@@ -55,6 +63,9 @@
     "traveler": "Traveler",
     "tourist": "Tourist",
     "guide": "Guide",
+    "accountSettings": "Account settings",
+    "exploreRoutes": "Explore routes",
+    "quickLinks": "Account shortcuts",
     "tabs": {
       "overview": "Overview",
       "history": "History",
@@ -70,6 +81,36 @@
     "noDistricts": "District list could not be loaded for this city.",
     "retry": "Retry",
     "explore": "Explore"
+  },
+  "place": {
+    "narration": "Audio guide",
+    "narrationLoading": "Preparing narration…",
+    "narrationListen": "Listen",
+    "narrationStop": "Stop"
+  },
+  "map": {
+    "openInMap": "Open on map",
+    "liveMap": "Live map",
+    "myLocation": "Show my location"
+  },
+  "route": {
+    "planTitle": "Plan route",
+    "step1": "1) Start",
+    "step1Hint": "Use your location or pick a start point on the map.",
+    "step2": "2) Optional stop",
+    "step2Hint": "Add an extra stop along the way if you like.",
+    "step3": "3) Draw route",
+    "step3Hint": "Choose walk or drive, then calculate the route.",
+    "myLocation": "My location",
+    "pickOnMap": "Pick on map",
+    "addWaypoint": "Add waypoint",
+    "clearWaypoints": "Clear",
+    "skipWaypoint": "Skip →",
+    "walk": "Walk",
+    "drive": "Drive",
+    "calculating": "Calculating route…",
+    "drawRoute": "Draw route",
+    "openInGoogleMaps": "Open in Google Maps"
   },
   "onboarding": {
     "cityTitle": "Which city will you explore?",

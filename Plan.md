@@ -1,6 +1,6 @@
 # Plan.md — PRD’den türetilen teknik plan
 
-**Kaynak:** [PRD.md](PRD.md) · **Durum:** MVP tamamlandı; aşağıdaki adımlar uygulama sırasıyla izlenmiştir.
+**Kaynak:** [PRD.md](PRD.md) · **Durum:** MVP tamamlandı (Mayıs 2026) · **Test:** backend 141 pytest geçer
 
 ---
 
@@ -8,9 +8,9 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E1.1 | Turist olarak kayıt olup giriş yapmak istiyorum | `auth_routes`, JWT, `User` model, `profile_service`, FE login/register | ✅ |
-| E1.2 | İlgi/süre/bütçe tercihlerimi kaydetmek istiyorum | Onboarding store, `PATCH /auth/me`, kullanıcı alanları | ✅ |
-| E1.3 | Şifremi unuttumda sıfırlamak istiyorum | `password_reset_service`, forgot/reset uçları, FE sayfaları | ✅ |
+| E1.1 | Turist olarak kayıt olup giriş yapmak istiyorum | `auth_routes`, JWT, `User` model, FE login/register | ✅ |
+| E1.2 | İlgi/süre/bütçe tercihlerimi kaydetmek istiyorum | Onboarding, `PATCH /auth/me` | ✅ |
+| E1.3 | Şifremi unuttumda sıfırlamak istiyorum | `password_reset_service`, forgot/reset | ✅ |
 
 ---
 
@@ -18,10 +18,11 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E2.1 | İlgi alanıma göre rota önerisi almak istiyorum | `POST /ai/recommend`, `AIService` + `LLMService`, Discover UI | ✅ |
-| E2.2 | Rota detayında durakları görmek istiyorum | `routes`, `stops`, `RouteService`, route-detail sayfası | ✅ |
-| E2.3 | Anlatım metnini önizlemek istiyorum | `POST /ai/narration/preview`, çok dilli prompt | ✅ |
-| E2.4 | LLM’nin aktif olduğunu bilmek istiyorum (jüri) | `GET /ai/status`, `fetchAiStatus()` | ✅ |
+| E2.1 | İlgi alanıma göre rota önerisi almak istiyorum | `POST /ai/recommend`, `AIService`, Discover | ✅ |
+| E2.2 | Rota detayında durakları görmek istiyorum | `routes`, `stops`, route-detail | ✅ |
+| E2.3 | Anlatım metnini önizlemek istiyorum | `POST /ai/narration/preview` | ✅ |
+| E2.4 | LLM’nin aktif olduğunu bilmek istiyorum | `GET /ai/status` | ✅ |
+| E2.5 | Sohbet asistanı ile gezi sormak istiyorum | `/assistant`, Places ipuçları + LLM | ✅ |
 
 ---
 
@@ -29,9 +30,10 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E3.1 | Haritada rotayı görmek istiyorum | Leaflet/Google map bileşenleri, `places` API | ✅ |
-| E3.2 | Durağa yaklaşınca sesli anlatım istiyorum | `useGeofenceWatch`, geofence testleri, audio-guide sayfası | ✅ |
-| E3.3 | Zayıf internette kullanmak istiyorum | `offline-package.ts`, indirme akışı | ✅ |
+| E3.1 | Haritada rotayı ve POI’leri görmek istiyorum | Leaflet/Google map, `places`, `google/places/nearby`, aktif rota polyline | ✅ |
+| E3.2 | Durağa yaklaşınca sesli anlatım istiyorum | `useGeofenceWatch`, `PlaceNarrationPanel`, `/ai/narration/*` | ✅ |
+| E3.3 | Zayıf internette kullanmak istiyorum | `offline-package.ts` (kısmi) | ⚠️ kısmi |
+| E3.4 | Mobilde menü ve keşif akışını rahat kullanmak istiyorum | 4 öğeli alt nav, drawer portal, `CategoryIconCard` | ✅ |
 
 ---
 
@@ -39,8 +41,8 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E4.1 | Rotayı satın almak istiyorum | `PaymentService`, Stripe session, checkout sayfaları | ✅ |
-| E4.2 | Geçmiş ödemelerimi görmek istiyorum | `purchases`, purchases sayfası | ✅ |
+| E4.1 | Rotayı satın almak istiyorum | Stripe session, checkout | ✅ |
+| E4.2 | Geçmiş ödemelerimi görmek istiyorum | `purchases`, `/purchases` | ✅ |
 
 ---
 
@@ -48,9 +50,10 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E5.1 | Rehber olarak profil ve doğrulama sunmak istiyorum | `guide_profiles`, verification sayfası, admin onay | ✅ |
-| E5.2 | Turist talebine teklif vermek istiyorum | `trip_requests`, `guide_offers`, marketplace UI | ✅ |
-| E5.3 | Panelde analitik görmek istiyorum | Guide dashboard, stat kartları | ✅ |
+| E5.1 | Rehber profil ve doğrulama | `guide_profiles`, admin onay | ✅ |
+| E5.2 | Turist talebine teklif vermek | `trip_requests`, `guide_offers` | ✅ |
+| E5.3 | Panelde analitik | Guide dashboard | ✅ |
+| E5.4 | Taslak rotamı görmek (rehber) | `get_route_by_id` + `allow_unpublished` / viewer rol | ✅ |
 
 ---
 
@@ -58,9 +61,9 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E6.1 | Gezdikçe XP ve rozet kazanmak istiyorum | `gamification.py`, profil XP alanları | ✅ |
-| E6.2 | Rota hakkında not/yorum bırakmak istiyorum | `social_routes`, note/review servisleri | ✅ |
-| E6.3 | Gezi planı oluşturmak istiyorum | `plan_routes`, planner sayfası | ✅ |
+| E6.1 | XP ve rozet | `gamification.py`, profil | ✅ |
+| E6.2 | Not/yorum | `social_routes` | ✅ |
+| E6.3 | Gezi planı | `plan_routes`, planner | ✅ |
 
 ---
 
@@ -68,24 +71,42 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E7.1 | (Geliştirici) Regresyonu güvenle test etmek | pytest unit/integration, Vitest, coverage ≥90% servis | ✅ |
-| E7.2 | (Eğitmen) Repoyu standart yapıda incelemek | `frontend/`, `backend/`, `prodocs/`, zorunlu `.md` dosyaları | ✅ |
-| E7.3 | (Jüri) Canlı uygulamayı denemek | Render deploy, README canlı URL | ✅ |
+| E7.1 | Regresyon testi | pytest 141, Vitest, coverage servis ~%90 | ✅ |
+| E7.2 | Standart repo yapısı | `frontend/`, `backend/`, `prodocs/` | ✅ |
+| E7.3 | Canlı demo | Render, README URL | ✅ |
+| E7.4 | Production güvenlik | Rate limit (prod), hata maskeleme, `/ready` | ✅ |
 
 ---
 
-## Sonraki sprint (PRD yol haritası)
+## Epic 8 — Türkiye keşif ve Google entegrasyonu
 
-1. Alembic migration (şema versiyonlama)
-2. PostGIS / spatial index
-3. AR avatar entegrasyonu (v2)
-4. Ankara / İzmir şehir paketleri
+| ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
+|----|-------------------|----------------|-------|
+| E8.1 | 81 il ve ilçeleri görmek | `cities`, `districts`, seed, `/cities` | ✅ |
+| E8.2 | İl/ilçede kategorili mekanlar | `places`, city/district sayfaları | ✅ |
+| E8.3 | Harita merkezi koordinat | `GET /geo/center` | ✅ |
+| E8.4 | Google place detay ve rota çizimi | `/google/places/*`, `/google/routes` proxy | ✅ |
+| E8.5 | Favori mekanlar | `favorites` tablosu, `/favorites` | ✅ |
+| E8.6 | Admin POI / görsel senkron | `POST /admin/poi/sync`, `images/sync` | ✅ |
+
+---
+
+## Sonraki sprint (PRD yol haritası v2)
+
+1. PostGIS / spatial index  
+2. AR avatar entegrasyonu  
+3. Ankara / İzmir zengin POI seed (İstanbul dışı içerik)  
+4. Google Places kalıcı DB önbelleği  
+5. Wikidata zenginleştirme  
+6. Tam offline paket (ses + harita bir arada)
 
 ---
 
 ## Bağımlılık sırası (özet)
 
 ```
-Docker PG → Backend modeller → Auth → Routes/Places → AI (LLM) → FE sayfalar
-         → Payments → Trip/Guide → Tests → Deploy şablonları → Canlı URL
+Docker PG → Alembic → Backend modeller → Auth → Routes/Places
+         → Cities/Districts seed → AI (LLM) → Google proxy
+         → FE sayfalar (keşif, harita, asistan) → Payments → Trip/Guide
+         → Tests (141) → Deploy → Canlı URL
 ```

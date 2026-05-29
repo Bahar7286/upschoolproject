@@ -3,7 +3,6 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 
 import { AppLayout } from '../components/layout/app-layout';
 import { ProtectedRoute } from '../components/layout/protected-route';
-import AudioGuidePage from '../pages/audio-guide-page';
 import DiscoverPage from '../pages/discover-page';
 import GuideCreateRoutePage from '../pages/guide-create-route-page';
 import GuideDashboardPage from '../pages/guide-dashboard-page';
@@ -81,7 +80,7 @@ export function AppRouter(): ReactElement {
         <Route path="/google-places/:placeId" element={<GooglePlaceDetailPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/onboarding" element={<OnboardingPage />} />
-        <Route path="/audio" element={<AudioGuidePage />} />
+        <Route path="/audio" element={<Navigate to="/map" replace />} />
 
         <Route path="/rehberler" element={<GuidesMarketplacePage />} />
         <Route path="/rehberler/:guideId" element={<GuidePublicPage />} />

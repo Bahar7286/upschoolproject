@@ -1,6 +1,7 @@
 import { Menu, X } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 
 import { useTouristMobileMenuExtras } from '../../config/nav-items';
@@ -29,21 +30,64 @@ export function MobileHeaderMenu({
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
     };
+    const prevOverflow = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
     window.addEventListener('keydown', onKey);
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = prevOverflow;
       window.removeEventListener('keydown', onKey);
     };
   }, [open]);
 
-  if (isAdmin || isGuide) return <span className="md:hidden" />;
+  if (isAdmin || isGuide) return <span className="shrink-0 md:hidden" aria-hidden="true" />;
+
+  const drawer =
+    open && typeof document !== 'undefined'
+      ? createPortal(
+          <>
+            <button
+              type="button"
+              className="fixed inset-0 z-[100] bg-black/40"
+              aria-label={t('nav.menuClose', 'Menüyü kapat')}
+              onClick={() => setOpen(false)}
+            />
+            <nav
+              id="mobile-nav-drawer"
+              className="fixed inset-y-0 right-0 z-[110] flex w-[min(100vw-3rem,320px)] flex-col gap-1 overflow-y-auto overscroll-contain border-l border-stone-900/10 bg-white p-4 pt-safe shadow-xl dark:border-white/10 dark:bg-zinc-950"
+              aria-label={t('nav.menu', 'Mobil menü')}
+            >
+              <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wide text-stone-500">
+                {t('nav.menu', 'Menü')}
+              </p>
+              <NavLink
+                className={({ isActive }) => linkClass(isActive)}
+                to="/profile"
+                onClick={() => setOpen(false)}
+              >
+                {t('nav.profile', 'Profil')}
+              </NavLink>
+              {extras.map(({ to, label, icon: Icon }) => (
+                <NavLink
+                  key={to}
+                  className={({ isActive }) => linkClass(isActive)}
+                  to={to}
+                  onClick={() => setOpen(false)}
+                >
+                  <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
+                  {label}
+                </NavLink>
+              ))}
+            </nav>
+          </>,
+          document.body,
+        )
+      : null;
 
   return (
-    <div className="md:hidden">
+    <>
       <button
         type="button"
-        className="tap-scale inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-stone-900/10 bg-white/80 dark:border-white/10 dark:bg-zinc-900"
+        className="tap-scale inline-flex shrink-0 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-stone-900/10 bg-white/80 md:hidden dark:border-white/10 dark:bg-zinc-900"
         aria-expanded={open}
         aria-controls="mobile-nav-drawer"
         aria-label={open ? t('nav.menuClose', 'Menüyü kapat') : t('nav.menuOpen', 'Menüyü aç')}
@@ -51,30 +95,7 @@ export function MobileHeaderMenu({
       >
         {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
       </button>
-
-      {open ? (
-        <>
-          <button
-            type="button"
-            className="fixed inset-0 z-[65] bg-black/40"
-            aria-label={t('nav.menuClose', 'Menüyü kapat')}
-            onClick={() => setOpen(false)}
-          />
-          <nav
-            id="mobile-nav-drawer"
-            className="fixed inset-y-0 right-0 z-[70] flex w-[min(100vw-3rem,320px)] flex-col gap-1 overflow-y-auto border-l border-stone-900/10 bg-white p-4 pt-safe shadow-xl dark:border-white/10 dark:bg-zinc-950"
-            aria-label={t('nav.menu', 'Mobil menü')}
-          >
-            <p className="mb-2 px-2 text-xs font-bold uppercase tracking-wide text-stone-500">{t('nav.menu', 'Menü')}</p>
-            {extras.map(({ to, label, icon: Icon }) => (
-              <NavLink key={to} className={({ isActive }) => linkClass(isActive)} to={to} onClick={() => setOpen(false)}>
-                <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-                {label}
-              </NavLink>
-            ))}
-          </nav>
-        </>
-      ) : null}
-    </div>
+      {drawer}
+    </>
   );
 }

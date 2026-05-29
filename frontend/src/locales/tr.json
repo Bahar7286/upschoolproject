@@ -31,7 +31,15 @@
   },
   "discover": {
     "offlineDemo": "Sunucuya ulaşılamadı — örnek rotalar gösteriliyor.",
-    "offlineDemoHint": "Bağlantı düzelince sayfayı yenileyin veya İller sekmesinden keşfe devam edin."
+    "offlineDemoHint": "Bağlantı düzelince sayfayı yenileyin veya İller sekmesinden keşfe devam edin.",
+    "aiWizard": "AI Rota Sihirbazı",
+    "aiWizardHint": "Eşleşme skoru, bütçe uyumu, süre ve konum yakınlığı birlikte hesaplanır.",
+    "interests": "İlgi alanları",
+    "minutes": "dk",
+    "aiLimit": "Ücretsiz planda günlük AI öneri limiti doldu. Premium ile sınırsız kullanabilirsin.",
+    "aiLoading": "Kişisel öneriler hazırlanıyor…",
+    "aiCta": "Kişisel Rotanı Oluştur",
+    "allRoutes": "Tüm rotalar"
   },
   "district": {
     "pickCategory": "Kategori seçin",
@@ -55,6 +63,9 @@
     "traveler": "Gezgin",
     "tourist": "Turist",
     "guide": "Rehber",
+    "accountSettings": "Hesap ayarları",
+    "exploreRoutes": "Rotaları keşfet",
+    "quickLinks": "Hesap kısayolları",
     "tabs": {
       "overview": "Özet",
       "history": "Geçmiş",
@@ -70,6 +81,36 @@
     "noDistricts": "Bu il için ilçe listesi henüz yüklenemedi.",
     "retry": "Yeniden dene",
     "explore": "Keşfet"
+  },
+  "place": {
+    "narration": "Sesli anlatım",
+    "narrationLoading": "Anlatım hazırlanıyor…",
+    "narrationListen": "Dinle",
+    "narrationStop": "Durdur"
+  },
+  "map": {
+    "openInMap": "Haritada aç",
+    "liveMap": "Canlı harita",
+    "myLocation": "Konumumu göster"
+  },
+  "route": {
+    "planTitle": "Rota planla",
+    "step1": "1) Başlangıç",
+    "step1Hint": "Konumunuzu veya haritadan bir başlangıç noktası seçin.",
+    "step2": "2) Ara durak (isteğe bağlı)",
+    "step2Hint": "Yolda uğramak istediğiniz bir nokta ekleyebilirsiniz.",
+    "step3": "3) Rotayı çiz",
+    "step3Hint": "Yürüyüş veya araç modunu seçip rotayı hesaplayın.",
+    "myLocation": "Konumum",
+    "pickOnMap": "Haritadan seç",
+    "addWaypoint": "Ara durak ekle",
+    "clearWaypoints": "Temizle",
+    "skipWaypoint": "Atla →",
+    "walk": "Yürüyüş",
+    "drive": "Araç",
+    "calculating": "Rota hesaplanıyor…",
+    "drawRoute": "Rotayı çiz",
+    "openInGoogleMaps": "Google Maps'te aç"
   },
   "onboarding": {
     "cityTitle": "Hangi şehirde gezeceksin?",

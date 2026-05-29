@@ -3,7 +3,6 @@ import { useEffect } from 'react';
 import {
   CalendarDays,
   Compass,
-  Headphones,
   Heart,
   LayoutDashboard,
   Map as MapIcon,
@@ -140,10 +139,6 @@ export function AppLayout(): ReactElement {
                 </NavLink>
               </>
             )}
-            <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/audio">
-              <Headphones className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-              {t('nav.audio', 'Ses')}
-            </NavLink>
             {isTourist ? (
               <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/onboarding">
                 <Palette className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
@@ -162,7 +157,7 @@ export function AppLayout(): ReactElement {
             </NavLink>
           </nav>
 
-          <div className="ml-auto flex items-center gap-2">
+          <div className="ml-auto flex shrink-0 items-center gap-1.5 sm:gap-2">
             <MobileHeaderMenu isAdmin={isAdmin} isGuide={isGuide} />
             <NavLink
               className="app-chip tap-scale focus-ring hidden min-h-[44px] min-w-[44px] items-center justify-center rounded-full md:inline-flex"
@@ -182,7 +177,7 @@ export function AppLayout(): ReactElement {
         </div>
       </header>
 
-      <main className="app-main mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 py-5 pb-[calc(4.75rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
+      <main className="app-main mx-auto w-full min-w-0 max-w-7xl flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-3 py-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
         <OnboardingGate>
           <div className="animate-fade-in-up">
             <Outlet />

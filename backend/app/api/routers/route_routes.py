@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 
+from app.api.auth_deps import get_optional_user_id
 from app.api.dependencies import (
     get_route_service,
     get_user_repository,
@@ -47,11 +48,21 @@ async def recommend_routes(
 async def get_route(
     route_id: int,
     service: RouteService = Depends(get_route_service),
+    user_id: int | None = Depends(get_optional_user_id),
+    user_repo: UserRepository = Depends(get_user_repository),
 ) -> RouteResponse:
     if route_id <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid route id')
+    viewer_role: str | None = None
+    if user_id is not None:
+        user = await user_repo.get_by_id(user_id)
+        viewer_role = user.role if user else None
     try:
-        return await service.get_route_by_id(route_id)
+        return await service.get_route_by_id(
+            route_id,
+            viewer_user_id=user_id,
+            viewer_role=viewer_role,
+        )
     except RouteNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Route not found') from exc
 

@@ -6,19 +6,19 @@ export default function PaymentSecurityPage(): ReactElement {
   return (
     <LegalPageShell title="Ödeme Güvenliği">
       <p>
-        Ödemeleriniz iki modda işlenebilir: <strong>Stripe Checkout</strong> (üretim) veya <strong>demo kart</strong>{' '}
-        (geliştirme / anahtar yokken).
+        Ödemeleriniz güvenli ödeme altyapısı üzerinden işlenir. Kart bilgileriniz Historial-GO sunucularında tam
+        olarak saklanmaz.
       </p>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Stripe (önerilen)</h2>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Güvenli ödeme</h2>
       <ul className="list-disc space-y-1 pl-5">
-        <li>Kart bilgisi tarayıcıdan doğrudan Stripe&apos;a gider; sunucumuz tam kart numarasını saklamaz.</li>
-        <li>3D Secure ve PCI uyumlu altyapı Stripe tarafından sağlanır.</li>
+        <li>Kart bilgisi tarayıcıdan doğrudan ödeme sağlayıcısına iletilir.</li>
+        <li>3D Secure ve PCI uyumlu altyapı ödeme ortağı tarafından sağlanır.</li>
         <li>İşlem sonrası yalnızca son 4 hane ve referans kodu saklanır.</li>
       </ul>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Demo mod</h2>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Test ortamı</h2>
       <p>
-        Backend&apos;de <code className="text-xs">STRIPE_SECRET_KEY</code> tanımlı değilse ödeme sayfası demo kart
-        formu gösterir. Bu modda gerçek tahsilat yapılmaz; yalnızca test amaçlı satın alma kaydı oluşur.
+        Bazı kurulumlarda ödeme yalnızca deneme amaçlıdır; bu durumda gerçek tahsilat yapılmaz ve satın alma kaydı
+        eğitim/demo için oluşturulur.
       </p>
       <h2 className="font-bold text-heritage-ink dark:text-stone-100">Komisyon</h2>
       <p>

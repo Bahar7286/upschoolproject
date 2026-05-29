@@ -465,7 +465,9 @@ export default function OnboardingPage(): ReactElement {
                       Kapat
                     </button>
                   </div>
-                  <p className="text-xs text-amber-900/80 dark:text-amber-200/80">API: {getApiBaseUrl()}</p>
+                  {import.meta.env.DEV ? (
+                    <p className="text-xs text-amber-900/80 dark:text-amber-200/80">Geliştirici: {getApiBaseUrl()}</p>
+                  ) : null}
                 </div>
               ) : null}
               <header className="text-center">

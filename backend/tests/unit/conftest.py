@@ -5,6 +5,8 @@ from pathlib import Path
 
 # Entegrasyon testleri ile aynı SQLite dosyasını paylaşmayın (drop_all çakışması).
 os.environ['DATABASE_URL'] = 'sqlite+aiosqlite:///./test_unit.db'
+os.environ['ENVIRONMENT'] = 'development'
+os.environ['TESTING'] = '1'
 
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine

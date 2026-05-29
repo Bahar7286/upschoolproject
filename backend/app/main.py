@@ -36,7 +36,7 @@ from app.api.routers import (
 
 from app.core.config import settings
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.db.bootstrap import seed_initial_data
+from app.db.bootstrap import ensure_images_seeded, seed_initial_data
 from app.db.connection import Base, SessionLocal, engine
 from app import models  # noqa: F401
 
@@ -53,6 +53,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
         async with SessionLocal() as session:
             await seed_initial_data(session)
+            await ensure_images_seeded(session)
     except Exception as exc:
         log.exception('Startup DB seed failed (API still listening): %s', exc)
 
@@ -197,3 +198,19 @@ async def add_process_time_header(request: Request, call_next):
 @app.get('/health', tags=['health'], summary='Sağlık kontrolü')
 async def healthcheck() -> JSONResponse:
     return JSONResponse(content={'status': 'ok'})
+
+
+@app.get('/ready', tags=['health'], summary='Hazırlık kontrolü (DB)')
+async def readiness() -> JSONResponse:
+    from sqlalchemy import text
+
+    try:
+        async with SessionLocal() as session:
+            await session.execute(text('SELECT 1'))
+        return JSONResponse(content={'status': 'ready', 'database': 'ok'})
+    except Exception as exc:
+        _log.warning('Readiness check failed: %s', exc)
+        return JSONResponse(
+            status_code=503,
+            content={'status': 'not_ready', 'database': 'error'},
+        )

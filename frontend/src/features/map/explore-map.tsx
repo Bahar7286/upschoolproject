@@ -17,6 +17,7 @@ export interface ExploreMapProps {
   userLocation?: { lat: number; lng: number } | null;
   activeStops?: StopResponse[];
   focusRouteId?: number;
+  currentStopIndex?: number;
   showPlaces?: boolean;
   mapCenter?: { lat: number; lng: number };
   mapZoom?: number;
@@ -31,6 +32,7 @@ export function ExploreMap({
   userLocation = null,
   activeStops = [],
   focusRouteId,
+  currentStopIndex = 0,
   showPlaces = true,
   mapCenter,
   mapZoom = 13,
@@ -48,11 +50,11 @@ export function ExploreMap({
         <p className="text-sm text-stone-600 dark:text-stone-400">
           {engine === 'google' ? (
             <>
-              <strong>Google Haritalar</strong> — canlı POI pinleri sunucu proxy üzerinden gelir.
+              <strong>Google Haritalar</strong> — canlı mekan pinleri.
             </>
           ) : (
             <>
-              <strong>OpenStreetMap</strong> (Türkiye WGS84). Yerel katalog pinleri.
+              <strong>OpenStreetMap</strong> — yerel katalog pinleri.
             </>
           )}
         </p>
@@ -101,6 +103,8 @@ export function ExploreMap({
           googlePlaces={googlePlaces}
           userLocation={userLocation}
           routePolyline={routePolyline}
+          activeStops={activeStops}
+          currentStopIndex={currentStopIndex}
         />
       ) : null}
     </div>

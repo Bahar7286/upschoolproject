@@ -253,6 +253,23 @@ export default function MapPage(): ReactElement {
     lastTriggeredStopRef.current = null;
   }, [focusRouteId]);
 
+  useEffect(() => {
+    if (!focusRouteId || mergedStops.length === 0) return;
+    if (!navigator.geolocation) return;
+
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+      },
+      () => {
+        /* konum izni yoksa sessizce devam */
+      },
+      { enableHighAccuracy: true, maximumAge: 3000, timeout: 15000 },
+    );
+
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, [focusRouteId, mergedStops.length]);
+
 
 
   const showMyLocation = useCallback(() => {
@@ -490,6 +507,8 @@ export default function MapPage(): ReactElement {
           userLocation={userLocation}
 
           activeStops={mergedStops}
+
+          currentStopIndex={currentStopIndex}
 
           focusRouteId={focusRouteId ?? undefined}
 

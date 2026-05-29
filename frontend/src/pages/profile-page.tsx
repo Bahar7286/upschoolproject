@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { formatApiError } from '../lib/api';
 import { listPlans } from '../services/plan-service';
@@ -57,6 +57,7 @@ export default function ProfilePage(): ReactElement {
     { id: 'look', label: t('profile.tabs.look', 'Görünüm'), icon: Palette },
   ];
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const setUser = useAuthStore((s) => s.setUser);
@@ -114,6 +115,15 @@ export default function ProfilePage(): ReactElement {
       setThemePreference(user.theme_preference as ThemePreference);
     }
   }, [user, setInterests, setThemePreference]);
+
+  useEffect(() => {
+    if (location.hash !== '#settings') return;
+    setTab('overview');
+    const timer = window.setTimeout(() => {
+      document.getElementById('settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [location.hash]);
 
   const handleSaveTheme = async (theme: ThemePreference, font?: FontPreference) => {
     setThemePreference(theme);

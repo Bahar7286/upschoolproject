@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
+import { CategoryIconCard } from '../components/explore/category-icon-card';
 import { DistrictRowCard } from '../components/explore/district-row-card';
 import { BackButton } from '../components/ui/back-button';
 import { RegionInlineMap } from '../features/map/region-inline-map';
@@ -79,22 +80,20 @@ export default function CityDetailPage(): ReactElement {
         <p className="text-sm text-theme-muted">İlçe seç → mekanları gör</p>
       </header>
 
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
         {CATEGORIES.map(({ id: catId, label, emoji }) => (
-          <Link
+          <CategoryIconCard
             key={catId}
             to={`/cities/${id}/places?category=${catId}`}
-            className="tap-scale flex min-h-[52px] flex-col items-center justify-center gap-1 rounded-2xl border border-stone-900/10 bg-white px-2 py-3 text-center text-sm font-semibold shadow-sm dark:border-white/10 dark:bg-zinc-900"
-          >
-            <span aria-hidden="true">{emoji}</span>
-            {label}
-          </Link>
+            label={label}
+            emoji={emoji}
+          />
         ))}
         <Link
           to={`/map?cityId=${id}&city=${encodeURIComponent(city?.name_tr ?? '')}`}
-          className="tap-scale col-span-2 flex min-h-[52px] items-center justify-center rounded-2xl bg-primary px-4 text-center text-sm font-bold text-white shadow-sm sm:col-span-4"
+          className="tap-scale col-span-2 flex min-h-[52px] items-center justify-center rounded-2xl bg-primary px-4 text-center text-sm font-bold text-white shadow-sm sm:col-span-3"
         >
-          Haritada aç
+          {t('map.openInMap', 'Haritada aç')}
         </Link>
       </div>
 
@@ -124,7 +123,7 @@ export default function CityDetailPage(): ReactElement {
         ) : null}
         {!isPending && districts.length === 0 ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
-            Bu il için ilçe bulunamadı. Backend&apos;i yeniden başlatıp sayfayı yenileyin.
+            Bu il için ilçe listesi şu an yüklenemedi. Lütfen biraz sonra sayfayı yenileyin.
           </p>
         ) : null}
 

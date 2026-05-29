@@ -11,7 +11,7 @@ import { ErrorAlert } from '../components/ui/error-alert';
 import { DEMO_ROUTES } from '../data/demo-routes';
 import { EMPTY_STATES } from '../content/empty-states';
 import { useI18n } from '../lib/i18n';
-import { fetchAiStatus, recommendWithAi, type AIRecommendationItem } from '../services/ai-service';
+import { recommendWithAi, type AIRecommendationItem } from '../services/ai-service';
 import { useRoutesQuery } from '../hooks/use-routes-query';
 import { mapError } from '../lib/user-errors';
 import { recommendRoutes } from '../services/route-service';
@@ -32,12 +32,6 @@ export default function DiscoverPage(): ReactElement {
   const { data: routes = [], isPending, isError, error, refetch } = useRoutesQuery();
   const usingOfflineDemo = isError && routes.length === 0;
   const routeSource = usingOfflineDemo ? DEMO_ROUTES : routes;
-  const { data: aiStatus } = useQuery({
-    queryKey: ['ai', 'status'],
-    queryFn: fetchAiStatus,
-    staleTime: 60_000,
-  });
-
   const interests = useOnboardingStore((s) => s.interests);
   const durationMinutes = useOnboardingStore((s) => s.durationMinutes);
   const budget = useOnboardingStore((s) => s.budget);
@@ -143,14 +137,7 @@ export default function DiscoverPage(): ReactElement {
           {firstName ? `Merhaba, ${firstName}! 👋` : 'Rota keşfi'}
         </h1>
         <p className="text-sm leading-relaxed text-theme-muted md:text-base">
-          AI motoru ilgi alanı, süre ve bütçene göre skorlar; en uygun rotalar üstte listelenir.
-          {aiStatus?.llm_enabled ? (
-            <span className="mt-1 block text-xs text-primary">AI önerileri aktif</span>
-          ) : (
-            <span className="mt-1 block text-xs text-theme-muted">
-              Yerel skor motoru (sunucuda LLM anahtarı yok)
-            </span>
-          )}
+          İlgi alanın, süren ve bütçene göre sana en uygun rotaları öneririz.
         </p>
         {user?.onboarding_completed ? (
           <p className="mt-2 inline-flex flex-wrap items-center gap-2 rounded-full border border-primary/25 bg-primary/5 px-3 py-1 text-xs font-semibold text-stone-700 dark:text-stone-300">
@@ -177,44 +164,78 @@ export default function DiscoverPage(): ReactElement {
             : 'border-primary/25 bg-primary/5 dark:border-primary/30 dark:bg-primary/10'
         }`}
       >
-        <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
-          <div className="space-y-2 flex-1">
+        <div className="space-y-4">
+          <div className="space-y-1">
             <p className="inline-flex items-center gap-2 text-sm font-bold text-primary-dark dark:text-primary">
               <Sparkles className="h-4 w-4" aria-hidden="true" />
-              AI Rota Sihirbazı
-            </p>
-            <p className="break-anywhere text-sm text-stone-700 dark:text-stone-300">
-              <strong>İlgi:</strong> {effectiveInterests.join(', ')} · <strong>Süre:</strong> {effectiveDuration} dk ·{' '}
-              <strong>Bütçe:</strong> ₺{effectiveBudget}
+              {t('discover.aiWizard', 'AI Rota Sihirbazı')}
             </p>
             <p className="text-xs text-stone-500 dark:text-stone-400">
-              Eşleşme skoru, bütçe uyumu, süre ve konum yakınlığı birlikte hesaplanır.
+              {t('discover.aiWizardHint', 'Eşleşme skoru, bütçe uyumu, süre ve konum yakınlığı birlikte hesaplanır.')}
             </p>
           </div>
-          <div className="flex w-full flex-col gap-2 sm:flex-row sm:flex-wrap">
+
+          <div className="space-y-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-stone-500 dark:text-stone-400">
+              {t('discover.interests', 'İlgi alanları')}
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {effectiveInterests.map((interest) => (
+                <span
+                  key={interest}
+                  className="rounded-full border border-primary/25 bg-white px-3 py-1 text-xs font-semibold text-stone-700 dark:bg-zinc-900 dark:text-stone-200"
+                >
+                  {interest}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-wrap gap-2">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm dark:bg-zinc-900 dark:text-stone-200">
+              <Clock className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              {effectiveDuration} {t('discover.minutes', 'dk')}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm dark:bg-zinc-900 dark:text-stone-200">
+              ₺{effectiveBudget}
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-white px-3 py-1.5 text-xs font-semibold text-stone-700 shadow-sm dark:bg-zinc-900 dark:text-stone-200">
+              <MapPin className="h-3.5 w-3.5 text-primary" aria-hidden="true" />
+              {effectiveCity}
+            </span>
+          </div>
+
+          <div className="flex w-full flex-col gap-2 sm:flex-row">
             <button
-              className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary px-5 font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-60 sm:w-auto"
+              className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary px-5 font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-60 sm:flex-1"
               type="button"
               disabled={recommendMutation.isPending}
               onClick={() => {
                 setPremiumMsg('');
                 setDismissRecommendError(false);
                 if (!canUseAi()) {
-                  setPremiumMsg('Ücretsiz planda günlük AI öneri limiti doldu. Premium ile sınırsız kullanabilirsin.');
+                  setPremiumMsg(
+                    t(
+                      'discover.aiLimit',
+                      'Ücretsiz planda günlük AI öneri limiti doldu. Premium ile sınırsız kullanabilirsin.',
+                    ),
+                  );
                   return;
                 }
                 recommendMutation.mutate();
               }}
             >
-              {recommendMutation.isPending ? 'Kişisel öneriler hazırlanıyor…' : 'Kişisel Rotanı Oluştur'}
+              {recommendMutation.isPending
+                ? t('discover.aiLoading', 'Kişisel öneriler hazırlanıyor…')
+                : t('discover.aiCta', 'Kişisel Rotanı Oluştur')}
             </button>
             {recommendMutation.data ? (
               <button
-                className="tap-scale min-h-[48px] rounded-xl border-2 border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
+                className="tap-scale min-h-[48px] rounded-xl border-2 border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600 sm:w-auto"
                 type="button"
                 onClick={() => recommendMutation.reset()}
               >
-                Tüm rotalar
+                {t('discover.allRoutes', 'Tüm rotalar')}
               </button>
             ) : null}
           </div>
@@ -254,7 +275,7 @@ export default function DiscoverPage(): ReactElement {
               listError.kind === 'network'
                 ? 'Rota listesi şu an yüklenemedi. İl ve mekan keşfine devam edebilirsin.'
                 : listError.message,
-            alternative: 'Render kullanıyorsan API servisinin uyandığını doğrula (ilk istek yavaş olabilir).',
+            alternative: 'İlk yükleme biraz sürebilir; birkaç saniye sonra yenilemeyi dene.',
             actionLabel: 'İlleri keşfet',
             actionTo: '/cities',
           }}
@@ -324,10 +345,13 @@ export default function DiscoverPage(): ReactElement {
                     <Clock className="h-4 w-4" aria-hidden="true" />
                     {route.estimated_minutes} dk
                   </span>
-                  <span className="inline-flex items-center gap-1">
+                  <Link
+                    className="inline-flex items-center gap-1 font-semibold text-primary hover:underline"
+                    to={`/rehberler/${route.guide_id}`}
+                  >
                     <MapPin className="h-4 w-4" aria-hidden="true" />
-                    Rehber #{route.guide_id}
-                  </span>
+                    Rehber profili
+                  </Link>
                 </p>
                 <p className="text-lg font-bold">₺{route.price.toFixed(2)}</p>
                 <Link

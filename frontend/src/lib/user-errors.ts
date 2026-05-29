@@ -34,29 +34,30 @@ function isNetworkError(error: unknown): boolean {
   return msg.includes('failed to fetch') || msg.includes('network');
 }
 
+const devHint = (text: string): string | undefined => (import.meta.env.DEV ? text : undefined);
+
 export function mapError(error: unknown, context: ErrorContext = 'general'): UserFacingError {
   if (isNetworkError(error)) {
     if (context === 'assistant') {
       return {
         kind: 'network',
-        message: 'Asistan sunucusuna ulaşılamıyor (API kapalı veya yanlış adres).',
-        alternative:
-          'Yerelde backend: uvicorn :8000 · frontend .env: VITE_API_BASE_URL=http://127.0.0.1:8000',
+        message: 'Asistan şu an yanıt veremiyor. İnternet bağlantını kontrol edip tekrar dene.',
+        alternative: devHint('Geliştirme: backend :8000 ve VITE_API_BASE_URL'),
         actionLabel: 'Sayfayı yenile',
       };
     }
     if (context === 'discover' || context === 'route-recommendations') {
       return {
         kind: 'network',
-        message: 'Sunucuya bağlanılamadı. API adresini veya internet bağlantını kontrol et.',
-        alternative: 'Render kullanıyorsan API servisinin uyandığını doğrula (ilk istek yavaş olabilir).',
+        message: 'Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar dene.',
+        alternative: 'İlk bağlantı biraz sürebilir; birkaç saniye sonra yenilemeyi dene.',
         actionLabel: 'Sayfayı yenile',
       };
     }
     return {
       kind: 'network',
       message: 'Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar dene.',
-      alternative: 'Yerelde çalışıyorsan backend ve docker (PostgreSQL) açık olmalı.',
+      alternative: devHint('Geliştirme: backend ve veritabanının çalıştığından emin olun'),
       actionLabel: 'Sayfayı yenile',
     };
   }
@@ -98,9 +99,10 @@ export function mapError(error: unknown, context: ErrorContext = 'general'): Use
       if (context === 'assistant') {
         return {
           kind: 'api',
-          message: 'AI asistan şu an yanıt veremiyor (LLM anahtarı veya model).',
-          alternative: 'backend/.env içinde OPENROUTER_API_KEY ve OPENROUTER_MODEL kontrol edin.',
-          actionLabel: 'Tekrar dene',
+          message: 'Asistan şu an yanıt veremiyor. Lütfen biraz sonra tekrar dene.',
+          alternative: 'Keşfet veya iller sayfasından rotalara göz atabilirsin.',
+          actionLabel: 'Keşfe dön',
+          actionTo: '/discover',
         };
       }
       if (context === 'route-recommendations' || context === 'discover') {

@@ -25,7 +25,7 @@ async def test_route_crud_and_recommend(db_session: AsyncSession) -> None:
             guide_id=2,
         )
     )
-    fetched = await service.get_route_by_id(created.route_id)
+    fetched = await service.get_route_by_id(created.route_id, allow_unpublished=True)
     assert fetched.title == 'Unit Route'
     assert await service.route_exists(created.route_id)
 
@@ -47,4 +47,4 @@ async def test_route_crud_and_recommend(db_session: AsyncSession) -> None:
 
     await service.delete_route(created.route_id)
     with pytest.raises(RouteNotFoundError):
-        await service.get_route_by_id(created.route_id)
+        await service.get_route_by_id(created.route_id, allow_unpublished=True)

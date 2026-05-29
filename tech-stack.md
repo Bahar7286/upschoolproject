@@ -18,7 +18,9 @@
 | Ödeme | Stripe API | Yoksa demo checkout |
 | LLM (ürün) | OpenRouter (örn. Gemma) veya doğrudan Gemini API | `httpx` ile REST |
 | Harita | Leaflet + opsiyonel Google Maps | `VITE_GOOGLE_MAPS_API_KEY` |
-| Test BE | pytest, pytest-asyncio, coverage | `tests/unit`, `tests/integration` |
+| Test BE | pytest, pytest-asyncio, coverage | 141 test; `tests/unit`, `tests/integration`, `test_api.py` |
+| Google API | Places + Routes (backend proxy) | `GOOGLE_PLACES_API_KEY` sunucuda |
+| i18n FE | Özel `I18nProvider` + JSON locale | TR / EN |
 | Test FE | Vitest | `src/**/*.test.ts` |
 | Paket yönetimi BE | uv | `pyproject.toml`, `uv.lock` |
 | Deploy şablonları | Render + Vercel + Docker | `render.yaml`, `vercel.json` |
@@ -37,7 +39,7 @@
 
 - **Neden:** İlişkisel veri (kullanıcı, rota, durak, satın alma, trip talebi); üretimde güvenilir.
 - **Geliştirme:** `docker-compose.yml` ile yerel PG; testlerde SQLite (`aiosqlite`) hız için.
-- **Karar:** Alembic henüz yok; `bootstrap.py` ile şema evrimi (MVP).
+- **Karar:** Alembic migration (`backend/alembic/`); seed ve demo veri `bootstrap.py`.
 
 ### 2.3 React + Vite (frontend)
 

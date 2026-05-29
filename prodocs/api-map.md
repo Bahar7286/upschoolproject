@@ -60,6 +60,20 @@ Base: `http://127.0.0.1:8000` (geliştirme) — Swagger: `/docs`
 ## Diğer
 
 - `/places`, `/plans`, `/notes`, `/reviews`, `/guides/profile` — CRUD benzeri uçlar
-- Sağlık: `GET /health`
+- Sağlık: `GET /health`, `GET /ready` (DB ping)
+
+## Google (proxy)
+
+| Method | Path | Açıklama |
+|--------|------|----------|
+| GET | `/google/places/nearby` | Yakındaki yerler |
+| GET | `/google/places/{place_id}` | Place detay |
+| POST | `/google/routes` | Rota çizimi (polyline) |
+
+## Geo
+
+| Method | Path | Açıklama |
+|--------|------|----------|
+| GET | `/geo/center?city=&district=` | Harita merkez koordinatı |
 
 Tam şema için çalışan backend’de `/openapi.json` kullanın.

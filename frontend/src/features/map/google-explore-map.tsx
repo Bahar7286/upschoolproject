@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 
 import type { GooglePlaceSummary } from '../../types/google';
 import type { RouteResponse } from '../../types/route';
+import type { StopResponse } from '../../types/stop';
 import { decodePolyline } from '../../utils/polyline';
 import { routeMapPosition } from './route-map-position';
 
@@ -21,6 +22,8 @@ export interface GoogleExploreMapProps {
   googlePlaces?: GooglePlaceSummary[];
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: { lat: number; lng: number }[] | null;
+  activeStops?: StopResponse[];
+  currentStopIndex?: number;
   onRequestRoute?: (place: GooglePlaceSummary) => void;
   routingPlaceId?: string | null;
   compact?: boolean;
@@ -34,6 +37,8 @@ export function GoogleExploreMap({
   googlePlaces = [],
   userLocation = null,
   routePolyline = null,
+  activeStops = [],
+  currentStopIndex = 0,
   onRequestRoute,
   routingPlaceId = null,
   compact = false,
@@ -56,7 +61,23 @@ export function GoogleExploreMap({
     }
   }, [map, center.lat, center.lng, zoom]);
 
-  const polyPath = useMemo(() => routePolyline ?? [], [routePolyline]);
+  const polyPath = useMemo(() => {
+    if (routePolyline && routePolyline.length > 1) return routePolyline;
+    if (activeStops.length > 1) {
+      return activeStops.map((s) => ({ lat: s.latitude, lng: s.longitude }));
+    }
+    return [];
+  }, [routePolyline, activeStops]);
+
+  const nextStop = activeStops[currentStopIndex] ?? null;
+
+  const userToNextLine = useMemo(() => {
+    if (!userLocation || !nextStop) return [];
+    return [
+      userLocation,
+      { lat: nextStop.latitude, lng: nextStop.longitude },
+    ];
+  }, [userLocation, nextStop]);
 
   const handleMarkerClick = useCallback(
     (place: GooglePlaceSummary) => {
@@ -72,7 +93,7 @@ export function GoogleExploreMap({
   if (loadError) {
     return (
       <div className="flex h-[min(52vh,400px)] sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] items-center justify-center rounded-2xl border border-red-200 bg-red-50 px-4 text-center text-sm text-red-800">
-        Google Haritalar yüklenemedi. API anahtarı, faturalandırma ve Maps JavaScript API etkinliğini kontrol edin.
+        Harita şu an yüklenemedi. Lütfen daha sonra tekrar deneyin veya listeden mekan seçmeye devam edin.
       </div>
     );
   }
@@ -97,6 +118,30 @@ export function GoogleExploreMap({
         onLoad={setMap}
         options={{ fullscreenControl: false, mapTypeControl: false }}
       >
+        {activeStops.map((stop, idx) => (
+          <Marker
+            key={stop.stop_id}
+            position={{ lat: stop.latitude, lng: stop.longitude }}
+            title={stop.title}
+            label={{
+              text: String(idx + 1),
+              color: idx === currentStopIndex ? '#fff' : '#1c1917',
+              fontWeight: '700',
+            }}
+            icon={
+              idx === currentStopIndex
+                ? {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#b45309',
+                    fillOpacity: 1,
+                    strokeColor: '#fff',
+                    strokeWeight: 2,
+                  }
+                : undefined
+            }
+          />
+        ))}
         {userLocation ? (
           <Marker
             position={userLocation}
@@ -133,11 +178,29 @@ export function GoogleExploreMap({
             }}
           />
         ) : null}
+        {userToNextLine.length > 1 ? (
+          <Polyline
+            path={userToNextLine}
+            options={{
+              strokeColor: '#2563eb',
+              strokeOpacity: 0.85,
+              strokeWeight: 4,
+              icons: [
+                {
+                  icon: { path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW, scale: 3 },
+                  offset: '50%',
+                },
+              ],
+            }}
+          />
+        ) : null}
       </GoogleMap>
       <div className="pointer-events-none absolute bottom-3 left-3 right-3 rounded-xl bg-white/90 px-3 py-2 text-xs text-stone-700 shadow-md backdrop-blur dark:bg-zinc-900/90 dark:text-stone-300">
-        {googlePlaces.length
-          ? `${googlePlaces.length} canlı pin (Google; istek başına en fazla 20, tümü seçilince birleştirilmiş arama). Pin’e dokunun → detay ve rota.`
-          : 'Bu bölgede sonuç yok; yarıçapı artırmayı deneyin veya kategori değiştirin.'}
+        {nextStop && userLocation
+          ? `Sıradaki durak: ${nextStop.title}`
+          : googlePlaces.length
+            ? `${googlePlaces.length} canlı pin. Pin’e dokunun → detay ve rota.`
+            : 'Bu bölgede sonuç yok; yarıçapı artırmayı veya kategori değiştirmeyi deneyin.'}
         {onRequestRoute && routingPlaceId ? ' · Rota hesaplanıyor…' : ''}
       </div>
     </div>

@@ -2,6 +2,8 @@ import os
 
 # Test DB — entegrasyon / test_api (unit testleri test_unit.db kullanır)
 os.environ['DATABASE_URL'] = 'sqlite+aiosqlite:///./test_historial_go.db'
+os.environ['ENVIRONMENT'] = 'development'
+os.environ['TESTING'] = '1'
 
 import asyncio
 

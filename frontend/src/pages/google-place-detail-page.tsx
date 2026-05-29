@@ -1,17 +1,17 @@
-import { Headphones, Loader2, MapPin, Navigation, Volume2 } from 'lucide-react';
+import { MapPin, Navigation } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { BackButton } from '../components/ui/back-button';
 import { LoadingButton } from '../components/ui/loading-button';
+import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { AddToActiveRouteButton } from '../features/active-route/active-route-planner';
 import { RoutePreviewMap } from '../features/map/route-preview-map';
 import { resolveGooglePlaceImage } from '../lib/region-images';
-import { langToSpeechCode, playAudioBase64, useSpeech } from '../hooks/use-speech';
+import { useI18n } from '../lib/i18n';
 import { formatApiError } from '../lib/api';
-import { fetchNarrationAudio, fetchNarrationPreview } from '../services/ai-service';
 import { computeGoogleRoute, fetchGooglePlaceDetail } from '../services/google-service';
 import type { ComputeRouteResponse, GooglePlaceDetail } from '../types/google';
 
@@ -19,45 +19,23 @@ type TravelMode = 'WALK' | 'DRIVE';
 type OriginMode = 'gps' | 'pick';
 
 export default function GooglePlaceDetailPage(): ReactElement {
+  const { t } = useI18n();
   const { placeId } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [place, setPlace] = useState<GooglePlaceDetail | null>(null);
   const [error, setError] = useState('');
-  const [story, setStory] = useState('');
-  const [narrationNote, setNarrationNote] = useState('');
   const [routeError, setRouteError] = useState('');
   const { run: runRoute, loading: routeLoading } = useSubmitLock();
-  const { run: runNarration, loading: narrationBusy } = useSubmitLock();
   const [route, setRoute] = useState<ComputeRouteResponse | null>(null);
   const [userOrigin, setUserOrigin] = useState<{ lat: number; lng: number } | null>(null);
-  const [originMode, setOriginMode] = useState<OriginMode>('pick');
+  const [originMode, setOriginMode] = useState<OriginMode>('gps');
   const [pickOriginActive, setPickOriginActive] = useState(false);
   const [waypoints, setWaypoints] = useState<{ lat: number; lng: number }[]>([]);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALK');
-  const { speak, stop, speaking, supported } = useSpeech();
-  const [narrationSources, setNarrationSources] = useState<{ title: string; url: string }[]>([]);
+  const [routeStep, setRouteStep] = useState<1 | 2 | 3>(1);
 
   const backTo = searchParams.get('back') || (searchParams.get('from') === 'map' ? '/map' : '/cities');
-
-  const loadNarration = useCallback(async (detail: GooglePlaceDetail) => {
-    try {
-      const preview = await fetchNarrationPreview({
-        stop_title: detail.name,
-        description: [detail.editorial_summary, detail.formatted_address].filter(Boolean).join('\n'),
-        languages: ['tr'],
-      });
-      const text = preview.scripts.tr || preview.scripts.en || Object.values(preview.scripts)[0] || '';
-      if (text) setStory(text);
-      if (preview.note) setNarrationNote(preview.note);
-      const sources = preview.sources?.length ? preview.sources : detail.sources;
-      setNarrationSources(sources);
-    } catch {
-      if (detail.editorial_summary) setStory(detail.editorial_summary);
-      else setStory(`${detail.name} — ${detail.formatted_address}`);
-      setNarrationSources(detail.sources);
-    }
-  }, []);
 
   useEffect(() => {
     if (!placeId) return;
@@ -65,21 +43,15 @@ export default function GooglePlaceDetailPage(): ReactElement {
     (async () => {
       try {
         const data = await fetchGooglePlaceDetail(placeId);
-        if (!cancelled) {
-          setPlace(data);
-          if (data.editorial_summary) setStory(data.editorial_summary);
-          setNarrationSources(data.sources);
-          void loadNarration(data);
-        }
+        if (!cancelled) setPlace(data);
       } catch (err) {
         if (!cancelled) setError(formatApiError(err));
       }
     })();
     return () => {
       cancelled = true;
-      stop();
     };
-  }, [placeId, stop, loadNarration]);
+  }, [placeId]);
 
   const computeFromOrigin = async (origin: { lat: number; lng: number }) => {
     if (!place) return;
@@ -155,27 +127,9 @@ export default function GooglePlaceDetailPage(): ReactElement {
     navigate(`/map?${q.toString()}`);
   };
 
-  const handleNarration = () => {
-    if (!place) return;
-    void runNarration(async () => {
-      try {
-        const audio = await fetchNarrationAudio({
-          stop_title: place.name,
-          description: story || place.formatted_address,
-          language: 'tr',
-        });
-        if (audio.sources?.length) setNarrationSources(audio.sources);
-        if (audio.script) setStory(audio.script);
-        if (audio.audio_base64) {
-          await playAudioBase64(audio.audio_base64, audio.content_type);
-        } else {
-          speak(audio.script || story || place.name, langToSpeechCode('tr'));
-        }
-      } catch {
-        speak(story || place.name, langToSpeechCode('tr'));
-      }
-    });
-  };
+  const narrationDescription = place
+    ? [place.editorial_summary, place.formatted_address].filter(Boolean).join('\n')
+    : '';
 
   if (error) {
     return (
@@ -222,132 +176,133 @@ export default function GooglePlaceDetailPage(): ReactElement {
         ) : null}
       </header>
 
-      <section className="rounded-[22px] border border-primary/20 bg-primary/5 p-4 sm:p-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold">
-            <Headphones className="h-5 w-5 text-primary" aria-hidden="true" />
-            Sesli anlatım
-          </h2>
-          <button
-            type="button"
-            className="tap-scale inline-flex min-h-[44px] cursor-pointer items-center gap-2 rounded-xl bg-primary px-4 text-sm font-bold text-white disabled:opacity-60"
-            disabled={narrationBusy}
-            onClick={() => (speaking ? stop() : handleNarration())}
-          >
-            {narrationBusy ? (
-              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-            ) : (
-              <Volume2 className="h-4 w-4" aria-hidden="true" />
-            )}
-            {speaking ? 'Durdur' : 'Dinle'}
-          </button>
-        </div>
-        {!story ? (
-          <p className="mt-3 text-sm text-stone-500">Anlatım hazırlanıyor…</p>
-        ) : (
-          <p className="mt-3 text-sm leading-relaxed text-stone-700 dark:text-stone-300">
-            {story || 'Anlatım yükleniyor…'}
-          </p>
-        )}
-        {narrationNote ? <p className="mt-2 text-xs text-stone-500">{narrationNote}</p> : null}
-        {narrationSources.map((s) => (
-          <p key={s.url || s.title} className="mt-2 text-xs">
-            {s.url ? (
-              <a className="font-semibold text-primary underline" href={s.url} rel="noopener noreferrer" target="_blank">
-                {s.title}
-              </a>
-            ) : (
-              s.title
-            )}
-          </p>
-        ))}
-      </section>
+      <PlaceNarrationPanel stopTitle={place.name} description={narrationDescription} />
 
       <AddToActiveRouteButton
         title={place.name}
         latitude={place.lat}
         longitude={place.lng}
-        description={story}
+        description={narrationDescription}
         googlePlaceId={place.place_id}
         className="mb-2"
       />
 
-      <section className="space-y-3 rounded-[22px] border border-stone-900/10 bg-white/90 p-4 dark:border-white/10 dark:bg-zinc-900/95">
-        <h2 className="font-display text-lg font-bold">Rota</h2>
-        <div className="flex flex-wrap gap-2">
-          {(['WALK', 'DRIVE'] as const).map((mode) => (
-            <button
-              key={mode}
-              type="button"
-              className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
-                travelMode === mode ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
-              }`}
-              onClick={() => setTravelMode(mode)}
-            >
-              {mode === 'WALK' ? 'Yürüyüş' : 'Araç'}
-            </button>
-          ))}
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
-              originMode === 'pick' ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
-            }`}
-            onClick={() => {
-              setOriginMode('pick');
-              setPickOriginActive(true);
-            }}
-          >
-            Haritadan başlangıç
-          </button>
-          <button
-            type="button"
-            className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
-              originMode === 'gps' ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
-            }`}
-            onClick={() => setOriginMode('gps')}
-          >
-            GPS konumum
-          </button>
-        </div>
-        {pickOriginActive && originMode === 'pick' ? (
-          <p className="text-xs text-stone-600 dark:text-stone-400">
-            Önizleme haritasına dokunarak başlangıç seçin.
-            {userOrigin ? ` Seçili: ${userOrigin.lat.toFixed(4)}, ${userOrigin.lng.toFixed(4)}` : ''}
-          </p>
-        ) : null}
-        <div className="flex flex-wrap gap-2">
-          <button
-            type="button"
-            className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
-            onClick={() => {
-              if (userOrigin) setWaypoints((w) => [...w, userOrigin]);
-            }}
-            disabled={!userOrigin}
-          >
-            Ara durak ekle (başlangıç)
-          </button>
-          {waypoints.length > 0 ? (
-            <button
-              type="button"
-              className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
-              onClick={() => setWaypoints([])}
-            >
-              Ara durakları temizle ({waypoints.length})
-            </button>
+      <section className="space-y-4 rounded-[22px] border border-stone-900/10 bg-white/90 p-4 dark:border-white/10 dark:bg-zinc-900/95">
+        <h2 className="font-display text-lg font-bold">{t('route.planTitle', 'Rota planla')}</h2>
+
+        <div className="space-y-3">
+          <div className="rounded-xl border border-stone-900/10 p-3 dark:border-white/10">
+            <p className="text-xs font-bold uppercase tracking-wide text-primary">
+              {t('route.step1', '1) Başlangıç')}
+            </p>
+            <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+              {t('route.step1Hint', 'Konumunuzu veya haritadan bir başlangıç noktası seçin.')}
+            </p>
+            <div className="mt-2 flex flex-wrap gap-2">
+              <button
+                type="button"
+                className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
+                  originMode === 'gps' ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
+                }`}
+                onClick={() => {
+                  setOriginMode('gps');
+                  setRouteStep(2);
+                }}
+              >
+                {t('route.myLocation', 'Konumum')}
+              </button>
+              <button
+                type="button"
+                className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
+                  originMode === 'pick' ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
+                }`}
+                onClick={() => {
+                  setOriginMode('pick');
+                  setPickOriginActive(true);
+                  setRouteStep(2);
+                }}
+              >
+                {t('route.pickOnMap', 'Haritadan seç')}
+              </button>
+            </div>
+          </div>
+
+          {routeStep >= 2 ? (
+            <div className="rounded-xl border border-stone-900/10 p-3 dark:border-white/10">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary">
+                {t('route.step2', '2) Ara durak (isteğe bağlı)')}
+              </p>
+              <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+                {t('route.step2Hint', 'Yolda uğramak istediğiniz bir nokta ekleyebilirsiniz.')}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
+                  onClick={() => {
+                    if (userOrigin) setWaypoints((w) => [...w, userOrigin]);
+                    setRouteStep(3);
+                  }}
+                  disabled={!userOrigin}
+                >
+                  {t('route.addWaypoint', 'Ara durak ekle')}
+                </button>
+                {waypoints.length > 0 ? (
+                  <button
+                    type="button"
+                    className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
+                    onClick={() => setWaypoints([])}
+                  >
+                    {t('route.clearWaypoints', 'Temizle')} ({waypoints.length})
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    className="tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold text-primary underline"
+                    onClick={() => setRouteStep(3)}
+                  >
+                    {t('route.skipWaypoint', 'Atla →')}
+                  </button>
+                )}
+              </div>
+            </div>
+          ) : null}
+
+          {routeStep >= 3 ? (
+            <div className="rounded-xl border border-stone-900/10 p-3 dark:border-white/10">
+              <p className="text-xs font-bold uppercase tracking-wide text-primary">
+                {t('route.step3', '3) Rotayı çiz')}
+              </p>
+              <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+                {t('route.step3Hint', 'Yürüyüş veya araç modunu seçip rotayı hesaplayın.')}
+              </p>
+              <div className="mt-2 flex flex-wrap gap-2">
+                {(['WALK', 'DRIVE'] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    type="button"
+                    className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
+                      travelMode === mode ? 'bg-primary text-white' : 'border border-stone-300 dark:border-zinc-600'
+                    }`}
+                    onClick={() => setTravelMode(mode)}
+                  >
+                    {mode === 'WALK' ? t('route.walk', 'Yürüyüş') : t('route.drive', 'Araç')}
+                  </button>
+                ))}
+              </div>
+              <LoadingButton
+                className="mt-3 w-full"
+                type="button"
+                loading={routeLoading}
+                loadingLabel={t('route.calculating', 'Rota hesaplanıyor…')}
+                onClick={handleRoute}
+              >
+                <Navigation className="h-5 w-5" aria-hidden="true" />
+                {t('route.drawRoute', 'Rotayı çiz')}
+              </LoadingButton>
+            </div>
           ) : null}
         </div>
-        <LoadingButton
-          className="w-full"
-          type="button"
-          loading={routeLoading}
-          loadingLabel="Rota hesaplanıyor…"
-          onClick={handleRoute}
-        >
-          <Navigation className="h-5 w-5" aria-hidden="true" />
-          {originMode === 'gps' ? 'Konumumdan rotayı çiz' : 'Seçilen başlangıçtan rotayı çiz'}
-        </LoadingButton>
         {routeError ? (
           <p className="text-sm font-medium text-red-700" role="alert">
             {routeError}
@@ -391,6 +346,14 @@ export default function GooglePlaceDetailPage(): ReactElement {
                 ))}
               </ol>
             ) : null}
+            <a
+              className="tap-scale flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-stone-300 text-sm font-bold text-stone-800 dark:border-zinc-600"
+              href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}${userOrigin ? `&origin=${userOrigin.lat},${userOrigin.lng}` : ''}`}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              {t('route.openInGoogleMaps', "Google Maps'te aç")}
+            </a>
             <button
               type="button"
               className="tap-scale w-full min-h-[44px] rounded-xl border-2 border-primary text-sm font-bold text-primary"

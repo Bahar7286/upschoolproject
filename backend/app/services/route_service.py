@@ -34,12 +34,18 @@ class RouteService:
         *,
         allow_unpublished: bool = False,
         include_moderation: bool = False,
+        viewer_user_id: int | None = None,
+        viewer_role: str | None = None,
     ) -> RouteResponse:
         route = await self.repository.get_by_id(route_id)
         if not route:
             raise RouteNotFoundError(route_id)
-        if not allow_unpublished and route.status != 'published':
-            raise RouteNotFoundError(route_id)
+        if route.status != 'published' and not allow_unpublished:
+            can_view_draft = viewer_role == 'admin' or (
+                viewer_role == 'guide' and viewer_user_id is not None and route.guide_id == viewer_user_id
+            )
+            if not can_view_draft:
+                raise RouteNotFoundError(route_id)
         return self._to_response(route, include_moderation=include_moderation)
 
     async def route_exists(self, route_id: int) -> bool:

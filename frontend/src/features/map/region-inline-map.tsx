@@ -110,8 +110,10 @@ export function RegionInlineMap({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-stone-600 dark:text-stone-400">
           {geoLoading ? 'Harita yükleniyor…' : regionLabel}
-          {nearby?.places.length != null ? ` · ${nearby.places.length} canlı pin` : ''}
-          {showDbCount && dbPlaces.length > 0 ? ` · ${dbPlaces.length} DB mekan` : ''}
+          {nearby?.places.length != null ? ` · ${nearby.places.length} yer` : ''}
+          {import.meta.env.DEV && showDbCount && dbPlaces.length > 0
+            ? ` · ${dbPlaces.length} katalog`
+            : ''}
         </p>
         <Link className="text-xs font-bold text-primary hover:underline" to={mapLink}>
           Tam ekran harita →
@@ -121,7 +123,7 @@ export function RegionInlineMap({
       {placesError ? (
         <p className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-950 dark:text-amber-100" role="alert">
           {formatApiError(placesError)}
-          <span className="mt-1 block">Backend çalışıyor mu? GOOGLE_PLACES_API_KEY tanımlı mı?</span>
+          <span className="mt-1 block">Harita verisi şu an alınamadı; listeden mekan seçmeye devam edebilirsin.</span>
         </p>
       ) : null}
 

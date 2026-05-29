@@ -1,4 +1,6 @@
 import logging
+import time
+from hashlib import sha256
 
 from app.core.config import settings
 from app.core.exceptions import RouteNotFoundError
@@ -25,6 +27,14 @@ from app.services.stop_service import StopService
 from app.utils.geolocation import calculate_distance_meters, is_user_near_location
 
 logger = logging.getLogger(__name__)
+
+_NARRATION_CACHE: dict[str, tuple[float, StopNarrationResponse]] = {}
+_NARRATION_TTL_SEC = 3600
+
+
+def _narration_cache_key(title: str, desc: str, langs: tuple[str, ...]) -> str:
+    raw = f'{title.strip().lower()}|{desc[:600]}|{";".join(sorted(langs))}'
+    return sha256(raw.encode()).hexdigest()
 
 _CITY_POI = {
     'Istanbul': (41.0082, 28.9784),
@@ -235,6 +245,16 @@ class AIService:
         )
 
     async def preview_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
+        langs = tuple(payload.languages or ['tr', 'en'])
+        cache_key = _narration_cache_key(
+            payload.stop_title,
+            payload.description or '',
+            langs,
+        )
+        cached = _NARRATION_CACHE.get(cache_key)
+        if cached and time.time() - cached[0] < _NARRATION_TTL_SEC:
+            return cached[1]
+
         wiki_text, wiki_sources = await fetch_wikipedia_summary(payload.stop_title)
         enriched = payload
         if wiki_text:
@@ -242,18 +262,20 @@ class AIService:
             enriched = StopNarrationRequest(
                 stop_title=payload.stop_title,
                 description=desc[:4000],
-                languages=payload.languages,
+                languages=list(langs),
             )
         sources = [NarrationSource(title=s['title'], url=s.get('url', '')) for s in wiki_sources]
         if settings.llm_enabled:
             try:
                 result = await self._llm_narration(enriched)
                 result.sources = sources
+                _NARRATION_CACHE[cache_key] = (time.time(), result)
                 return result
             except LLMServiceError as exc:
                 logger.warning('LLM narration failed: %s', exc)
         result = self._rule_narration(enriched)
         result.sources = sources
+        _NARRATION_CACHE[cache_key] = (time.time(), result)
         return result
 
     async def chat_assistant(self, payload: AssistantChatRequest) -> AssistantChatResponse:
@@ -318,14 +340,14 @@ class AIService:
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']
         system = (
-            'Sen tarihî sesli rehbersin. Doğru, kaynaklı ve detaylı anlatımlar yaz; '
+            'Sen tarihî sesli rehbersin. Doğru, kaynaklı ve zengin anlatımlar yaz; '
             'uydurma tarih verme. Yalnızca JSON: {"scripts":{"tr":"...","en":"...","de":"..."}} '
             'İstenen diller için anahtarları doldur.'
         )
         user = (
             f'Mekan: {payload.stop_title}. Bağlam ve kaynak özeti: '
             f'{payload.description or "Genel tarihî bilgi"}. '
-            f'Diller: {langs}. Her dilde 4-6 cümle, tarihî önem vurgula.'
+            f'Diller: {langs}. Her dilde 150-250 kelime; tarih, kültür ve pratik ipuçları ekle.'
         )
         data = await llm_service.complete_json(system=system, user=user)
         scripts_raw = data.get('scripts', data) if isinstance(data, dict) else {}
@@ -334,31 +356,40 @@ class AIService:
             code = lang.lower()[:2]
             text = scripts_raw.get(code) or scripts_raw.get(lang)
             if text:
-                scripts[code] = str(text).strip()[:1200]
+                scripts[code] = str(text).strip()[:2500]
         if not scripts:
             raise LLMServiceError('Boş narration scripts')
         return StopNarrationResponse(
             stop_title=payload.stop_title,
             scripts=scripts,
-            note='Anlatım OpenRouter LLM ile üretildi.',
+            note='',
         )
 
     @staticmethod
     def _rule_narration(payload: StopNarrationRequest) -> StopNarrationResponse:
-        base = payload.description.strip() or f'{payload.stop_title} hakkında kısa bir tarihî anlatım.'
+        title = payload.stop_title.strip()
+        base = (payload.description or '').strip()
+        if not base:
+            base = f'{title} Türkiye\'nin önemli kültür ve gezi noktalarından biridir.'
         scripts: dict[str, str] = {}
         for lang in payload.languages:
             code = lang.lower()[:2]
             if code == 'en':
-                scripts['en'] = f'Welcome. {base[:400]}'
+                scripts['en'] = (
+                    f'You are visiting {title}. {base[:900]} '
+                    'Take your time to explore the surroundings and check opening hours before you go.'
+                )
             elif code == 'de':
-                scripts['de'] = f'Willkommen. {base[:400]}'
+                scripts['de'] = f'Sie besuchen {title}. {base[:900]}'
             else:
-                scripts['tr'] = f'Hoş geldiniz. {base[:400]}'
+                scripts['tr'] = (
+                    f'{title} noktasındasınız. {base[:900]} '
+                    'Çevreyi keşfederken ziyaret saatlerini kontrol etmeyi unutmayın.'
+                )
         return StopNarrationResponse(
             stop_title=payload.stop_title,
             scripts=scripts,
-            note='Kural tabanlı önizleme (LLM anahtarı yok).',
+            note='',
         )
 
     async def narration_audio(self, payload: NarrationAudioRequest) -> NarrationAudioResponse:

@@ -68,9 +68,9 @@ export default function ForgotPasswordPage(): ReactElement {
                 {message}
               </p>
             ) : null}
-            {resetUrl ? (
+            {resetUrl && import.meta.env.DEV ? (
               <p className="break-anywhere rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs">
-                <strong>Geliştirme bağlantısı:</strong>{' '}
+                <strong>Geliştirici bağlantısı:</strong>{' '}
                 <Link
                   className="font-bold text-primary underline"
                   to={(() => {

@@ -17,9 +17,13 @@ async def list_cities(service: CityService = Depends(get_city_service)) -> list[
 @router.get('/{city_id}/districts', response_model=list[DistrictResponse])
 async def list_city_districts(
     city_id: int,
+    cities: CityService = Depends(get_city_service),
     districts: DistrictService = Depends(get_district_service),
 ) -> list[DistrictResponse]:
     if city_id <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid city id')
+    city = await cities.get_by_id(city_id)
+    if not city:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='City not found')
     return await districts.list_by_city_id(city_id)
 

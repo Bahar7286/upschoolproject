@@ -40,7 +40,7 @@ const FEATURES = [
     icon: Headphones,
     title: 'Sesli rehberlik',
     text: 'TR / EN / DE TTS; durak anlatımları ve offline kayıt.',
-    to: '/audio',
+    to: '/cities',
   },
   {
     icon: Award,

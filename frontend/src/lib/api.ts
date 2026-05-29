@@ -1,4 +1,22 @@
 const DEFAULT_BASE = 'http://127.0.0.1:8000';
+const MAX_NETWORK_RETRIES = 3;
+const RETRY_BASE_MS = 400;
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function isRetryableNetworkError(error: unknown): boolean {
+  if (error instanceof ApiError) {
+    return error.status === 0;
+  }
+  if (error instanceof TypeError) return true;
+  if (error instanceof Error) {
+    const msg = error.message.toLowerCase();
+    return msg.includes('failed to fetch') || msg.includes('network');
+  }
+  return false;
+}
 
 export function getApiBaseUrl(): string {
   const raw = import.meta.env.VITE_API_BASE_URL;
@@ -41,14 +59,28 @@ async function requestJsonImpl<T>(
     headers.Authorization = `Bearer ${accessToken}`;
   }
 
-  let response: Response;
-  try {
-    response = await fetch(`${base}${rel}`, {
-      ...init,
-      headers,
-    });
-  } catch (err) {
-    const msg = err instanceof Error ? err.message : 'Network error';
+  let response!: Response;
+  let lastNetworkError: unknown;
+  for (let attempt = 0; attempt < MAX_NETWORK_RETRIES; attempt += 1) {
+    try {
+      response = await fetch(`${base}${rel}`, {
+        ...init,
+        headers,
+      });
+      lastNetworkError = undefined;
+      break;
+    } catch (err) {
+      lastNetworkError = err;
+      if (attempt < MAX_NETWORK_RETRIES - 1 && isRetryableNetworkError(err)) {
+        await sleep(RETRY_BASE_MS * 2 ** attempt);
+        continue;
+      }
+      const msg = err instanceof Error ? err.message : 'Network error';
+      throw new ApiError(msg, 0, '');
+    }
+  }
+  if (lastNetworkError) {
+    const msg = lastNetworkError instanceof Error ? lastNetworkError.message : 'Network error';
     throw new ApiError(msg, 0, '');
   }
 
@@ -99,6 +131,16 @@ export async function requestMultipartWithAuth<T>(
   return JSON.parse(text) as T;
 }
 
+export async function pingHealth(): Promise<boolean> {
+  try {
+    const base = getApiBaseUrl().replace(/\/$/, '');
+    const response = await fetch(`${base}/health`, { method: 'GET' });
+    return response.ok;
+  } catch {
+    return false;
+  }
+}
+
 /** FastAPI `detail` alanını Türkçe kullanıcı mesajına çevirir. */
 export function formatApiError(error: unknown): string {
   if (error instanceof ApiError) {
@@ -135,10 +177,10 @@ export function formatApiError(error: unknown): string {
       if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
         return 'Sunucuya bağlanılamadı. Birkaç dakika sonra tekrar deneyin veya sayfayı yenileyin.';
       }
-      return 'Sunucuya bağlanılamadı. API adresini kontrol edin.';
+      return 'Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar deneyin.';
     }
     if (error.status === 503) {
-      return 'Bu özellik şu an kullanılamıyor. Yönetici Google API anahtarlarını yapılandırmalı.';
+      return 'Harita ve mekan bilgisi şu an kullanılamıyor. Lütfen daha sonra tekrar deneyin.';
     }
 
     return error.message || `İstek başarısız (${error.status}).`;
@@ -149,7 +191,7 @@ export function formatApiError(error: unknown): string {
       if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
         return 'Sunucuya bağlanılamadı. Bağlantınızı kontrol edip tekrar deneyin.';
       }
-      return 'Sunucuya bağlanılamadı. Backend çalışıyor mu?';
+      return 'Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar deneyin.';
     }
     return error.message;
   }

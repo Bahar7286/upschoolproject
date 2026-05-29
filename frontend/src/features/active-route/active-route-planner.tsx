@@ -2,8 +2,9 @@ import { ListPlus, Trash2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useState } from 'react';
 
+import { ErrorAlert } from '../../components/ui/error-alert';
 import { findInsertAfterOrder, type MergedRouteStop } from '../../lib/merge-route-stops';
-import { formatApiError } from '../../lib/api';
+import { ApiError, formatApiError } from '../../lib/api';
 import { addTripExtraStop, removeTripExtraStop } from '../../services/trip-extra-stop-service';
 import { useActiveRouteStore } from '../../stores/active-route-store';
 import { useAuthStore } from '../../stores/auth-store';
@@ -105,7 +106,10 @@ export function useAddPlaceToActiveRoute() {
     google_place_id?: string;
     insertAfterCurrent?: boolean;
   }): Promise<string | null> => {
-    if (!routeId || !accessToken) {
+    if (!accessToken) {
+      return 'Bu işlem için giriş yapmanız gerekir.';
+    }
+    if (!routeId) {
       return 'Önce bir rotayı başlatın (rota detay → Rotayı başlat).';
     }
     const merged = mergedStops();
@@ -125,6 +129,9 @@ export function useAddPlaceToActiveRoute() {
       addExtraStopLocal(created);
       return null;
     } catch (err) {
+      if (err instanceof ApiError && err.status === 403) {
+        return 'Bu rotayı satın almanız veya ücretsiz rota seçmeniz gerekir.';
+      }
       return formatApiError(err);
     }
   };
@@ -155,33 +162,59 @@ export function AddToActiveRouteButton({
 
   if (!routeId) return <></>;
 
+  const needsLogin = msg.includes('giriş');
+
+  const runAdd = () => {
+    setBusy(true);
+    setMsg('');
+    void addPlace({
+      title,
+      latitude,
+      longitude,
+      description,
+      place_id: placeId,
+      google_place_id: googlePlaceId,
+      insertAfterCurrent: true,
+    }).then((err) => {
+      setMsg(err ?? 'Rotaya eklendi ✓');
+      setBusy(false);
+    });
+  };
+
   return (
     <div className={className}>
       <button
         type="button"
         className="tap-scale inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-xl border-2 border-amber-500 bg-amber-50 px-4 text-sm font-bold text-amber-950 dark:bg-amber-950/40 dark:text-amber-100"
         disabled={busy}
-        onClick={() => {
-          setBusy(true);
-          setMsg('');
-          void addPlace({
-            title,
-            latitude,
-            longitude,
-            description,
-            place_id: placeId,
-            google_place_id: googlePlaceId,
-            insertAfterCurrent: true,
-          }).then((err) => {
-            setMsg(err ?? 'Rotaya eklendi ✓');
-            setBusy(false);
-          });
-        }}
+        onClick={runAdd}
       >
         <ListPlus className="h-5 w-5" aria-hidden="true" />
         {busy ? 'Ekleniyor…' : 'Aktif rotaya ekle (sonrasına)'}
       </button>
-      {msg ? <p className="mt-2 text-xs font-medium text-stone-600">{msg}</p> : null}
+      {msg && needsLogin ? (
+        <ErrorAlert
+          error={{
+            kind: 'unauthorized',
+            message: msg,
+            actionLabel: 'Giriş yap',
+            actionTo: '/login',
+          }}
+          onRetry={runAdd}
+        />
+      ) : msg ? (
+        <p
+          className={`mt-2 text-xs font-medium ${msg.includes('eklendi') ? 'text-primary' : 'text-red-700'}`}
+          role="status"
+        >
+          {msg}
+          {!msg.includes('eklendi') && !needsLogin ? (
+            <button type="button" className="ml-2 font-bold text-primary underline" onClick={runAdd}>
+              Tekrar dene
+            </button>
+          ) : null}
+        </p>
+      ) : null}
     </div>
   );
 }

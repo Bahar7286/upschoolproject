@@ -280,13 +280,15 @@ export default function RouteDetailPage(): ReactElement {
           ) : (
             <>
               <span aria-hidden="true">·</span>
-              <span>Rehber #{route.guide_id}</span>
+              <Link className="font-semibold underline" to={`/rehberler/${route.guide_id}`}>
+                Rehber profili
+              </Link>
             </>
           )}
         </p>
         {!stripeEnabled ? (
           <p className="mt-2 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-100">
-            Demo ödeme modu — gerçek tahsilat yok.{' '}
+            Test ödemesi — gerçek ücret alınmaz.{' '}
             <Link className="underline" to="/odeme-guvenlik">
               Detay
             </Link>
@@ -342,7 +344,7 @@ export default function RouteDetailPage(): ReactElement {
             <>
               <Link
                 className="tap-scale responsive-btn rounded-xl border-2 border-white/40 px-5 font-semibold text-white hover:bg-white/10"
-                to="/audio"
+                to="/map?active=1"
               >
                 <Headphones className="h-5 w-5" aria-hidden="true" />
                 Sesli rehber

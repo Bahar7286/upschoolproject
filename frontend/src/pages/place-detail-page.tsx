@@ -1,25 +1,23 @@
 import { useQuery } from '@tanstack/react-query';
-import { Headphones, Volume2 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { AddToActiveRouteButton } from '../features/active-route/active-route-planner';
 import { DirectionsCta, VenueDetailHero } from '../components/explore/venue-detail-hero';
+import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
 import { getRichPlaceContent } from '../data/place-rich-content';
-import { useSpeech } from '../hooks/use-speech';
 import { resolvePlaceImage } from '../lib/region-images';
 import { formatApiError } from '../lib/api';
 import { listCities } from '../services/city-service';
 import { getPlace } from '../services/place-service';
 import { addFavorite, listFavorites, removeFavorite } from '../services/favorite-service';
-import { PLACE_CATEGORY_LABELS, type PlaceResponse } from '../types/place';
+import type { PlaceResponse } from '../types/place';
 import { useAuthStore } from '../stores/auth-store';
 
 export default function PlaceDetailPage(): ReactElement {
   const { placeId } = useParams();
   const id = Number(placeId);
-  const { speak, stop, speaking, supported } = useSpeech();
   const [place, setPlace] = useState<PlaceResponse | null>(null);
   const [error, setError] = useState('');
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -53,9 +51,8 @@ export default function PlaceDetailPage(): ReactElement {
     })();
     return () => {
       cancelled = true;
-      stop();
     };
-  }, [id, stop, accessToken]);
+  }, [id, accessToken]);
 
   if (error) {
     return (
@@ -70,7 +67,7 @@ export default function PlaceDetailPage(): ReactElement {
   }
 
   const { story, tips, hours } = getRichPlaceContent(place.name, place.category, place.description);
-  const fullNarration = `${place.name}. ${PLACE_CATEGORY_LABELS[place.category]}. ${place.district}, ${place.city}. ${story}`;
+  const narrationContext = `${story} ${place.description}`.trim();
   const backTo = cityRow ? `/cities/${cityRow.city_id}` : '/cities';
 
   return (
@@ -132,24 +129,7 @@ export default function PlaceDetailPage(): ReactElement {
 
         <DirectionsCta lat={place.latitude} lng={place.longitude} />
 
-        <section className="rounded-2xl border border-primary/20 bg-primary/5 p-4 dark:border-primary/30">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold">
-              <Headphones className="h-5 w-5 text-primary" aria-hidden="true" />
-              Sesli anlatım
-            </h2>
-            {supported ? (
-              <button
-                type="button"
-                className="tap-scale inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-primary px-4 font-bold text-white"
-                onClick={() => (speaking ? stop() : speak(fullNarration))}
-              >
-                <Volume2 className="h-4 w-4" aria-hidden="true" />
-                {speaking ? 'Durdur' : 'Dinle'}
-              </button>
-            ) : null}
-          </div>
-        </section>
+        <PlaceNarrationPanel stopTitle={place.name} description={narrationContext} />
 
         {hours ? <p className="text-sm font-semibold text-stone-600">{hours}</p> : null}
 

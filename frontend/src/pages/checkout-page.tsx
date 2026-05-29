@@ -145,7 +145,7 @@ export default function CheckoutPage(): ReactElement {
         <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-theme">Güvenli ödeme</h1>
         <p className="mt-1 text-sm text-theme-muted">{state.title}</p>
         <p className="mt-2 text-xs text-theme-muted">
-          {stripeEnabled ? 'Gerçek ödeme: Stripe Checkout.' : 'Demo mod: gerçek tahsilat yapılmaz.'}{' '}
+          Ödemen güvenli bağlantı ile işlenir.{' '}
           <Link className="font-semibold text-primary underline" to="/odeme-guvenlik">
             Ödeme güvenliği
           </Link>
@@ -200,7 +200,7 @@ export default function CheckoutPage(): ReactElement {
         <form className="theme-card space-y-4 p-5" onSubmit={handleDemoPay}>
           <div className="flex items-center gap-2 text-sm font-semibold text-theme-muted">
             <Lock className="h-4 w-4 text-primary" aria-hidden="true" />
-            Demo kart (Stripe anahtarı yok — geliştirme)
+            Test ödemesi
           </div>
           <label className="block text-sm font-semibold">
             Kart üzerindeki isim
@@ -254,10 +254,10 @@ export default function CheckoutPage(): ReactElement {
             disabled={busy}
             type="submit"
           >
-            {busy ? 'İşleniyor…' : `₺${state.amount.toFixed(2)} öde (demo)`}
+            {busy ? 'İşleniyor…' : `₺${state.amount.toFixed(2)} öde`}
           </button>
           <p className="text-center text-xs text-theme-muted">
-            Üretim: backend `.env` içine `STRIPE_SECRET_KEY` ve `STRIPE_PUBLISHABLE_KEY` ekleyin.
+            Bu ortamda gerçek ücret tahsil edilmez; yalnızca deneme amaçlı kayıt oluşturulur.
           </p>
         </form>
       )}
