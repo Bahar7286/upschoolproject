@@ -1,4 +1,10 @@
 {
+  "auth": {
+    "login": "Log in",
+    "register": "Sign up",
+    "logout": "Log out",
+    "traveler": "Traveler"
+  },
   "nav": {
     "discover": "Discover",
     "cities": "Cities",
@@ -9,9 +15,36 @@
     "assistant": "Assistant",
     "favorites": "Favorites",
     "audio": "Audio",
+    "audioGuide": "Audio guide",
     "preferences": "Trip preferences",
+    "interests": "Interests",
     "purchases": "Purchases",
-    "profile": "Profile"
+    "profile": "Profile",
+    "admin": "Admin",
+    "panel": "Dashboard",
+    "verification": "Verification",
+    "settings": "Settings",
+    "menu": "Menu",
+    "menuOpen": "Open menu",
+    "menuClose": "Close menu",
+    "mainMenu": "Main menu"
+  },
+  "discover": {
+    "offlineDemo": "Cannot reach server — showing sample routes.",
+    "offlineDemoHint": "Refresh when back online, or continue from the Cities tab."
+  },
+  "district": {
+    "pickCategory": "Choose a category",
+    "pickCategoryHint": "Pick sightseeing, dining, or accommodation to see places.",
+    "museum": "Sightseeing",
+    "museumDesc": "Museums, history and attractions",
+    "restaurant": "Food & drink",
+    "restaurantDesc": "Restaurants, cafés and local food",
+    "accommodation": "Stay",
+    "accommodationDesc": "Hotels and lodging",
+    "backCategories": "← Categories",
+    "searchPlaceholder": "Search places",
+    "venueCount": "{count} places"
   },
   "profile": {
     "preferences": "Preferences",

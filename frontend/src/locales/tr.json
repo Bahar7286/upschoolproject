@@ -1,4 +1,10 @@
 {
+  "auth": {
+    "login": "Giriş",
+    "register": "Kayıt",
+    "logout": "Çıkış",
+    "traveler": "Gezgin"
+  },
   "nav": {
     "discover": "Keşfet",
     "cities": "İller",
@@ -9,9 +15,36 @@
     "assistant": "Asistan",
     "favorites": "Favori",
     "audio": "Ses",
+    "audioGuide": "Sesli rehber",
     "preferences": "Gezi tercihleri",
+    "interests": "İlgi alanları",
     "purchases": "Satın alımlar",
-    "profile": "Profil"
+    "profile": "Profil",
+    "admin": "Admin",
+    "panel": "Panel",
+    "verification": "Doğrulama",
+    "settings": "Ayarlar",
+    "menu": "Menü",
+    "menuOpen": "Menüyü aç",
+    "menuClose": "Menüyü kapat",
+    "mainMenu": "Ana menü"
+  },
+  "discover": {
+    "offlineDemo": "Sunucuya ulaşılamadı — örnek rotalar gösteriliyor.",
+    "offlineDemoHint": "Bağlantı düzelince sayfayı yenileyin veya İller sekmesinden keşfe devam edin."
+  },
+  "district": {
+    "pickCategory": "Kategori seçin",
+    "pickCategoryHint": "Gezilecek yerler, yeme-içme ve konaklama mekanlarını görmek için bir kategori seçin.",
+    "museum": "Gezilecek",
+    "museumDesc": "Müze, tarih ve turistik noktalar",
+    "restaurant": "Yeme-İçme",
+    "restaurantDesc": "Restoran, kafe ve lezzet durakları",
+    "accommodation": "Konaklama",
+    "accommodationDesc": "Otel ve konaklama seçenekleri",
+    "backCategories": "← Kategoriler",
+    "searchPlaceholder": "Mekan ara",
+    "venueCount": "{count} mekan"
   },
   "profile": {
     "preferences": "Tercihler",

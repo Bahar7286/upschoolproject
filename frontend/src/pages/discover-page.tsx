@@ -8,7 +8,9 @@ import { DiscoverLoading } from '../components/loading/discover-loading';
 import { ListSkeleton } from '../components/loading/page-skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import { ErrorAlert } from '../components/ui/error-alert';
+import { DEMO_ROUTES } from '../data/demo-routes';
 import { EMPTY_STATES } from '../content/empty-states';
+import { useI18n } from '../lib/i18n';
 import { fetchAiStatus, recommendWithAi, type AIRecommendationItem } from '../services/ai-service';
 import { useRoutesQuery } from '../hooks/use-routes-query';
 import { mapError } from '../lib/user-errors';
@@ -24,9 +26,12 @@ function isScoredRoute(route: RouteResponse | ScoredRoute): route is ScoredRoute
 }
 
 export default function DiscoverPage(): ReactElement {
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const { data: routes = [], isPending, isError, error, refetch } = useRoutesQuery();
+  const usingOfflineDemo = isError && routes.length === 0;
+  const routeSource = usingOfflineDemo ? DEMO_ROUTES : routes;
   const { data: aiStatus } = useQuery({
     queryKey: ['ai', 'status'],
     queryFn: fetchAiStatus,
@@ -77,9 +82,9 @@ export default function DiscoverPage(): ReactElement {
             interests: effectiveInterests,
             duration_minutes: effectiveDuration,
             budget: effectiveBudget,
-          }).catch(() => routes),
+          }).catch(() => routeSource),
         ]);
-        const byId = new Map(routes.map((r) => [r.route_id, r]));
+        const byId = new Map(routeSource.map((r) => [r.route_id, r]));
         const scored: ScoredRoute[] = [];
         const seen = new Set<number>();
 
@@ -96,7 +101,7 @@ export default function DiscoverPage(): ReactElement {
             scored.push(route);
           }
         }
-        if (scored.length === 0) return routes;
+        if (scored.length === 0) return routeSource;
         const cityNorm = effectiveCity.toLowerCase();
         const cityFiltered = scored.filter((r) => r.city.toLowerCase().includes(cityNorm));
         return cityFiltered.length > 0 ? cityFiltered : scored;
@@ -110,7 +115,7 @@ export default function DiscoverPage(): ReactElement {
   const showAiPanel = searchParams.get('ai') === '1' || recommendMutation.data != null;
 
   useEffect(() => {
-    if (searchParams.get('ai') !== '1' || routes.length === 0) return;
+    if (searchParams.get('ai') !== '1' || routeSource.length === 0) return;
     if (recommendMutation.isPending || recommendMutation.isSuccess) return;
     recommendMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca landing ?ai=1 ile bir kez
@@ -122,7 +127,7 @@ export default function DiscoverPage(): ReactElement {
     const norm = cityFilter.toLowerCase();
     const filtered = base.filter((r) => r.city.toLowerCase().includes(norm));
     return filtered.length > 0 ? filtered : base;
-  }, [recommendMutation.data, routes, cityFilter]);
+  }, [recommendMutation.data, routeSource, cityFilter]);
 
   const listError = isError ? mapError(error, 'discover') : null;
   const recommendError = recommendMutation.isError
@@ -216,6 +221,18 @@ export default function DiscoverPage(): ReactElement {
         </div>
       </div>
 
+      {usingOfflineDemo ? (
+        <p
+          className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100"
+          role="status"
+        >
+          {t('discover.offlineDemo', 'Sunucuya ulaşılamadı — örnek rotalar gösteriliyor.')}{' '}
+          <span className="block mt-1 text-xs opacity-90">
+            {t('discover.offlineDemoHint', 'Bağlantı düzelince sayfayı yenileyin veya İller sekmesinden keşfe devam edin.')}
+          </span>
+        </p>
+      ) : null}
+
       {premiumMsg ? (
         <div className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm font-semibold text-amber-950 dark:text-amber-100" role="status">
           {premiumMsg} <Link className="font-bold text-primary underline" to="/premium">Premium</Link>
@@ -229,7 +246,7 @@ export default function DiscoverPage(): ReactElement {
         </p>
       ) : null}
 
-      {listError && display.length === 0 && !dismissListError ? (
+      {listError && display.length === 0 && !dismissListError && !usingOfflineDemo ? (
         <ErrorAlert
           error={{
             ...listError,

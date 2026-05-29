@@ -4,7 +4,9 @@ import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 
+import { BackButton } from '../components/ui/back-button';
 import { ExploreHero } from '../components/explore/explore-hero';
+import { useI18n } from '../lib/i18n';
 import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-card';
 import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
@@ -16,17 +18,6 @@ import { listPlaces } from '../services/place-service';
 import type { GooglePlaceSummary } from '../types/google';
 import type { PlaceCategory, PlaceResponse } from '../types/place';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
-
-const DISTRICT_CATEGORIES: {
-  id: PlaceCategory;
-  label: string;
-  description: string;
-  icon: typeof Landmark;
-}[] = [
-  { id: 'museum', label: 'Gezilecek', description: 'Müze, tarih ve turistik noktalar', icon: Landmark },
-  { id: 'restaurant', label: 'Yeme-İçme', description: 'Restoran, kafe ve lezzet durakları', icon: Utensils },
-  { id: 'accommodation', label: 'Konaklama', description: 'Otel ve konaklama seçenekleri', icon: BedDouble },
-];
 
 function normName(s: string): string {
   return s
@@ -60,6 +51,7 @@ function mergeVenues(
 }
 
 export default function DistrictPlacesPage(): ReactElement {
+  const { t } = useI18n();
   const { cityId, districtId } = useParams();
   const city_id = Number(cityId);
   const district_id = Number(districtId);
@@ -86,6 +78,32 @@ export default function DistrictPlacesPage(): ReactElement {
   );
 
   const base = `/cities/${city_id}/districts/${district_id}`;
+  const cityBack = city ? `/cities/${city.city_id}` : '/cities';
+
+  const districtCategories = useMemo(
+    () =>
+      [
+        {
+          id: 'museum' as const,
+          label: t('district.museum', 'Gezilecek'),
+          description: t('district.museumDesc', 'Müze, tarih ve turistik noktalar'),
+          icon: Landmark,
+        },
+        {
+          id: 'restaurant' as const,
+          label: t('district.restaurant', 'Yeme-İçme'),
+          description: t('district.restaurantDesc', 'Restoran, kafe ve lezzet durakları'),
+          icon: Utensils,
+        },
+        {
+          id: 'accommodation' as const,
+          label: t('district.accommodation', 'Konaklama'),
+          description: t('district.accommodationDesc', 'Otel ve konaklama seçenekleri'),
+          icon: BedDouble,
+        },
+      ] as const,
+    [t],
+  );
 
   const { data: center } = useQuery({
     queryKey: ['geo-center', district_id],
@@ -138,26 +156,26 @@ export default function DistrictPlacesPage(): ReactElement {
 
   if (!category) {
     return (
-      <section className="mx-auto max-w-3xl" aria-labelledby="district-hub-title">
+      <section className="mx-auto max-w-3xl space-y-4" aria-labelledby="district-hub-title">
+        <BackButton to={cityBack} />
         <ExploreHero
           title={district?.name_tr ?? 'İlçe'}
           subtitle={city?.name_tr ?? ''}
-          backTo={city ? `/cities/${city.city_id}` : '/cities'}
           badge={
             <span className="inline-flex items-center gap-1.5 rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
               <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
-              Kategori seçin
+              {t('district.pickCategory', 'Kategori seçin')}
             </span>
           }
         />
         <h1 className="sr-only" id="district-hub-title">
           {district?.name_tr}
         </h1>
-        <p className="mb-4 px-1 text-sm text-theme-muted">
-          Gezilecek yerler, yeme-içme ve konaklama mekanlarını görmek için bir kategori seçin.
+        <p className="px-1 text-sm text-theme-muted">
+          {t('district.pickCategoryHint', 'Gezilecek yerler, yeme-içme ve konaklama mekanlarını görmek için bir kategori seçin.')}
         </p>
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-          {DISTRICT_CATEGORIES.map(({ id, label, description, icon: Icon }) => (
+          {districtCategories.map(({ id, label, description, icon: Icon }) => (
             <Link
               key={id}
               to={`${base}?category=${id}`}
@@ -176,14 +194,14 @@ export default function DistrictPlacesPage(): ReactElement {
   }
 
   return (
-    <section className="mx-auto max-w-3xl" aria-labelledby="district-title">
+    <section className="mx-auto max-w-3xl space-y-4" aria-labelledby="district-title">
+      <BackButton to={base} />
       <ExploreHero
         title={district?.name_tr ?? 'İlçe'}
         subtitle={`${city?.name_tr ?? ''} · ${PLACE_CATEGORY_LABELS[category]}`}
-        backTo={base}
         badge={
           <span className="inline-flex rounded-full bg-white/20 px-3 py-1 text-xs font-bold text-white backdrop-blur-sm">
-            {totalCount} mekan
+            {t('district.venueCount', '{count} mekan').replace('{count}', String(totalCount))}
           </span>
         }
       >
@@ -191,10 +209,10 @@ export default function DistrictPlacesPage(): ReactElement {
           <Search className="h-5 w-5 text-stone-400" aria-hidden="true" />
           <input
             className="w-full bg-transparent text-sm text-stone-800 outline-none"
-            placeholder="Mekan ara"
+            placeholder={t('district.searchPlaceholder', 'Mekan ara')}
             value={q}
             onChange={(e) => setQ(e.target.value)}
-            aria-label="Mekan ara"
+            aria-label={t('district.searchPlaceholder', 'Mekan ara')}
           />
         </div>
       </ExploreHero>
@@ -208,9 +226,9 @@ export default function DistrictPlacesPage(): ReactElement {
           to={base}
           className="tap-scale shrink-0 rounded-full border border-stone-900/10 bg-white px-4 py-2 text-sm font-semibold dark:border-white/10 dark:bg-zinc-900"
         >
-          ← Kategoriler
+          {t('district.backCategories', '← Kategoriler')}
         </Link>
-        {DISTRICT_CATEGORIES.map(({ id, label }) => {
+        {districtCategories.map(({ id, label }) => {
           const active = category === id;
           return (
             <Link

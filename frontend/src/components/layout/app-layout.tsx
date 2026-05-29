@@ -6,7 +6,6 @@ import {
   Headphones,
   Heart,
   LayoutDashboard,
-  LogOut,
   Map as MapIcon,
   MapPin,
   MessageCircle,
@@ -20,6 +19,7 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 
 import { OnboardingGate } from '../onboarding/onboarding-gate';
 import { BrandLogo } from '../brand/brand-logo';
+import { AuthHeaderActions } from './auth-header-actions';
 import { MobileBottomNav } from './mobile-bottom-nav';
 import { MobileHeaderMenu } from './mobile-header-menu';
 import { ThemeToggle } from '../theme/theme-toggle';
@@ -142,18 +142,18 @@ export function AppLayout(): ReactElement {
             )}
             <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/audio">
               <Headphones className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-              Ses
+              {t('nav.audio', 'Ses')}
             </NavLink>
             {isTourist ? (
               <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/onboarding">
                 <Palette className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                Gezi tercihleri
+                {t('nav.preferences', 'Gezi tercihleri')}
               </NavLink>
             ) : null}
             {isTourist ? (
               <NavLink className={({ isActive }) => `${navClass(isActive)} hidden xl:inline-flex`} to="/purchases">
                 <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                Satın alımlar
+                {t('nav.purchases', 'Satın alımlar')}
               </NavLink>
             ) : null}
             <NavLink className={({ isActive }) => navClass(isActive)} to="/profile">
@@ -167,53 +167,17 @@ export function AppLayout(): ReactElement {
             <NavLink
               className="app-chip tap-scale focus-ring hidden min-h-[44px] min-w-[44px] items-center justify-center rounded-full md:inline-flex"
               to="/profile#settings"
-              aria-label="Ayarlar"
-              title="Ayarlar"
+              aria-label={t('nav.settings', 'Ayarlar')}
+              title={t('nav.settings', 'Ayarlar')}
             >
               <Settings className="h-5 w-5 text-theme-muted" aria-hidden="true" strokeWidth={2} />
             </NavLink>
             <ThemeToggle />
-            {accessToken ? (
-              <>
-                <div
-                  className="app-chip hidden items-center gap-2 rounded-full px-3 py-1.5 md:flex"
-                  title={user?.email ?? ''}
-                >
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-xs font-bold">
-                    {initials}
-                  </span>
-                  <span className="max-w-[120px] truncate text-sm font-semibold text-theme">{user?.full_name ?? 'Gezgin'}</span>
-                </div>
-                <button
-                  className="app-chip tap-scale focus-ring inline-flex min-h-[44px] items-center gap-2 rounded-full px-3 text-sm font-semibold shadow-sm"
-                  type="button"
-                  onClick={() => {
-                    logout();
-                    navigate('/', { replace: true });
-                  }}
-                >
-                  <LogOut className="h-4 w-4 text-theme-muted" aria-hidden="true" strokeWidth={2} />
-                  <span className="hidden sm:inline text-theme">Çıkış</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <button
-                  className="app-chip tap-scale focus-ring hidden min-h-[44px] rounded-full border-2 px-4 text-sm font-semibold sm:inline-flex sm:items-center text-theme"
-                  type="button"
-                  onClick={() => navigate('/login')}
-                >
-                  Giriş
-                </button>
-                <button
-                  className="tap-scale focus-ring inline-flex min-h-[44px] rounded-full bg-primary px-4 text-sm font-bold shadow-sm"
-                  type="button"
-                  onClick={() => navigate('/register')}
-                >
-                  Kayıt
-                </button>
-              </>
-            )}
+            <AuthHeaderActions
+              accessToken={accessToken}
+              userName={user?.full_name}
+              initials={initials}
+            />
           </div>
         </div>
       </header>

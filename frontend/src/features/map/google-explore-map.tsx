@@ -60,7 +60,11 @@ export function GoogleExploreMap({
 
   const handleMarkerClick = useCallback(
     (place: GooglePlaceSummary) => {
-      navigate(`/google-places/${encodeURIComponent(place.place_id)}?back=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      navigate(
+        `/google-places/${encodeURIComponent(place.place_id)}?back=${encodeURIComponent(
+          window.location.pathname + window.location.search,
+        )}`,
+      );
     },
     [navigate],
   );
