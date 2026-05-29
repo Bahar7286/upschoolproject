@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
+import { getQuickAssistantReply } from '../lib/assistant-intent';
 import { AssistantMessageBody } from '../components/ai/assistant-message-body';
 import { BackButton } from '../components/ui/back-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
@@ -65,6 +66,13 @@ export default function AssistantPage(): ReactElement {
     const next: AssistantMessage[] = [...msgs, { role: 'user', content: text }];
     setMsgs(next);
     setInput('');
+
+    const instant = getQuickAssistantReply(text, city, district);
+    if (instant) {
+      setMsgs((prev) => [...prev, { role: 'assistant', content: instant }]);
+      return;
+    }
+
     void run(async () => {
       try {
         const apiMessages = next.filter(

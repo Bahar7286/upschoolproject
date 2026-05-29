@@ -1,7 +1,15 @@
 const DEFAULT_BASE = 'http://127.0.0.1:8000';
-const MAX_NETWORK_RETRIES = 5;
-const RETRY_BASE_MS = 600;
-const HEALTH_TIMEOUT_MS = 20_000;
+const MAX_NETWORK_RETRIES = 6;
+const RETRY_BASE_MS = 500;
+const HEALTH_TIMEOUT_MS = 25_000;
+const KEEPALIVE_MS = 4 * 60 * 1000;
+
+function isRenderWebHost(): boolean {
+  return typeof window !== 'undefined' && window.location.hostname.includes('onrender.com');
+}
+
+let apiReady = false;
+let wakeInFlight: Promise<boolean> | null = null;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -50,6 +58,9 @@ async function requestJsonImpl<T>(
   init: RequestInit | undefined,
   accessToken: string | null | undefined,
 ): Promise<T> {
+  if (isRenderWebHost() && !apiReady) {
+    await ensureApiReady();
+  }
   const base = getApiBaseUrl().replace(/\/$/, '');
   const rel = path.startsWith('/') ? path : `/${path}`;
   const headers: Record<string, string> = {
@@ -73,6 +84,10 @@ async function requestJsonImpl<T>(
     } catch (err) {
       lastNetworkError = err;
       if (attempt < MAX_NETWORK_RETRIES - 1 && isRetryableNetworkError(err)) {
+        if (isRenderWebHost()) {
+          apiReady = false;
+          await ensureApiReady(45_000);
+        }
         await sleep(RETRY_BASE_MS * 2 ** attempt);
         continue;
       }
@@ -92,6 +107,10 @@ async function requestJsonImpl<T>(
       response.status,
       text,
     );
+  }
+
+  if (response.ok) {
+    markApiReady();
   }
 
   if (response.status === 204 || text.length === 0) {
@@ -146,6 +165,41 @@ export async function pingHealth(): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+/** Render cold start — ilk istekten önce API'yi uyandır. */
+export async function ensureApiReady(maxWaitMs = 75_000): Promise<boolean> {
+  if (apiReady) return true;
+  if (!isRenderWebHost()) {
+    apiReady = true;
+    return true;
+  }
+  if (!wakeInFlight) {
+    wakeInFlight = wakeUpApi(maxWaitMs).finally(() => {
+      wakeInFlight = null;
+    });
+  }
+  const ok = await wakeInFlight;
+  if (ok) apiReady = true;
+  return ok;
+}
+
+/** Sekme açıkken periyodik ping — sunucuyu uykuya dalmaktan geciktirir. */
+export function startApiKeepAlive(): () => void {
+  if (!isRenderWebHost()) return () => undefined;
+  const tick = () => {
+    if (document.visibilityState === 'visible') {
+      void pingHealth().then((ok) => {
+        if (ok) apiReady = true;
+      });
+    }
+  };
+  const id = window.setInterval(tick, KEEPALIVE_MS);
+  return () => window.clearInterval(id);
+}
+
+export function markApiReady(): void {
+  apiReady = true;
 }
 
 /** Render free tier cold start — API uyanana kadar dener. */

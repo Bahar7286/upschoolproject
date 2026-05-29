@@ -18,6 +18,7 @@ from app.schemas.ai_schema import (
     StopNarrationResponse,
 )
 from app.services.google_places_service import google_places_service
+from app.services.assistant_intent import needs_travel_plan, quick_assistant_reply
 from app.services.ai_prompts import (
     SYSTEM_ASSISTANT,
     SYSTEM_NARRATION,
@@ -51,7 +52,7 @@ _CITY_POI = {
 
 _LLM_CATALOG_LIMIT = 30
 _LLM_RECOMMEND_MAX_TOKENS = 700
-_LLM_ASSISTANT_MAX_TOKENS = 900
+_LLM_ASSISTANT_MAX_TOKENS = 500
 _LLM_NARRATION_MAX_TOKENS = 1400
 
 
@@ -332,11 +333,15 @@ class AIService:
         if not last_user:
             last_user = 'Merhaba'
 
+        quick = quick_assistant_reply(last_user, payload.city, payload.district or '')
+        if quick:
+            return AssistantChatResponse(reply=quick, source='rules')
+
         interests = ', '.join(payload.interests) if payload.interests else 'genel'
         where = payload.city if not payload.district else f'{payload.district}, {payload.city}'
 
         places_hint = ''
-        if settings.google_places_enabled:
+        if needs_travel_plan(last_user) and settings.google_places_enabled:
             lat = payload.location_lat
             lng = payload.location_lng
             if lat is None or lng is None:
@@ -370,7 +375,7 @@ class AIService:
         text = await llm_service.complete_text(
             system=SYSTEM_ASSISTANT,
             user=user,
-            temperature=0.4,
+            temperature=0.35,
             max_tokens=_LLM_ASSISTANT_MAX_TOKENS,
         )
         return AssistantChatResponse(reply=text.strip()[:2500], source='llm')

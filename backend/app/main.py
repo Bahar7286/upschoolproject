@@ -195,6 +195,11 @@ async def add_process_time_header(request: Request, call_next):
     return response
 
 
+@app.get('/', tags=['health'], include_in_schema=False)
+async def root() -> JSONResponse:
+    return JSONResponse(content={'service': 'historial-go-api', 'status': 'ok', 'docs': '/docs'})
+
+
 @app.get('/health', tags=['health'], summary='Sağlık kontrolü')
 async def healthcheck() -> JSONResponse:
     return JSONResponse(content={'status': 'ok'})
