@@ -1,15 +1,17 @@
 import type { FormEvent, ReactElement } from 'react';
-import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 import {
   createEmptyDraftStop,
+  draftStopFromResponse,
   resolveCityMapCenter,
   RouteStopsBuilder,
   validateDraftStops,
   type DraftStop,
 } from '../components/guide/route-stops-builder';
+import { PageSkeleton } from '../components/loading/page-skeleton';
 import { LoadingButton } from '../components/ui/loading-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { formatApiError } from '../lib/api';
@@ -19,27 +21,62 @@ import {
   type FieldErrors,
 } from '../lib/validation';
 import { listCities } from '../services/city-service';
-import { createGuideRoute } from '../services/guide-service';
-import { createStop } from '../services/stop-service';
+import { getGuideRoute, updateGuideRoute } from '../services/guide-service';
+import { createStop, deleteStop, listStops, updateStop } from '../services/stop-service';
 import { useAuthStore } from '../stores/auth-store';
 
-const DEFAULT_TAGS = 'tarih, kültür';
+const EDITABLE_STATUSES = new Set(['draft', 'changes_requested']);
 
 const fieldClass = (hasError: boolean) =>
   `mt-1 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950 ${
     hasError ? inputErrorClass : ''
   }`;
 
-export default function GuideCreateRoutePage(): ReactElement {
+async function syncRouteStops(
+  routeId: number,
+  accessToken: string,
+  originalStopIds: number[],
+  drafts: DraftStop[],
+): Promise<void> {
+  const keptIds = new Set(drafts.filter((s) => s.stopId).map((s) => s.stopId!));
+  for (const stopId of originalStopIds) {
+    if (!keptIds.has(stopId)) {
+      await deleteStop(routeId, stopId, accessToken);
+    }
+  }
+  for (let i = 0; i < drafts.length; i += 1) {
+    const stop = drafts[i];
+    const payload = {
+      title: stop.title.trim(),
+      description: stop.description.trim(),
+      latitude: Number(stop.latitude),
+      longitude: Number(stop.longitude),
+      order_index: i,
+    };
+    if (stop.stopId) {
+      await updateStop(routeId, stop.stopId, payload, accessToken);
+    } else {
+      await createStop(routeId, payload, accessToken);
+    }
+  }
+}
+
+export default function GuideEditRoutePage(): ReactElement {
+  const { routeId: routeIdParam } = useParams();
+  const routeId = Number(routeIdParam);
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
+
   const [title, setTitle] = useState('');
-  const [city, setCity] = useState('İstanbul');
+  const [city, setCity] = useState('');
   const [estimatedMinutes, setEstimatedMinutes] = useState(120);
-  const [price, setPrice] = useState(149);
-  const [tagsText, setTagsText] = useState(DEFAULT_TAGS);
-  const [stops, setStops] = useState<DraftStop[]>([createEmptyDraftStop()]);
+  const [price, setPrice] = useState(0);
+  const [tagsText, setTagsText] = useState('');
+  const [status, setStatus] = useState('');
+  const [stops, setStops] = useState<DraftStop[]>([]);
+  const [originalStopIds, setOriginalStopIds] = useState<number[]>([]);
+  const [loadingRoute, setLoadingRoute] = useState(true);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [stopErrors, setStopErrors] = useState<Record<string, string>>({});
@@ -52,6 +89,48 @@ export default function GuideCreateRoutePage(): ReactElement {
   });
 
   const mapCenter = useMemo(() => resolveCityMapCenter(city, cities), [city, cities]);
+  const canEdit = EDITABLE_STATUSES.has(status);
+
+  useEffect(() => {
+    if (!user || user.role !== 'guide' || !Number.isFinite(routeId) || routeId <= 0) {
+      setLoadingRoute(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      setLoadingRoute(true);
+      setError('');
+      try {
+        const [route, routeStops] = await Promise.all([
+          getGuideRoute(user.user_id, routeId),
+          listStops(routeId, accessToken),
+        ]);
+        if (cancelled) return;
+        setTitle(route.title);
+        setCity(route.city);
+        setEstimatedMinutes(route.estimated_minutes);
+        setPrice(route.price);
+        setTagsText(route.tags.join(', '));
+        setStatus(route.status ?? 'draft');
+        const drafts =
+          routeStops.length > 0
+            ? routeStops
+                .slice()
+                .sort((a, b) => a.order_index - b.order_index)
+                .map(draftStopFromResponse)
+            : [createEmptyDraftStop()];
+        setStops(drafts);
+        setOriginalStopIds(routeStops.map((s) => s.stop_id));
+      } catch (err) {
+        if (!cancelled) setError(formatApiError(err));
+      } finally {
+        if (!cancelled) setLoadingRoute(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, routeId, accessToken]);
 
   if (user?.role !== 'guide') {
     return (
@@ -64,8 +143,24 @@ export default function GuideCreateRoutePage(): ReactElement {
     );
   }
 
+  if (!Number.isFinite(routeId) || routeId <= 0) {
+    return (
+      <section className="mx-auto max-w-lg space-y-4">
+        <p className="text-sm text-red-700">Geçersiz rota.</p>
+        <Link className="font-bold text-primary" to="/guide">
+          Rehber paneli
+        </Link>
+      </section>
+    );
+  }
+
+  if (loadingRoute) {
+    return <PageSkeleton />;
+  }
+
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (!canEdit) return;
     setError('');
     const errs: FieldErrors = {};
     const titleErr = validateRequired(title, 'Rota başlığı');
@@ -93,30 +188,15 @@ export default function GuideCreateRoutePage(): ReactElement {
 
     await run(async () => {
       try {
-        const route = await createGuideRoute(user.user_id, {
+        await updateGuideRoute(user.user_id, routeId, {
           title: title.trim(),
           city: city.trim(),
           estimated_minutes: estimatedMinutes,
           price,
           tags: tags.length ? tags : ['kültür'],
         });
-
-        for (let i = 0; i < stops.length; i += 1) {
-          const stop = stops[i];
-          await createStop(
-            route.route_id,
-            {
-              title: stop.title.trim(),
-              description: stop.description.trim(),
-              latitude: Number(stop.latitude),
-              longitude: Number(stop.longitude),
-              order_index: i,
-            },
-            accessToken,
-          );
-        }
-
-        navigate('/guide', { replace: true, state: { routeCreated: route.route_id } });
+        await syncRouteStops(routeId, accessToken, originalStopIds, stops);
+        navigate('/guide', { replace: true, state: { routeUpdated: routeId } });
       } catch (err) {
         setError(formatApiError(err));
       }
@@ -129,11 +209,20 @@ export default function GuideCreateRoutePage(): ReactElement {
         <Link className="text-sm font-semibold text-primary hover:underline" to="/guide">
           ← Rehber paneli
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Yeni rota oluştur</h1>
+        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Rotayı düzenle</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Taslak olarak kaydedilir; durakları sırayla ekle, ardından incelemeye gönderebilirsin.
+          Durakları güncelle, sırayı değiştir veya yeni mekan ekle.
         </p>
       </header>
+
+      {!canEdit ? (
+        <p
+          className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/30 dark:text-amber-100"
+          role="alert"
+        >
+          Bu rota şu an düzenlenemez (yayında veya incelemede). Taslak veya düzeltme istenen rotalar düzenlenebilir.
+        </p>
+      ) : null}
 
       {error ? (
         <p
@@ -148,14 +237,13 @@ export default function GuideCreateRoutePage(): ReactElement {
         className="space-y-6 rounded-[22px] border border-stone-900/10 bg-white/90 p-6 dark:border-white/10 dark:bg-zinc-900/95"
         onSubmit={handleSubmit}
       >
-        <div className="space-y-4">
+        <fieldset className="space-y-4" disabled={!canEdit}>
           <label className="block text-sm font-semibold">
             Rota başlığı
             <input
               className={fieldClass(!!fieldErrors.title)}
               maxLength={180}
               minLength={3}
-              placeholder="Örn. Sultanahmet kültür yürüyüşü"
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -167,14 +255,13 @@ export default function GuideCreateRoutePage(): ReactElement {
             Şehir
             <input
               className={fieldClass(!!fieldErrors.city)}
-              list="guide-route-cities"
+              list="guide-edit-route-cities"
               maxLength={120}
-              placeholder="İstanbul"
               required
               value={city}
               onChange={(e) => setCity(e.target.value)}
             />
-            <datalist id="guide-route-cities">
+            <datalist id="guide-edit-route-cities">
               {cities.map((c) => (
                 <option key={c.city_id} value={c.name_tr} />
               ))}
@@ -218,30 +305,33 @@ export default function GuideCreateRoutePage(): ReactElement {
             Etiketler (virgülle ayır)
             <input
               className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2.5 dark:border-zinc-600"
-              placeholder="tarih, sanat, yemek"
               value={tagsText}
               onChange={(e) => setTagsText(e.target.value)}
             />
           </label>
-        </div>
+        </fieldset>
 
-        <RouteStopsBuilder
-          city={city}
-          errors={stopErrors}
-          mapCenter={mapCenter}
-          stops={stops}
-          onChange={setStops}
-        />
+        {canEdit ? (
+          <RouteStopsBuilder
+            city={city}
+            errors={stopErrors}
+            mapCenter={mapCenter}
+            stops={stops}
+            onChange={setStops}
+          />
+        ) : null}
 
         <div className="flex flex-wrap gap-3 pt-2">
-          <LoadingButton className="min-h-[48px] flex-1 sm:flex-none" loading={loading} type="submit">
-            Rotayı kaydet
-          </LoadingButton>
+          {canEdit ? (
+            <LoadingButton className="min-h-[48px] flex-1 sm:flex-none" loading={loading} type="submit">
+              Değişiklikleri kaydet
+            </LoadingButton>
+          ) : null}
           <Link
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-stone-300 px-5 font-semibold dark:border-zinc-600"
             to="/guide"
           >
-            İptal
+            {canEdit ? 'İptal' : 'Panele dön'}
           </Link>
         </div>
       </form>

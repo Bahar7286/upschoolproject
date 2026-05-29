@@ -29,8 +29,9 @@ export async function getStop(
 export async function createStop(
   routeId: number,
   payload: StopCreatePayload,
+  accessToken: string,
 ): Promise<StopResponse> {
-  return requestJson<StopResponse>(`/routes/${routeId}/stops`, {
+  return requestJsonWithAuth<StopResponse>(`/routes/${routeId}/stops`, accessToken, {
     method: 'POST',
     body: JSON.stringify(payload),
   });
@@ -40,8 +41,9 @@ export async function updateStop(
   routeId: number,
   stopId: number,
   payload: StopUpdatePayload,
+  accessToken: string,
 ): Promise<StopResponse> {
-  return requestJson<StopResponse>(`/routes/${routeId}/stops/${stopId}`, {
+  return requestJsonWithAuth<StopResponse>(`/routes/${routeId}/stops/${stopId}`, accessToken, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   });
@@ -50,8 +52,9 @@ export async function updateStop(
 export async function deleteStop(
   routeId: number,
   stopId: number,
+  accessToken: string,
 ): Promise<{ status: string }> {
-  return requestJson<{ status: string }>(`/routes/${routeId}/stops/${stopId}`, {
+  return requestJsonWithAuth<{ status: string }>(`/routes/${routeId}/stops/${stopId}`, accessToken, {
     method: 'DELETE',
   });
 }

@@ -34,6 +34,7 @@ export function GuideRoutesPanel(): ReactElement {
   const [error, setError] = useState('');
   const [busy, setBusy] = useState<number | null>(null);
   const [createdBanner, setCreatedBanner] = useState('');
+  const [updatedBanner, setUpdatedBanner] = useState('');
 
   const load = async () => {
     if (!user || user.role !== 'guide') return;
@@ -57,9 +58,13 @@ export function GuideRoutesPanel(): ReactElement {
   }, [user?.user_id, location.key]);
 
   useEffect(() => {
-    const state = location.state as { routeCreated?: number } | null;
+    const state = location.state as { routeCreated?: number; routeUpdated?: number } | null;
     if (state?.routeCreated) {
       setCreatedBanner('Rota taslak olarak kaydedildi. İncelemeye gönderebilirsin.');
+      window.history.replaceState({}, document.title);
+    }
+    if (state?.routeUpdated) {
+      setUpdatedBanner('Rota güncellendi.');
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -108,6 +113,11 @@ export function GuideRoutesPanel(): ReactElement {
           {createdBanner}
         </p>
       ) : null}
+      {updatedBanner ? (
+        <p className="mt-3 rounded-xl border border-primary/30 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-dark dark:text-primary" role="status">
+          {updatedBanner}
+        </p>
+      ) : null}
       {error ? (
         <div className="mt-2">
           <ErrorAlert error={{ kind: 'api', message: error }} />
@@ -134,6 +144,14 @@ export function GuideRoutesPanel(): ReactElement {
                   ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
+                  {(r.status === 'draft' || r.status === 'changes_requested') ? (
+                    <Link
+                      className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-bold dark:border-zinc-600"
+                      to={`/guide/rotalar/${r.route_id}/duzenle`}
+                    >
+                      Düzenle
+                    </Link>
+                  ) : null}
                   {(r.status === 'draft' || r.status === 'changes_requested') && accessToken ? (
                     <button
                       type="button"
