@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
 import { resolveCityImage } from '../../lib/region-images';
+import { useRegionImage } from '../../hooks/use-region-image';
 import { RegionThumb } from '../ui/region-thumb';
 
 export function CityGridCard({
@@ -23,6 +24,7 @@ export function CityGridCard({
   to: string;
 }): ReactElement {
   const img = resolveCityImage(slug, cityId, imageUrl);
+  const displayImg = useRegionImage(img, name);
 
   return (
     <Link
@@ -30,7 +32,7 @@ export function CityGridCard({
       className="tap-scale group relative block aspect-[4/3] overflow-hidden rounded-2xl shadow-lift"
     >
       <RegionThumb
-        src={img}
+        src={displayImg}
         alt={name}
         label={name}
         className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

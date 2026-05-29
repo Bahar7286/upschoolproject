@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query, status
 
-from app.api.dependencies import get_place_service, require_admin
+from app.api.auth_deps import get_current_user_id
+from app.api.dependencies import get_place_service, get_place_visit_service, require_admin
 from app.core.exceptions import PlaceNotFoundError
 from app.schemas.place_schema import (
     PLACE_CATEGORIES,
@@ -10,7 +11,9 @@ from app.schemas.place_schema import (
     PlaceResponse,
     PlaceUpdate,
 )
+from app.schemas.place_visit_schema import AlsoVisitedResponse, PlaceVisitCreate
 from app.services.place_service import PlaceService
+from app.services.place_visit_service import PlaceVisitService
 
 router = APIRouter()
 
@@ -115,6 +118,67 @@ async def delete_place(
         return {'status': 'deleted'}
     except PlaceNotFoundError as exc:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Place not found') from exc
+
+
+@router.post('/visits', status_code=status.HTTP_204_NO_CONTENT)
+async def record_place_visit(
+    payload: PlaceVisitCreate,
+    user_id: int = Depends(get_current_user_id),
+    service: PlaceVisitService = Depends(get_place_visit_service),
+) -> None:
+    """Mekan ziyaretini kaydet (co-visit önerileri için)."""
+    try:
+        await service.record_visit(user_id, payload)
+    except PlaceNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Place not found') from exc
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc
+
+
+@router.get('/google/{google_place_id}/also-visited', response_model=AlsoVisitedResponse)
+async def google_place_also_visited(
+    google_place_id: str,
+    city: str | None = Query(default=None, max_length=120),
+    place_name: str = Query(default='', max_length=200),
+    limit: int = Query(default=6, ge=1, le=12),
+    service: PlaceVisitService = Depends(get_place_visit_service),
+) -> AlsoVisitedResponse:
+    """Google Places mekanı için birlikte gezilen yerler."""
+    gid = google_place_id.strip()
+    if not gid:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid google place id')
+    return await service.also_visited(
+        entity_type='google_place',
+        entity_key=gid,
+        city=city,
+        limit=limit,
+        source_place_name=place_name.strip(),
+    )
+
+
+@router.get('/{place_id}/also-visited', response_model=AlsoVisitedResponse)
+async def place_also_visited(
+    place_id: int,
+    city: str | None = Query(default=None, max_length=120),
+    limit: int = Query(default=6, ge=1, le=12),
+    place_service: PlaceService = Depends(get_place_service),
+    visit_service: PlaceVisitService = Depends(get_place_visit_service),
+) -> AlsoVisitedResponse:
+    """Bu mekanı gezenlerin sıklıkla ziyaret ettiği diğer mekanlar."""
+    if place_id <= 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid place id')
+    try:
+        place = await place_service.get_place(place_id)
+    except PlaceNotFoundError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Place not found') from exc
+    filter_city = city or place.city
+    return await visit_service.also_visited(
+        entity_type='place',
+        entity_key=str(place_id),
+        city=filter_city,
+        limit=limit,
+        source_place_name=place.name,
+    )
 
 
 @router.get('/{place_id}', response_model=PlaceResponse)

@@ -23,7 +23,7 @@ export default function CitiesPage(): ReactElement {
   }, [cities, q]);
 
   return (
-    <section className="mx-auto max-w-3xl" aria-labelledby="cities-title">
+    <section className="w-full" aria-labelledby="cities-title">
       <ExploreHero
         title="Historial-GO"
         subtitle="Türkiye'nin güzelliklerini keşfet"
@@ -65,7 +65,7 @@ export default function CitiesPage(): ReactElement {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-2 gap-3 px-0 sm:gap-4">
+      <div className="grid grid-cols-2 gap-3 px-0 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
         {filtered.map((c) => (
           <CityGridCard
             key={c.city_id}

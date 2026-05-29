@@ -4,8 +4,10 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 
 import { AddToActiveRouteButton } from '../features/active-route/active-route-planner';
+import { AlsoVisitedPanel } from '../components/explore/also-visited-panel';
 import { DirectionsCta, VenueDetailHero } from '../components/explore/venue-detail-hero';
 import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
+import { useRecordPlaceVisit } from '../hooks/use-record-place-visit';
 import { getRichPlaceContent } from '../data/place-rich-content';
 import { resolvePlaceImage } from '../lib/region-images';
 import { formatApiError } from '../lib/api';
@@ -53,6 +55,17 @@ export default function PlaceDetailPage(): ReactElement {
       cancelled = true;
     };
   }, [id, accessToken]);
+
+  useRecordPlaceVisit(
+    accessToken,
+    id > 0
+      ? {
+          entity_type: 'place',
+          entity_key: String(id),
+          source: 'view',
+        }
+      : null,
+  );
 
   if (error) {
     return (
@@ -130,6 +143,8 @@ export default function PlaceDetailPage(): ReactElement {
         <DirectionsCta lat={place.latitude} lng={place.longitude} />
 
         <PlaceNarrationPanel stopTitle={place.name} description={narrationContext} />
+
+        <AlsoVisitedPanel entityType="place" placeId={place.place_id} placeName={place.name} city={place.city} />
 
         {hours ? <p className="text-sm font-semibold text-stone-600">{hours}</p> : null}
 

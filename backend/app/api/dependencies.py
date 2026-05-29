@@ -10,6 +10,7 @@ from app.repositories.note_repository import NoteRepository
 from app.repositories.purchase_repository import PurchaseRepository
 from app.repositories.plan_repository import PlanRepository
 from app.repositories.place_repository import PlaceRepository
+from app.repositories.place_visit_repository import PlaceVisitRepository
 from app.repositories.city_repository import CityRepository
 from app.repositories.district_repository import DistrictRepository
 from app.repositories.favorite_repository import FavoriteRepository
@@ -27,6 +28,7 @@ from app.services.guide_service import GuideService
 from app.services.note_service import NoteService
 from app.services.payment_service import PaymentService
 from app.services.place_service import PlaceService
+from app.services.place_visit_service import PlaceVisitService
 from app.services.city_service import CityService
 from app.services.district_service import DistrictService
 from app.services.poi_sync_service import PoiSyncService
@@ -78,6 +80,10 @@ def get_user_repository(db: AsyncSession = Depends(get_db)) -> UserRepository:
 
 def get_place_repository(db: AsyncSession = Depends(get_db)) -> PlaceRepository:
     return PlaceRepository(db=db)
+
+
+def get_place_visit_repository(db: AsyncSession = Depends(get_db)) -> PlaceVisitRepository:
+    return PlaceVisitRepository(db=db)
 
 
 def get_favorite_repository(db: AsyncSession = Depends(get_db)) -> FavoriteRepository:
@@ -152,6 +158,13 @@ def get_review_service(
 
 def get_place_service(repo: PlaceRepository = Depends(get_place_repository)) -> PlaceService:
     return PlaceService(repository=repo)
+
+
+def get_place_visit_service(
+    visit_repo: PlaceVisitRepository = Depends(get_place_visit_repository),
+    place_repo: PlaceRepository = Depends(get_place_repository),
+) -> PlaceVisitService:
+    return PlaceVisitService(visit_repo=visit_repo, place_repo=place_repo)
 
 
 def get_city_service(repo: CityRepository = Depends(get_city_repository)) -> CityService:

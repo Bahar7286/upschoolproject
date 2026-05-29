@@ -5,6 +5,7 @@ from app.models.city_model import City
 from app.models.district_model import District
 from app.models.favorite_model import Favorite
 from app.models.place_model import Place
+from app.models.place_visit_model import PlaceVisit
 from app.models.plan_model import RoutePlan
 from app.models.purchase_model import Purchase
 from app.models.quote_request_model import QuoteRequest
@@ -29,6 +30,7 @@ __all__ = [
     'District',
     'Favorite',
     'Place',
+    'PlaceVisit',
     'GuideProfile',
     'QuoteRequest',
     'TripRequest',

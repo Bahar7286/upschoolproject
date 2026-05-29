@@ -31,7 +31,7 @@ class Settings:
         if o.strip()
     ]
 
-    # LLM — OpenRouter (önerilen, örn. Gemma) veya doğrudan Google Gemini API
+    # LLM — OpenRouter (önerilen), Hugging Face (hızlı yedek) veya Google Gemini
     llm_provider: str = os.getenv('LLM_PROVIDER', 'openrouter').strip().lower()
     openrouter_api_key: str = os.getenv('OPENROUTER_API_KEY', '')
     openrouter_model: str = os.getenv(
@@ -42,6 +42,15 @@ class Settings:
         'OPENROUTER_BASE_URL',
         'https://openrouter.ai/api/v1',
     )
+    huggingface_api_key: str = os.getenv('HUGGINGFACE_API_KEY', '').strip()
+    huggingface_model: str = os.getenv(
+        'HUGGINGFACE_MODEL',
+        'google/gemma-2-2b-it',
+    )
+    huggingface_base_url: str = os.getenv(
+        'HUGGINGFACE_BASE_URL',
+        'https://router.huggingface.co/v1',
+    ).strip().rstrip('/')
     gemini_api_key: str = os.getenv('GEMINI_API_KEY', '')
     gemini_model: str = os.getenv('GEMINI_MODEL', 'gemini-2.0-flash')
     llm_timeout_seconds: float = float(os.getenv('LLM_TIMEOUT_SECONDS', '45'))
@@ -113,7 +122,13 @@ class Settings:
     def llm_enabled(self) -> bool:
         if self.llm_provider == 'gemini':
             return bool(self.gemini_api_key.strip())
+        if self.llm_provider == 'huggingface':
+            return bool(self.huggingface_api_key.strip())
         return bool(self.openrouter_api_key.strip())
+
+    @property
+    def huggingface_fallback_enabled(self) -> bool:
+        return bool(self.huggingface_api_key.strip())
 
 
 settings = Settings()

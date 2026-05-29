@@ -5,7 +5,9 @@ import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 
 import { BackButton } from '../components/ui/back-button';
 import { LoadingButton } from '../components/ui/loading-button';
+import { AlsoVisitedPanel } from '../components/explore/also-visited-panel';
 import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
+import { useRecordPlaceVisit } from '../hooks/use-record-place-visit';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { AddToActiveRouteButton } from '../features/active-route/active-route-planner';
 import { RoutePreviewMap } from '../features/map/route-preview-map';
@@ -14,6 +16,7 @@ import { useI18n } from '../lib/i18n';
 import { formatApiError } from '../lib/api';
 import { computeGoogleRoute, fetchGooglePlaceDetail } from '../services/google-service';
 import type { ComputeRouteResponse, GooglePlaceDetail } from '../types/google';
+import { useAuthStore } from '../stores/auth-store';
 
 type TravelMode = 'WALK' | 'DRIVE';
 type OriginMode = 'gps' | 'pick';
@@ -34,6 +37,7 @@ export default function GooglePlaceDetailPage(): ReactElement {
   const [waypoints, setWaypoints] = useState<{ lat: number; lng: number }[]>([]);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALK');
   const [routeStep, setRouteStep] = useState<1 | 2 | 3>(1);
+  const accessToken = useAuthStore((s) => s.accessToken);
 
   const backTo = searchParams.get('back') || (searchParams.get('from') === 'map' ? '/map' : '/cities');
 
@@ -52,6 +56,19 @@ export default function GooglePlaceDetailPage(): ReactElement {
       cancelled = true;
     };
   }, [placeId]);
+
+  useRecordPlaceVisit(
+    accessToken,
+    placeId
+      ? {
+          entity_type: 'google_place',
+          entity_key: placeId,
+          place_name: place?.name ?? '',
+          city: place?.formatted_address?.split(',').slice(-2, -1)[0]?.trim() ?? '',
+          source: 'view',
+        }
+      : null,
+  );
 
   const computeFromOrigin = async (origin: { lat: number; lng: number }) => {
     if (!place) return;
@@ -177,6 +194,13 @@ export default function GooglePlaceDetailPage(): ReactElement {
       </header>
 
       <PlaceNarrationPanel stopTitle={place.name} description={narrationDescription} />
+
+      <AlsoVisitedPanel
+        entityType="google_place"
+        googlePlaceId={place.place_id}
+        placeName={place.name}
+        city={place.formatted_address.split(',').slice(-2, -1)[0]?.trim()}
+      />
 
       <AddToActiveRouteButton
         title={place.name}

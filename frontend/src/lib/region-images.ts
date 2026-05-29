@@ -1,6 +1,8 @@
 /** Görsel URL — önce DB (image_url), sonra Wikimedia, son olarak yerel SVG placeholder. */
 
 const CITY_WIKI: Record<string, string> = {
+  adana:
+    'https://upload.wikimedia.org/wikipedia/commons/thumb/7/76/Adana_Seyhan_River_and_Sabanc%C4%B1_Mosque.jpg/640px-Adana_Seyhan_River_and_Sabanc%C4%B1_Mosque.jpg',
   istanbul:
     'https://upload.wikimedia.org/wikipedia/commons/thumb/9/91/View_of_Levi%2C_Istanbul%2C_from_Galata_Tower.jpg/640px-View_of_Levi%2C_Istanbul%2C_from_Galata_Tower.jpg',
   ankara:

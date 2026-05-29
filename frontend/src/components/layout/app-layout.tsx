@@ -77,7 +77,7 @@ export function AppLayout(): ReactElement {
   const isTourist = !isGuide && !isAdmin;
 
   return (
-    <div className="app-shell flex min-h-dvh flex-col">
+    <div className="app-shell flex h-dvh max-h-dvh flex-col overflow-hidden">
       <header className="app-header sticky top-0 z-40 border-b pt-safe backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
           <BrandLogo size="sm" className="min-w-0 shrink" />

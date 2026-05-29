@@ -11,6 +11,7 @@ from app.models.guide_profile_model import GuideProfile
 from app.models.city_model import City
 from app.models.district_model import District
 from app.models.place_model import Place
+from app.models.place_visit_model import PlaceVisit
 from app.models.route_model import Route
 from app.models.review_model import RouteReview
 from app.models.stop_model import Stop
@@ -213,6 +214,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
 
     await ensure_cities_seeded(session)
     await ensure_districts_seeded(session)
+    await ensure_co_visit_seed(session)
 
 
 async def ensure_cities_seeded(session: AsyncSession) -> None:
@@ -282,24 +284,123 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
 
 
 async def ensure_images_seeded(session: AsyncSession) -> None:
-    """Fill missing city image_url from Wikipedia when DB has few images."""
+    """Eksik city image_url alanlarını Wikipedia'dan doldur."""
     import logging
 
-    from sqlalchemy import func
+    from sqlalchemy import func, or_
 
     from app.services.image_sync_service import ImageSyncService
 
     log = logging.getLogger(__name__)
-    count_result = await session.execute(
+    missing_result = await session.execute(
         select(func.count())
         .select_from(City)
-        .where(City.image_url.isnot(None), City.image_url != '')
+        .where(or_(City.image_url.is_(None), City.image_url == ''))
     )
-    if (count_result.scalar() or 0) >= 20:
+    missing = missing_result.scalar() or 0
+    if missing == 0:
         return
     try:
         svc = ImageSyncService(session)
         result = await svc.sync_cities(limit=81, force=False)
-        log.info('Wikipedia image sync: %s cities updated', result.updated)
+        log.info('Wikipedia image sync: %s/%s cities updated', result.updated, missing)
     except Exception as exc:
         log.warning('Wikipedia image sync skipped: %s', exc)
+
+
+async def ensure_co_visit_seed(session: AsyncSession) -> None:
+    """Demo co-visit verisi — Topkapı gezenler Galata, Ayasofya vb. de gezmiş gibi."""
+    import logging
+
+    from app.repositories.place_visit_repository import PlaceVisitRepository
+
+    log = logging.getLogger(__name__)
+    repo = PlaceVisitRepository(session)
+    if await repo.has_any_visits():
+        return
+
+    rows = await session.execute(select(Place.place_id, Place.name, Place.city))
+    by_name = {name: (pid, city) for pid, name, city in rows.all()}
+    anchor = 'Topkapı Sarayı'
+    if anchor not in by_name:
+        return
+
+    also_names = [
+        'Galata Kulesi',
+        'Ayasofya-i Kebir Camii',
+        'Kapalıçarşı',
+        'Yerebatan Sarnıcı',
+        'Sultanahmet Camii',
+    ]
+    also_ids: list[tuple[int, str, str]] = []
+    for n in also_names:
+        if n in by_name:
+            pid, city = by_name[n]
+            also_ids.append((pid, n, city))
+
+    if not also_ids:
+        return
+
+    anchor_id, anchor_city = by_name[anchor]
+    visits: list[PlaceVisit] = []
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+
+    for user_idx in range(1, 31):
+        user_id = 1000 + user_idx
+        visits.append(
+            PlaceVisit(
+                user_id=user_id,
+                entity_type='place',
+                entity_key=str(anchor_id),
+                place_name=anchor,
+                city=anchor_city,
+                source='seed',
+                visited_at=now,
+            )
+        )
+        for j, (pid, pname, pcity) in enumerate(also_ids):
+            threshold = max(1, 28 - j * 3)
+            if user_idx <= threshold:
+                visits.append(
+                    PlaceVisit(
+                        user_id=user_id,
+                        entity_type='place',
+                        entity_key=str(pid),
+                        place_name=pname,
+                        city=pcity,
+                        source='seed',
+                        visited_at=now,
+                    )
+                )
+
+    galata = by_name.get('Galata Kulesi')
+    if galata:
+        gid, gcity = galata
+        for user_idx in range(31, 41):
+            user_id = 1000 + user_idx
+            visits.append(
+                PlaceVisit(
+                    user_id=user_id,
+                    entity_type='place',
+                    entity_key=str(gid),
+                    place_name='Galata Kulesi',
+                    city=gcity,
+                    source='seed',
+                    visited_at=now,
+                )
+            )
+            if user_idx <= 38 and anchor_id:
+                visits.append(
+                    PlaceVisit(
+                        user_id=user_id,
+                        entity_type='place',
+                        entity_key=str(anchor_id),
+                        place_name=anchor,
+                        city=anchor_city,
+                        source='seed',
+                        visited_at=now,
+                    )
+                )
+
+    await repo.bulk_insert_visits(visits)
+    log.info('Co-visit seed: %s kayıt (Topkapı ↔ Galata demo)', len(visits))

@@ -14,14 +14,21 @@
 html {
   -webkit-tap-highlight-color: transparent;
   -webkit-text-size-adjust: 100%;
+  height: 100%;
 }
 
 body {
-  overscroll-behavior: none;
+  overscroll-behavior-y: auto;
   -webkit-overflow-scrolling: touch;
   background: var(--hg-bg);
   color: var(--hg-fg);
   font-family: var(--hg-body-font);
+  height: 100%;
+  margin: 0;
+}
+
+#root {
+  height: 100%;
 }
 
 .leaflet-container {
@@ -240,6 +247,8 @@ html[data-mode='light'] .dark\:text-amber-200 {
 
 .app-main {
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-y: contain;
+  touch-action: pan-y;
 }
 
 /* GEZİYOR tarzı keşif başlığı */

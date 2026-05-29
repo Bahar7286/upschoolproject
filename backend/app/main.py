@@ -78,7 +78,7 @@ OPENAPI_TAGS = [
     {'name': 'guides', 'description': 'Rehber CRUD, rota yönetimi, kazanç ve ödeme talebi.'},
     {'name': 'plans', 'description': 'Takvim rota planları (auth gerekli).'},
     {'name': 'social', 'description': 'Rota yorumları (herkese açık) ve kişisel notlar (auth).'},
-    {'name': 'places', 'description': 'Türkiye POI kataloğu — müze, saray, yemek, konaklama (harita).'},
+    {'name': 'places', 'description': 'Türkiye POI kataloğu, ziyaret kaydı ve birlikte gezilen mekan önerileri.'},
     {'name': 'cities', 'description': 'Türkiye il/ilçe referans verisi (81 il, 973 ilçe).'},
     {'name': 'geo', 'description': 'Şehir/ilçe harita merkezi koordinatları.'},
     {'name': 'google', 'description': 'Google Places & Routes proxy (anahtar sunucuda).'},

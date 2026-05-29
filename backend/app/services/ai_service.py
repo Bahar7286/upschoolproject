@@ -63,6 +63,8 @@ class AIService:
             model=(
                 settings.openrouter_model
                 if settings.llm_provider == 'openrouter'
+                else settings.huggingface_model
+                if settings.llm_provider == 'huggingface'
                 else settings.gemini_model
             )
             if settings.llm_enabled
