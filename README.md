@@ -94,4 +94,4 @@ Ayrıntı: [`prodocs/testing.md`](prodocs/testing.md).
 
 Tüm kaynak kod bu repoda commit edilir; eğitmen en güncel commit üzerinden değerlendirir. Teslim kontrolü: [`SUBMISSION_CHECKLIST.md`](SUBMISSION_CHECKLIST.md).
 
-**Son teslim commit:** `6b63f99` (main) — UX teslim paketi: `659b25d` (özellikler) + doküman güncellemeleri.
+**Jüri değerlendirmesi:** `main` dalının en güncel commit'i (`git log -1`). UX teslim paketi: `659b25d`.
