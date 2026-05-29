@@ -34,6 +34,7 @@ export default function GooglePlaceDetailPage(): ReactElement {
   const [userOrigin, setUserOrigin] = useState<{ lat: number; lng: number } | null>(null);
   const [originMode, setOriginMode] = useState<OriginMode>('gps');
   const [pickOriginActive, setPickOriginActive] = useState(false);
+  const [pickWaypointActive, setPickWaypointActive] = useState(false);
   const [waypoints, setWaypoints] = useState<{ lat: number; lng: number }[]>([]);
   const [travelMode, setTravelMode] = useState<TravelMode>('WALK');
   const [routeStep, setRouteStep] = useState<1 | 2 | 3>(1);
@@ -262,20 +263,25 @@ export default function GooglePlaceDetailPage(): ReactElement {
               <div className="mt-2 flex flex-wrap gap-2">
                 <button
                   type="button"
-                  className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
+                  className={`tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold ${
+                    pickWaypointActive ? 'bg-amber-600 text-white' : 'border border-stone-300 dark:border-zinc-600'
+                  }`}
                   onClick={() => {
-                    if (userOrigin) setWaypoints((w) => [...w, userOrigin]);
+                    setPickWaypointActive(true);
+                    setPickOriginActive(false);
                     setRouteStep(3);
                   }}
-                  disabled={!userOrigin}
                 >
-                  {t('route.addWaypoint', 'Ara durak ekle')}
+                  {t('route.addWaypoint', 'Haritadan ara durak seç')}
                 </button>
                 {waypoints.length > 0 ? (
                   <button
                     type="button"
                     className="tap-scale min-h-[44px] rounded-full border border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600"
-                    onClick={() => setWaypoints([])}
+                    onClick={() => {
+                      setWaypoints([]);
+                      setPickWaypointActive(false);
+                    }}
                   >
                     {t('route.clearWaypoints', 'Temizle')} ({waypoints.length})
                   </button>
@@ -283,12 +289,25 @@ export default function GooglePlaceDetailPage(): ReactElement {
                   <button
                     type="button"
                     className="tap-scale min-h-[44px] rounded-full px-4 text-sm font-semibold text-primary underline"
-                    onClick={() => setRouteStep(3)}
+                    onClick={() => {
+                      setPickWaypointActive(false);
+                      setRouteStep(3);
+                    }}
                   >
                     {t('route.skipWaypoint', 'Atla →')}
                   </button>
                 )}
               </div>
+              {pickWaypointActive ? (
+                <p className="mt-2 text-xs font-semibold text-amber-800 dark:text-amber-200">
+                  Haritada ara durak noktasına dokunun. İstediğiniz kadar ekleyebilirsiniz.
+                </p>
+              ) : null}
+              {waypoints.length > 0 ? (
+                <p className="mt-1 text-xs text-stone-600 dark:text-stone-400">
+                  {waypoints.length} ara durak eklendi.
+                </p>
+              ) : null}
             </div>
           ) : null}
 
@@ -332,7 +351,36 @@ export default function GooglePlaceDetailPage(): ReactElement {
             {routeError}
           </p>
         ) : null}
-        {originMode === 'pick' && !route?.encoded_polyline ? (
+        {routeStep >= 2 && !route?.encoded_polyline ? (
+          <>
+            <RoutePreviewMap
+              dest={{ lat: place.lat, lng: place.lng, title: place.name }}
+              encodedPolyline=""
+              origin={userOrigin}
+              pickOrigin={pickOriginActive && originMode === 'pick' && !pickWaypointActive}
+              pickWaypoint={pickWaypointActive}
+              waypoints={waypoints}
+              onPickOrigin={(lat, lng) => {
+                setUserOrigin({ lat, lng });
+                setPickOriginActive(false);
+                setRouteError('');
+              }}
+              onPickWaypoint={(lat, lng) => {
+                setWaypoints((w) => [...w, { lat, lng }]);
+                setRouteError('');
+              }}
+            />
+            {pickOriginActive && originMode === 'pick' ? (
+              <p className="text-xs font-semibold text-primary">Başlangıç noktası için haritaya dokunun.</p>
+            ) : null}
+            {pickWaypointActive ? (
+              <p className="text-xs font-semibold text-amber-800 dark:text-amber-200">
+                Ara durak için haritaya dokunun.
+              </p>
+            ) : null}
+          </>
+        ) : null}
+        {originMode === 'pick' && routeStep < 2 && !route?.encoded_polyline ? (
           <RoutePreviewMap
             dest={{ lat: place.lat, lng: place.lng, title: place.name }}
             encodedPolyline=""
@@ -355,13 +403,9 @@ export default function GooglePlaceDetailPage(): ReactElement {
               dest={{ lat: place.lat, lng: place.lng, title: place.name }}
               encodedPolyline={route.encoded_polyline}
               origin={userOrigin}
-              pickOrigin={pickOriginActive && originMode === 'pick'}
+              pickOrigin={false}
+              pickWaypoint={false}
               waypoints={waypoints}
-              onPickOrigin={(lat, lng) => {
-                setUserOrigin({ lat, lng });
-                setPickOriginActive(false);
-                setRouteError('');
-              }}
             />
             {route.steps.length > 0 ? (
               <ol className="max-h-40 space-y-1 overflow-auto text-xs text-stone-600 dark:text-stone-400">
@@ -372,7 +416,7 @@ export default function GooglePlaceDetailPage(): ReactElement {
             ) : null}
             <a
               className="tap-scale flex w-full min-h-[44px] items-center justify-center rounded-xl border-2 border-stone-300 text-sm font-bold text-stone-800 dark:border-zinc-600"
-              href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}${userOrigin ? `&origin=${userOrigin.lat},${userOrigin.lng}` : ''}`}
+              href={`https://www.google.com/maps/dir/?api=1&destination=${place.lat},${place.lng}${userOrigin ? `&origin=${userOrigin.lat},${userOrigin.lng}` : ''}${waypoints.map((w) => `&waypoints=${w.lat},${w.lng}`).join('')}`}
               target="_blank"
               rel="noopener noreferrer"
             >

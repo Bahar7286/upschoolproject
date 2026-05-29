@@ -87,21 +87,23 @@ export default function ProfilePage(): ReactElement {
     if (!accessToken || !user) return;
     let cancelled = false;
     (async () => {
-      try {
-        const [gam, planList, noteList, board] = await Promise.all([
-          fetchGamification(accessToken),
-          listPlans(accessToken),
-          listMyNotes(accessToken),
-          fetchLeaderboard(accessToken),
-        ]);
-        if (!cancelled) {
-          setStats(gam);
-          setPlans(planList);
-          setNotes(noteList);
-          setLeaderboard(board);
-        }
-      } catch (err) {
-        if (!cancelled) setError(mapError(err).message);
+      const results = await Promise.allSettled([
+        fetchGamification(accessToken),
+        listPlans(accessToken),
+        listMyNotes(accessToken),
+        fetchLeaderboard(accessToken),
+      ]);
+      if (cancelled) return;
+      const [gamR, plansR, notesR, boardR] = results;
+      if (gamR.status === 'fulfilled') setStats(gamR.value);
+      if (plansR.status === 'fulfilled') setPlans(plansR.value);
+      if (notesR.status === 'fulfilled') setNotes(notesR.value);
+      if (boardR.status === 'fulfilled') setLeaderboard(boardR.value);
+      const failed = results.filter((r) => r.status === 'rejected');
+      if (failed.length === results.length) {
+        setError(mapError((failed[0] as PromiseRejectedResult).reason).message);
+      } else if (failed.length > 0) {
+        setError('');
       }
     })();
     return () => {

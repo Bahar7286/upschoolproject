@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth_deps import get_current_user_id
 from app.core.config import settings
-from app.api.dependencies import get_db, get_password_reset_service, get_user_service
+from app.api.dependencies import get_db, get_password_reset_service, get_premium_request_service, get_user_service
 from app.core.exceptions import EmailAlreadyExistsError, InvalidCredentialsError, UserNotFoundError
 from app.schemas.auth_schema import (
     ForgotPasswordRequest,
@@ -15,6 +15,7 @@ from app.schemas.auth_schema import (
     RegisterResponse,
     ResetPasswordRequest,
 )
+from app.schemas.premium_request_schema import PremiumRequestCreate, PremiumRequestStatusResponse
 from app.schemas.user_schema import (
     CompleteRouteResponse,
     GamificationResponse,
@@ -24,6 +25,7 @@ from app.schemas.user_schema import (
     UserPreferencesUpdate,
     UserResponse,
 )
+from app.services.premium_request_service import PremiumRequestService
 from app.services.profile_service import (
     complete_route,
     get_gamification,
@@ -193,3 +195,31 @@ async def complete_user_route(
     if route_id <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid route id')
     return await complete_route(session, user_id, route_id)
+
+
+@router.get(
+    '/me/premium-request',
+    response_model=PremiumRequestStatusResponse,
+    summary='Premium talep durumu',
+)
+async def premium_request_status(
+    user_id: int = Depends(get_current_user_id),
+    service: PremiumRequestService = Depends(get_premium_request_service),
+) -> PremiumRequestStatusResponse:
+    return await service.status(user_id)
+
+
+@router.post(
+    '/me/premium-request',
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary='Premium erişim talebi gönder',
+)
+async def submit_premium_request(
+    payload: PremiumRequestCreate,
+    user_id: int = Depends(get_current_user_id),
+    service: PremiumRequestService = Depends(get_premium_request_service),
+) -> None:
+    try:
+        await service.submit(user_id, payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(exc)) from exc

@@ -6,11 +6,13 @@ from app.api.dependencies import (
     get_guide_profile_service,
     get_image_sync_service,
     get_poi_sync_service,
+    get_premium_request_service,
     get_user_repository,
 )
 from app.core.exceptions import GuideNotFoundError
 from app.repositories.user_repository import UserRepository
 from app.api.dependencies import get_moderation_service
+from app.schemas.premium_request_schema import PremiumRequestItem, PremiumRequestReview
 from app.schemas.moderation_schema import (
     AdminPendingRoute,
     ContentReportResolve,
@@ -18,6 +20,7 @@ from app.schemas.moderation_schema import (
     RouteModerationDecision,
 )
 from app.services.guide_profile_service import GuideProfileService
+from app.services.premium_request_service import PremiumRequestService
 from app.services.moderation_service import ModerationService
 from app.services.poi_sync_service import PoiSyncService
 from app.core.exceptions import RouteNotFoundError
@@ -220,3 +223,31 @@ async def set_user_premium(
     user.is_premium = payload.is_premium
     await user_repo.save(user)
     return {'status': 'ok'}
+
+
+@router.get('/premium-requests', response_model=list[PremiumRequestItem])
+async def list_premium_requests(
+    user_id: int = Depends(get_current_user_id),
+    service: PremiumRequestService = Depends(get_premium_request_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> list[PremiumRequestItem]:
+    await _require_admin(user_id, user_repo)
+    return await service.list_pending_admin()
+
+
+@router.patch('/premium-requests/{request_id}', response_model=dict[str, str])
+async def review_premium_request(
+    request_id: int,
+    payload: PremiumRequestReview,
+    user_id: int = Depends(get_current_user_id),
+    service: PremiumRequestService = Depends(get_premium_request_service),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> dict[str, str]:
+    await _require_admin(user_id, user_repo)
+    if request_id <= 0:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid request id')
+    try:
+        await service.review(request_id, action=payload.action, admin_note=payload.admin_note)
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(exc)) from exc
+    return {'status': payload.action}

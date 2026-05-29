@@ -6,14 +6,14 @@ import { HelmetProvider } from 'react-helmet-async';
 import { AppErrorBoundary } from '../components/layout/app-error-boundary';
 import { ThemeSync } from '../components/theme/theme-sync';
 import { I18nProvider } from '../lib/i18n';
-import { pingHealth } from '../lib/api';
+import { wakeUpApi } from '../lib/api';
 import { createAppQueryClient } from '../lib/query-client';
 
 export function AppProviders({ children }: PropsWithChildren): ReactElement {
   const [queryClient] = useState(() => createAppQueryClient());
 
   useEffect(() => {
-    void pingHealth();
+    void wakeUpApi(60_000);
   }, []);
 
   return (

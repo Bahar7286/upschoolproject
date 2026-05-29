@@ -31,14 +31,14 @@ function slugKey(slug: string): string {
     .replace(/[^a-z0-9]/g, '');
 }
 
-export function svgPlaceholderImage(label: string): string {
-  const safe = (label || 'HG').slice(0, 24).replace(/[<>&"]/g, '');
+export function svgPlaceholderImage(_label?: string): string {
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="640" height="400" viewBox="0 0 640 400">
   <defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
   <stop offset="0%" stop-color="#1e5fa8"/><stop offset="100%" stop-color="#0d3d6e"/>
   </linearGradient></defs>
   <rect width="640" height="400" fill="url(#g)"/>
-  <text x="320" y="210" fill="#ffffff" font-family="system-ui,sans-serif" font-size="22" font-weight="700" text-anchor="middle">${safe}</text>
+  <circle cx="320" cy="180" r="48" fill="rgba(255,255,255,0.12)"/>
+  <path d="M320 140 L350 210 H290 Z" fill="rgba(255,255,255,0.25)"/>
   </svg>`;
   return `data:image/svg+xml,${encodeURIComponent(svg)}`;
 }

@@ -18,9 +18,14 @@ import {
   type AdminPendingRoute,
   type ContentReportItem,
 } from '../services/admin-service';
+import {
+  listPremiumRequests,
+  reviewPremiumRequest,
+  type AdminPremiumRequestItem,
+} from '../services/premium-service';
 import { useAuthStore } from '../stores/auth-store';
 
-type Tab = 'guides' | 'routes' | 'reports' | 'tools';
+type Tab = 'guides' | 'routes' | 'reports' | 'premium' | 'tools';
 
 export default function AdminPage(): ReactElement {
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -33,19 +38,22 @@ export default function AdminPage(): ReactElement {
   const [busyId, setBusyId] = useState<number | null>(null);
   const [poiCityId, setPoiCityId] = useState('34');
   const [premiumUserId, setPremiumUserId] = useState('');
+  const [premiumRequests, setPremiumRequests] = useState<AdminPremiumRequestItem[]>([]);
   const [toolMsg, setToolMsg] = useState('');
 
   const load = async () => {
     if (!accessToken) return;
     try {
-      const [g, r, rep] = await Promise.all([
+      const [g, r, rep, prem] = await Promise.all([
         listPendingGuides(accessToken),
         listPendingRoutes(accessToken),
         listOpenReports(accessToken),
+        listPremiumRequests(accessToken).catch(() => [] as AdminPremiumRequestItem[]),
       ]);
       setPending(g);
       setPendingRoutes(r);
       setReports(rep);
+      setPremiumRequests(prem);
       setError('');
     } catch (err) {
       setError(formatApiError(err));
@@ -107,6 +115,7 @@ export default function AdminPage(): ReactElement {
     { id: 'guides', label: 'Rehberler' },
     { id: 'routes', label: 'Rota inceleme' },
     { id: 'reports', label: 'Bildirimler' },
+    { id: 'premium', label: `Premium (${premiumRequests.length})` },
     { id: 'tools', label: 'Araçlar' },
   ];
 
@@ -277,6 +286,49 @@ export default function AdminPage(): ReactElement {
                     onClick={() => {
                       if (!accessToken) return;
                       void resolveReport(accessToken, rep.report_id, 'dismissed').then(load);
+                    }}
+                  >
+                    Reddet
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
+
+      {tab === 'premium' ? (
+        premiumRequests.length === 0 ? (
+          <p className="rounded-[22px] border border-dashed px-4 py-10 text-center text-sm text-stone-500">
+            Bekleyen Premium talebi yok.
+          </p>
+        ) : (
+          <ul className="space-y-3">
+            {premiumRequests.map((req) => (
+              <li key={req.request_id} className="rounded-xl border border-stone-900/10 p-4 dark:border-white/10">
+                <p className="font-bold">
+                  {req.user_name} · {req.user_email}
+                </p>
+                <p className="text-xs text-stone-500">user_id: {req.user_id} · {req.created_at.slice(0, 16)}</p>
+                {req.message ? <p className="mt-2 text-sm text-stone-600">{req.message}</p> : null}
+                <div className="mt-3 flex gap-2">
+                  <button
+                    type="button"
+                    className="text-sm font-bold text-primary"
+                    onClick={() => {
+                      if (!accessToken) return;
+                      void reviewPremiumRequest(accessToken, req.request_id, 'approve').then(load);
+                    }}
+                  >
+                    Kabul et
+                  </button>
+                  <button
+                    type="button"
+                    className="text-sm font-bold text-stone-500"
+                    onClick={() => {
+                      if (!accessToken) return;
+                      const note = window.prompt('Red gerekçesi (isteğe bağlı):', '') ?? '';
+                      void reviewPremiumRequest(accessToken, req.request_id, 'reject', note).then(load);
                     }}
                   >
                     Reddet

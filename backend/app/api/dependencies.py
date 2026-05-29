@@ -21,6 +21,7 @@ from app.repositories.route_repository import RouteRepository
 from app.repositories.trip_request_repository import TripRequestRepository
 from app.repositories.stop_repository import StopRepository
 from app.repositories.trip_extra_stop_repository import TripExtraStopRepository
+from app.repositories.premium_request_repository import PremiumRequestRepository
 from app.repositories.user_repository import UserRepository
 from app.services.ai_service import AIService
 from app.services.guide_profile_service import GuideProfileService
@@ -34,6 +35,7 @@ from app.services.district_service import DistrictService
 from app.services.poi_sync_service import PoiSyncService
 from app.services.favorite_service import FavoriteService
 from app.services.plan_service import PlanService
+from app.services.premium_request_service import PremiumRequestService
 from app.services.quote_service import QuoteService
 from app.services.review_service import ReviewService
 from app.services.moderation_service import ModerationService
@@ -84,6 +86,10 @@ def get_place_repository(db: AsyncSession = Depends(get_db)) -> PlaceRepository:
 
 def get_place_visit_repository(db: AsyncSession = Depends(get_db)) -> PlaceVisitRepository:
     return PlaceVisitRepository(db=db)
+
+
+def get_premium_request_repository(db: AsyncSession = Depends(get_db)) -> PremiumRequestRepository:
+    return PremiumRequestRepository(db=db)
 
 
 def get_favorite_repository(db: AsyncSession = Depends(get_db)) -> FavoriteRepository:
@@ -194,6 +200,13 @@ def get_favorite_service(
     place_repo: PlaceRepository = Depends(get_place_repository),
 ) -> FavoriteService:
     return FavoriteService(repository=repo, place_repo=place_repo)
+
+
+def get_premium_request_service(
+    repo: PremiumRequestRepository = Depends(get_premium_request_repository),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> PremiumRequestService:
+    return PremiumRequestService(repo=repo, user_repo=user_repo)
 
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:

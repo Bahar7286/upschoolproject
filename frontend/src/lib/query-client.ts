@@ -5,7 +5,8 @@ export function createAppQueryClient(): QueryClient {
     defaultOptions: {
       queries: {
         staleTime: 60 * 1000,
-        retry: 1,
+        retry: 3,
+        retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 12_000),
         refetchOnWindowFocus: false,
       },
       mutations: {

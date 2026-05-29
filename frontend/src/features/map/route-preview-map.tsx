@@ -9,14 +9,18 @@ export function RoutePreviewMap({
   encodedPolyline,
   origin,
   pickOrigin = false,
+  pickWaypoint = false,
   onPickOrigin,
+  onPickWaypoint,
   waypoints = [],
 }: {
   dest: { lat: number; lng: number; title?: string };
   encodedPolyline: string;
   origin?: { lat: number; lng: number } | null;
   pickOrigin?: boolean;
+  pickWaypoint?: boolean;
   onPickOrigin?: (lat: number, lng: number) => void;
+  onPickWaypoint?: (lat: number, lng: number) => void;
   waypoints?: { lat: number; lng: number }[];
 }): ReactElement {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
@@ -32,7 +36,9 @@ export function RoutePreviewMap({
         origin={origin}
         path={path}
         pickOrigin={pickOrigin}
+        pickWaypoint={pickWaypoint}
         onPickOrigin={onPickOrigin}
+        onPickWaypoint={onPickWaypoint}
         waypoints={waypoints}
       />
     );
@@ -49,7 +55,9 @@ function GoogleRoutePreview({
   origin,
   path,
   pickOrigin,
+  pickWaypoint,
   onPickOrigin,
+  onPickWaypoint,
   waypoints,
 }: {
   apiKey: string;
@@ -58,7 +66,9 @@ function GoogleRoutePreview({
   origin?: { lat: number; lng: number } | null;
   path: { lat: number; lng: number }[];
   pickOrigin?: boolean;
+  pickWaypoint?: boolean;
   onPickOrigin?: (lat: number, lng: number) => void;
+  onPickWaypoint?: (lat: number, lng: number) => void;
   waypoints?: { lat: number; lng: number }[];
 }): ReactElement {
   const { isLoaded, loadError } = useJsApiLoader({
@@ -74,6 +84,8 @@ function GoogleRoutePreview({
     return <div className="h-56 animate-pulse rounded-2xl bg-stone-200" aria-busy="true" />;
   }
 
+  const canPick = pickOrigin || pickWaypoint;
+
   return (
     <div className="h-56 w-full overflow-hidden rounded-2xl border border-stone-900/10">
       <GoogleMap
@@ -82,9 +94,18 @@ function GoogleRoutePreview({
         zoom={14}
         options={{ mapTypeControl: false, fullscreenControl: false }}
         onClick={
-          pickOrigin && onPickOrigin
+          canPick
             ? (e) => {
-                if (e.latLng) onPickOrigin(e.latLng.lat(), e.latLng.lng());
+                if (!e.latLng) return;
+                const lat = e.latLng.lat();
+                const lng = e.latLng.lng();
+                if (pickWaypoint && onPickWaypoint) {
+                  onPickWaypoint(lat, lng);
+                  return;
+                }
+                if (pickOrigin && onPickOrigin) {
+                  onPickOrigin(lat, lng);
+                }
               }
             : undefined
         }
@@ -105,12 +126,13 @@ function GoogleRoutePreview({
         ) : null}
         {waypoints?.map((wp, i) => (
           <Marker
-            key={`wp-${i}-${wp.lat}`}
+            key={`wp-${i}-${wp.lat}-${wp.lng}`}
             position={wp}
+            label={{ text: String(i + 1), color: '#fff', fontSize: '11px', fontWeight: '700' }}
             title={`Ara durak ${i + 1}`}
             icon={{
               path: google.maps.SymbolPath.CIRCLE,
-              scale: 6,
+              scale: 8,
               fillColor: '#b45309',
               fillOpacity: 1,
               strokeColor: '#fff',

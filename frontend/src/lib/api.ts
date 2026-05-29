@@ -1,6 +1,7 @@
 const DEFAULT_BASE = 'http://127.0.0.1:8000';
-const MAX_NETWORK_RETRIES = 3;
-const RETRY_BASE_MS = 400;
+const MAX_NETWORK_RETRIES = 5;
+const RETRY_BASE_MS = 600;
+const HEALTH_TIMEOUT_MS = 20_000;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -134,11 +135,30 @@ export async function requestMultipartWithAuth<T>(
 export async function pingHealth(): Promise<boolean> {
   try {
     const base = getApiBaseUrl().replace(/\/$/, '');
-    const response = await fetch(`${base}/health`, { method: 'GET' });
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), HEALTH_TIMEOUT_MS);
+    const response = await fetch(`${base}/health`, {
+      method: 'GET',
+      signal: controller.signal,
+    });
+    window.clearTimeout(timer);
     return response.ok;
   } catch {
     return false;
   }
+}
+
+/** Render free tier cold start — API uyanana kadar dener. */
+export async function wakeUpApi(maxWaitMs = 90_000): Promise<boolean> {
+  if (await pingHealth()) return true;
+  const started = Date.now();
+  let delay = 800;
+  while (Date.now() - started < maxWaitMs) {
+    await sleep(delay);
+    if (await pingHealth()) return true;
+    delay = Math.min(Math.round(delay * 1.35), 8000);
+  }
+  return false;
 }
 
 /** FastAPI `detail` alanını Türkçe kullanıcı mesajına çevirir. */
@@ -175,7 +195,7 @@ export function formatApiError(error: unknown): string {
     }
     if (error.status === 0 || error.message.toLowerCase().includes('failed to fetch')) {
       if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
-        return 'Sunucuya bağlanılamadı. Birkaç dakika sonra tekrar deneyin veya sayfayı yenileyin.';
+        return 'Sunucu uyanıyor olabilir (30–60 sn). Birkaç saniye bekleyip tekrar deneyin veya sayfayı yenileyin.';
       }
       return 'Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar deneyin.';
     }

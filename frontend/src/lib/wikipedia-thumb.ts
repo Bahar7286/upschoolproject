@@ -17,15 +17,25 @@ async function fetchSummaryThumb(title: string, lang: string): Promise<string> {
   return data.thumbnail?.source ?? data.originalimage?.source ?? '';
 }
 
-export async function fetchWikipediaCityImage(cityName: string): Promise<string> {
+export async function fetchWikipediaCityImage(cityName: string, slug?: string): Promise<string> {
   const name = cityName.trim();
   if (!name) return '';
 
-  const cacheKey = name.toLowerCase();
+  const cacheKey = `${name.toLowerCase()}-${slug ?? ''}`;
   const hit = cache.get(cacheKey);
   if (hit) return hit;
 
-  const queries = [`${name} (il)`, name, `${name}, Turkey`];
+  const slugTitle = slug
+    ? slug.charAt(0).toUpperCase() + slug.slice(1).replace(/-/g, ' ')
+    : '';
+  const queries = [
+    `${name} (il)`,
+    name,
+    slugTitle ? `${slugTitle} (il)` : '',
+    slugTitle,
+    `${name}, Turkey`,
+  ].filter(Boolean);
+
   for (const q of queries) {
     for (const lang of ['tr', 'en'] as const) {
       try {
@@ -35,7 +45,7 @@ export async function fetchWikipediaCityImage(cityName: string): Promise<string>
           return thumb;
         }
       } catch {
-        /* ağ / CORS — sonraki sorguya geç */
+        /* sonraki sorgu */
       }
     }
   }
