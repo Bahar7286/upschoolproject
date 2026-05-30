@@ -63,21 +63,27 @@ export default function DiscoverPage(): ReactElement {
   const recommendMutation = useMutation({
     mutationFn: async () => {
       setSlowRecommend(false);
-      const slowTimer = window.setTimeout(() => setSlowRecommend(true), 10_000);
+      const slowTimer = window.setTimeout(() => setSlowRecommend(true), 5000);
       try {
-        const [aiItems, fallbackRoutes] = await Promise.all([
+        const fallbackRoutes = await recommendRoutes({
+          interests: effectiveInterests,
+          duration_minutes: effectiveDuration,
+          budget: effectiveBudget,
+        }).catch(() => routeSource);
+
+        const aiTimeout = new Promise<AIRecommendationItem[]>((resolve) => {
+          window.setTimeout(() => resolve([]), 12_000);
+        });
+        const aiItems = await Promise.race([
           recommendWithAi({
             interests: effectiveInterests,
             duration_minutes: effectiveDuration,
             budget: effectiveBudget,
             max_results: 12,
           }).catch(() => [] as AIRecommendationItem[]),
-          recommendRoutes({
-            interests: effectiveInterests,
-            duration_minutes: effectiveDuration,
-            budget: effectiveBudget,
-          }).catch(() => routeSource),
+          aiTimeout,
         ]);
+
         const byId = new Map(routeSource.map((r) => [r.route_id, r]));
         const scored: ScoredRoute[] = [];
         const seen = new Set<number>();

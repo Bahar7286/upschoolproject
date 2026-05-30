@@ -84,7 +84,7 @@ export default function MapPage(): ReactElement {
   const polylineParam = searchParams.get('polyline');
   const destLatParam = Number(searchParams.get('destLat'));
   const destLngParam = Number(searchParams.get('destLng'));
-  const [placesRadius, setPlacesRadius] = useState(8000);
+  const [placesRadius, setPlacesRadius] = useState(10000);
   const [googlePlacesError, setGooglePlacesError] = useState('');
 
   useEffect(() => {
@@ -168,10 +168,19 @@ export default function MapPage(): ReactElement {
 
   useEffect(() => {
     if (!googleNearby) return;
-    if (googleNearby.places.length === 0 && placesRadius < 15000) {
-      setPlacesRadius((r) => Math.min(r + 5000, 15000));
+    if (googleNearby.places.length === 0 && placesRadius < 20000) {
+      setPlacesRadius((r) => Math.min(r + 5000, 20000));
     }
   }, [googleNearby, placesRadius]);
+
+  const sortedGooglePlaces = useMemo(() => {
+    const list = googleNearby?.places ?? [];
+    return [...list].sort(
+      (a, b) =>
+        (b.user_rating_count ?? 0) - (a.user_rating_count ?? 0) ||
+        (b.rating ?? 0) - (a.rating ?? 0),
+    );
+  }, [googleNearby]);
 
   const routePolyline = useMemo(() => {
     if (!polylineParam) return null;
@@ -527,7 +536,7 @@ export default function MapPage(): ReactElement {
         showPlaces={showPlaces}
         mapCenter={mapCenter}
         mapZoom={mapZoom}
-        googlePlaces={googleNearby?.places ?? []}
+        googlePlaces={sortedGooglePlaces}
         routePolyline={routePolyline}
         preferGoogle={Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY)}
       />

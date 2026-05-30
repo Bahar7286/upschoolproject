@@ -48,16 +48,44 @@ def build_route_recommend_user(
 
 SYSTEM_ASSISTANT = """Sen Historial-GO Turist AI Asistanısın.
 
-NİYET KURALLARI (önce kullanici_mesaji'ni oku):
-- Selam/teşekkür/kısa sohbet → 1-2 cümle yanıt; gezi planı YAZMA.
-- Gezi/rota/mekan sorusu → kısa madde planı (en fazla 5 madde).
-- Belirsiz kısa mesaj → 1 soru sor (kaç gün, ilgi alanı).
+NİYET (intent alanına göre):
+- selam/teşekkür → 1-2 cümle; gezi planı YAZMA.
+- rota → sohbet_gecmisi'ndeki gün/bütçe/konumu kullan; en fazla 5 maddelik günlük plan.
+- yemek → YALNIZCA yakın_mekanlar listesindeki GERÇEK restoran/lokanta isimlerini öner; turistik mekan (cami, çarşı, meydan) YAZMA.
+- genel → kısa, net yanıt.
 
-GENEL:
+KURALLAR:
 - Yanıt dili: Türkçe.
-- Verilen yakın_mekanlar listesindeki isimleri kullan; listede yoksa mekan adı uydurma.
+- yakın_mekanlar listesindeki isimleri kullan; listede yoksa mekan adı uydurma.
+- sohbet_gecmisi'ndeki bütçe, gün sayısı ve semt bilgisini dikkate al.
 - Fiyat/saat uydurma.
-- Toplam en fazla 180 kelime (selamda en fazla 40 kelime)."""
+- Toplam en fazla 180 kelime."""
+
+SYSTEM_ASSISTANT_VENUE = """Sen Historial-GO yemek rehberisin.
+
+KURALLAR:
+- Kullanıcı somut lokanta/restoran istiyor.
+- YALNIZCA verilen mekan_listesi'ndeki isimleri kullan; turistik yer (cami, saray, çarşı, meydan) ÖNERME.
+- Her mekan için: isim, kısa neden (1 cümle), adres satırı.
+- En fazla 3 mekan öner; en yüksek puanlıları tercih et.
+- Türkçe, samimi ton. Toplam en fazla 120 kelime."""
+
+
+def format_places_detail(places: list[Any]) -> str:
+    """GooglePlaceSummary veya benzeri nesneleri prompt için sırala."""
+    lines: list[str] = []
+    for p in places[:8]:
+        name = getattr(p, 'name', str(p))
+        addr = getattr(p, 'address', '') or ''
+        rating = getattr(p, 'rating', None)
+        count = getattr(p, 'user_rating_count', None)
+        extra = ''
+        if rating:
+            extra += f' puan={rating}'
+        if count:
+            extra += f' yorum={count}'
+        lines.append(f'{name} ({addr}{extra})'.strip())
+    return '; '.join(lines) if lines else 'yok'
 
 
 def build_assistant_user(
@@ -66,12 +94,37 @@ def build_assistant_user(
     interests: str,
     places_hint: str,
     user_message: str,
+    intent: str = 'genel',
+    history: str = 'yok',
 ) -> str:
     places = places_hint.strip() or 'yok'
     return (
-        f'konum={where}; ilgi_alanlari={interests}; yakın_mekanlar={places}; '
+        f'intent={intent}; konum={where}; ilgi_alanlari={interests}; '
+        f'yakın_mekanlar={places}; sohbet_gecmisi={history}; '
         f'kullanici_mesaji={user_message}'
     )
+
+
+def format_venue_reply(places: list[Any], where: str) -> str:
+    """Google Places sonuçlarından doğrudan yanıt — LLM halüsinasyonu yok."""
+    if not places:
+        return (
+            f'{where} için şu an kayıtlı restoran bulamadım. '
+            'Harita sekmesinden "Yemek" filtresiyle canlı mekanlara bakabilirsin.'
+        )
+    lines = [f'**{where}** bölgesinde önerdiğim lokantalar:\n']
+    for i, p in enumerate(places[:5], 1):
+        name = getattr(p, 'name', '')
+        addr = getattr(p, 'address', '') or ''
+        rating = getattr(p, 'rating', None)
+        count = getattr(p, 'user_rating_count', None)
+        stars = f' ⭐ {rating}' if rating else ''
+        reviews = f' ({count} yorum)' if count else ''
+        lines.append(f'{i}. **{name}**{stars}{reviews}')
+        if addr:
+            lines.append(f'   📍 {addr}')
+    lines.append('\nDetay için uygulamada **Harita → Yemek** filtresine bakabilirsin.')
+    return '\n'.join(lines)
 
 
 # --- Sesli anlatım ---

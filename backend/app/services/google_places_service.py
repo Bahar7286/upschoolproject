@@ -140,11 +140,21 @@ def _summarize(place: dict, *, category: str | None = None) -> GooglePlaceSummar
     )
 
 
+def _sort_by_popularity(places: list[GooglePlaceSummary]) -> list[GooglePlaceSummary]:
+    return sorted(
+        places,
+        key=lambda p: (p.user_rating_count or 0, p.rating or 0.0),
+        reverse=True,
+    )
+
+
 # Google Nearby Search (New) allows max 20 results per HTTP request (no pagination).
 _NEARBY_MULTI_TYPE_GROUPS: list[list[str]] = [
     ['tourist_attraction', 'museum', 'historical_landmark'],
     ['restaurant', 'cafe', 'bakery'],
     ['lodging', 'hotel', 'shopping_mall'],
+    ['mosque', 'church', 'art_gallery'],
+    ['market', 'point_of_interest'],
 ]
 
 
@@ -161,6 +171,7 @@ class GooglePlacesService:
         body = {
             'includedTypes': types[:1] if len(types) == 1 else types[:3],
             'maxResultCount': 20,
+            'rankPreference': 'POPULARITY',
             'locationRestriction': {
                 'circle': {
                     'center': {'latitude': lat, 'longitude': lng},
@@ -184,11 +195,11 @@ class GooglePlacesService:
             logger.warning('Places nearby %s: %s', resp.status_code, resp.text[:300])
             raise ValueError('Google Places araması başarısız')
         data = resp.json()
-        return [
+        return _sort_by_popularity([
             _summarize(p, category=category)
             for p in data.get('places', [])
             if _display_name(p)
-        ]
+        ])
 
     async def search_text(
         self,
@@ -218,7 +229,7 @@ class GooglePlacesService:
         body = {
             'textQuery': q,
             'languageCode': 'tr',
-            'maxResultCount': 15,
+            'maxResultCount': 20,
             'locationBias': {
                 'circle': {
                     'center': {'latitude': lat, 'longitude': lng},
@@ -241,11 +252,11 @@ class GooglePlacesService:
             logger.warning('Places text search %s: %s', resp.status_code, resp.text[:300])
             raise ValueError('Google Places metin araması başarısız')
 
-        places = [
+        places = _sort_by_popularity([
             _summarize(p)
             for p in resp.json().get('places', [])
             if _display_name(p)
-        ]
+        ])
         _cache_set(cache_key, places)
         return places, False
 
@@ -272,9 +283,17 @@ class GooglePlacesService:
             return cached, True
 
         if category:
-            places = await self._fetch_nearby_types(
-                lat=lat, lng=lng, radius_m=radius_m, types=types, category=category
-            )
+            merged: dict[str, GooglePlaceSummary] = {}
+            for t in types:
+                try:
+                    batch = await self._fetch_nearby_types(
+                        lat=lat, lng=lng, radius_m=radius_m, types=[t], category=category
+                    )
+                except ValueError:
+                    continue
+                for place in batch:
+                    merged[place.place_id] = place
+            places = _sort_by_popularity(list(merged.values()))[:40]
         else:
             merged: dict[str, GooglePlaceSummary] = {}
             for group in _NEARBY_MULTI_TYPE_GROUPS:
@@ -286,7 +305,7 @@ class GooglePlacesService:
                     continue
                 for place in batch:
                     merged[place.place_id] = place
-            places = list(merged.values())[:60]
+            places = _sort_by_popularity(list(merged.values()))[:80]
 
         _cache_set(cache_key, places)
         return places, False

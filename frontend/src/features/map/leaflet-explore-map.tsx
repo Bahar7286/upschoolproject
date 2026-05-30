@@ -288,16 +288,31 @@ export function LeafletExploreMap({
 
 
         {showPlaces && googlePlaces.length > 0
-          ? googlePlaces.map((gp) => (
+          ? googlePlaces.map((gp, idx) => {
+              const popular = idx < 10;
+              const radius = popular ? 10 : 7;
+              const ratingLabel =
+                gp.rating != null
+                  ? `⭐ ${gp.rating}${gp.user_rating_count ? ` (${gp.user_rating_count})` : ''}`
+                  : null;
+              return (
               <CircleMarker
                 key={`gplace-${gp.place_id}`}
                 center={[gp.lat, gp.lng]}
-                radius={8}
-                pathOptions={{ color: '#b45309', fillColor: '#d97706', fillOpacity: 0.88, weight: 2 }}
+                radius={radius}
+                pathOptions={{
+                  color: popular ? '#92400e' : '#b45309',
+                  fillColor: popular ? '#f59e0b' : '#d97706',
+                  fillOpacity: popular ? 0.95 : 0.88,
+                  weight: popular ? 2.5 : 2,
+                }}
               >
                 <Popup>
                   <div className="min-w-[160px] space-y-1 p-1 font-sans text-sm">
                     <div className="font-bold">{gp.name}</div>
+                    {ratingLabel ? (
+                      <div className="text-xs font-semibold text-amber-700">{ratingLabel}</div>
+                    ) : null}
                     <div className="text-xs text-stone-600">{gp.address}</div>
                     <Link
                       className="mt-1 inline-block font-semibold text-primary underline"
@@ -308,7 +323,8 @@ export function LeafletExploreMap({
                   </div>
                 </Popup>
               </CircleMarker>
-            ))
+            );
+            })
           : null}
 
 

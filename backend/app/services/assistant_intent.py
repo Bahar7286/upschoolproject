@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import unicodedata
 
 _GREETING = re.compile(
     r'^(selam|slm|slmm|merhaba|mrb|hey|hi|hello|günaydın|gunaydin|iyi günler|'
@@ -18,6 +19,48 @@ _TRAVEL_HINT = re.compile(
     r'tavsiye|gün|gun|günde|kaç gün|itinerary|visit|place|museum|restaurant)',
     re.IGNORECASE,
 )
+_FOOD_HINT = re.compile(
+    r'(yemek|lokanta|restoran|restaurant|kafe|cafe|kebap|balık|balik|tatlı|tatli|'
+    r'brunch|kahvaltı|kahvalti|meze|yiyelim|yiyebilir|ne yiy|yemek.*öner|öner.*yemek|'
+    r'lokasyon.*lokanta|somewhere to eat|where to eat)',
+    re.IGNORECASE,
+)
+_SPECIFIC_VENUE = re.compile(
+    r'(tam bir mekan|gerçek mekan|ispesifik|somewhere specific|named restaurant|'
+    r'lokasyon bir lokanta|bir lokanta|bir restoran|somewhere to eat|'
+    r'konkret|somewhere concrete|adı geçen|isim ver)',
+    re.IGNORECASE,
+)
+
+# İstanbul semt/ilçe koordinatları (asistan konum çözümleme)
+_DISTRICT_POI: dict[str, tuple[float, float]] = {
+    'eminonu': (41.0175, 28.9720),
+    'eminönü': (41.0175, 28.9720),
+    'sultanahmet': (41.0054, 28.9768),
+    'fatih': (41.0186, 28.9497),
+    'beyoglu': (41.0310, 28.9833),
+    'beyoğlu': (41.0310, 28.9833),
+    'karakoy': (41.0227, 28.9747),
+    'karaköy': (41.0227, 28.9747),
+    'galata': (41.0256, 28.9744),
+    'kadikoy': (40.9903, 29.0258),
+    'kadıköy': (40.9903, 29.0258),
+    'besiktas': (41.0422, 29.0067),
+    'beşiktaş': (41.0422, 29.0067),
+    'ortakoy': (41.0553, 29.0267),
+    'ortaköy': (41.0553, 29.0267),
+    'uskudar': (41.0214, 29.0151),
+    'üsküdar': (41.0214, 29.0151),
+    'taksim': (41.0370, 28.9850),
+    'cankurtaran': (41.0036, 28.9810),
+    'balat': (41.0294, 28.9487),
+    'fener': (41.0290, 28.9480),
+}
+
+
+def _norm(text: str) -> str:
+    t = unicodedata.normalize('NFKD', text.strip().lower())
+    return ''.join(c for c in t if not unicodedata.combining(c))
 
 
 def is_greeting(text: str) -> bool:
@@ -38,6 +81,102 @@ def needs_travel_plan(text: str) -> bool:
     if len(t) > 35:
         return True
     return bool(_TRAVEL_HINT.search(t))
+
+
+def is_food_query(text: str) -> bool:
+    return bool(_FOOD_HINT.search(text))
+
+
+def is_specific_venue_request(text: str) -> bool:
+    t = text.strip()
+    if _SPECIFIC_VENUE.search(t):
+        return True
+    if is_food_query(t) and any(w in _norm(t) for w in ('lokanta', 'restoran', 'mekan oner', 'mekan öner')):
+        return True
+    return False
+
+
+def detect_query_category(text: str, interests: list[str] | None = None) -> str:
+    """Mesaj ve ilgi alanlarından Places kategorisi."""
+    t = _norm(text)
+    if is_food_query(text):
+        return 'restaurant'
+    if any(w in t for w in ('müze', 'muze', 'museum')):
+        return 'museum'
+    if any(w in t for w in ('cami', 'mosque')):
+        return 'mosque'
+    if any(w in t for w in ('saray', 'palace')):
+        return 'palace'
+    if any(w in t for w in ('otel', 'konak', 'hotel', 'pansiyon')):
+        return 'accommodation'
+    if any(w in t for w in ('çarşı', 'carsi', 'bazaar', 'alışveriş', 'alisveris')):
+        return 'bazaar'
+    joined = ' '.join(interests or []).lower()
+    if any(w in joined for w in ('food', 'yemek', 'restaurant', 'cafe', 'gastronomy')):
+        return 'restaurant'
+    if any(w in joined for w in ('museum', 'müze', 'art')):
+        return 'museum'
+    return 'historical'
+
+
+def resolve_intent(text: str, recent_user_text: str = '') -> str:
+    """greeting | thanks | specific_venue | food | route_plan | general"""
+    if is_greeting(text):
+        return 'greeting'
+    if is_thanks(text):
+        return 'thanks'
+    if is_specific_venue_request(text):
+        return 'specific_venue'
+    if is_food_query(text) or is_food_query(recent_user_text):
+        return 'food'
+    if needs_travel_plan(text):
+        return 'route_plan'
+    return 'general'
+
+
+def extract_area_from_text(text: str) -> str:
+    """Metinden semt/ilçe adı çıkar."""
+    norm = _norm(text)
+    for key in sorted(_DISTRICT_POI.keys(), key=len, reverse=True):
+        if _norm(key) in norm:
+            return key
+    return ''
+
+
+def extract_area_from_messages(
+    messages: list,
+    city: str,
+    district: str,
+) -> str:
+    if district.strip():
+        return district.strip()
+    for msg in reversed(messages):
+        if getattr(msg, 'role', '') == 'user':
+            area = extract_area_from_text(msg.content)
+            if area:
+                return area
+    return extract_area_from_text(city)
+
+
+def district_coords(area: str) -> tuple[float, float] | None:
+    if not area.strip():
+        return None
+    key = _norm(area)
+    for name, coords in _DISTRICT_POI.items():
+        if _norm(name) == key or key in _norm(name) or _norm(name) in key:
+            return coords
+    return None
+
+
+def build_conversation_history(messages: list, limit: int = 6) -> str:
+    recent = messages[-limit:] if len(messages) > limit else messages
+    parts: list[str] = []
+    for msg in recent:
+        role = 'Kullanıcı' if getattr(msg, 'role', '') == 'user' else 'Asistan'
+        content = str(getattr(msg, 'content', ''))[:180]
+        if content.strip():
+            parts.append(f'{role}: {content}')
+    return ' | '.join(parts) if parts else 'yok'
 
 
 def quick_assistant_reply(text: str, city: str, district: str = '') -> str | None:

@@ -1,3 +1,4 @@
+import asyncio
 import logging
 import time
 from hashlib import sha256
@@ -18,14 +19,26 @@ from app.schemas.ai_schema import (
     StopNarrationResponse,
 )
 from app.services.google_places_service import google_places_service
-from app.services.assistant_intent import needs_travel_plan, quick_assistant_reply
+from app.services.assistant_intent import (
+    build_conversation_history,
+    detect_query_category,
+    district_coords,
+    extract_area_from_messages,
+    is_food_query,
+    needs_travel_plan,
+    quick_assistant_reply,
+    resolve_intent,
+)
 from app.services.ai_prompts import (
     SYSTEM_ASSISTANT,
+    SYSTEM_ASSISTANT_VENUE,
     SYSTEM_NARRATION,
     SYSTEM_ROUTE_RECOMMEND,
     build_assistant_user,
     build_narration_user,
     build_route_recommend_user,
+    format_places_detail,
+    format_venue_reply,
 )
 from app.services.llm_service import LLMServiceError, llm_service
 from app.services.tts_service import synthesize_mp3_base64
@@ -46,9 +59,21 @@ def _narration_cache_key(title: str, desc: str, langs: tuple[str, ...]) -> str:
     return sha256(raw.encode()).hexdigest()
 
 _CITY_POI = {
-    'Istanbul': (41.0082, 28.9784),
+    'istanbul': (41.0082, 28.9784),
+    'İstanbul': (41.0082, 28.9784),
+    'ankara': (39.9334, 32.8597),
     'Ankara': (39.9334, 32.8597),
+    'izmir': (38.4192, 27.1287),
+    'antalya': (36.8969, 30.7133),
+    'bursa': (40.1885, 29.0610),
+    'gaziantep': (37.0662, 37.3833),
+    'trabzon': (41.0027, 39.7168),
+    'konya': (37.8746, 32.4932),
+    'duzce': (40.8438, 31.1565),
+    'düzce': (40.8438, 31.1565),
 }
+
+_LLM_RECOMMEND_TIMEOUT_SEC = 12.0
 
 _LLM_CATALOG_LIMIT = 30
 _LLM_RECOMMEND_MAX_TOKENS = 700
@@ -111,9 +136,14 @@ class AIService:
 
         if settings.llm_enabled:
             try:
-                items = await self._llm_recommendations(payload, routes)
+                items = await asyncio.wait_for(
+                    self._llm_recommendations(payload, routes),
+                    timeout=_LLM_RECOMMEND_TIMEOUT_SEC,
+                )
                 if items:
                     return items
+            except asyncio.TimeoutError:
+                logger.warning('LLM recommend timeout (%.0fs), using rules', _LLM_RECOMMEND_TIMEOUT_SEC)
             except LLMServiceError as exc:
                 logger.warning('LLM recommend failed, using rules: %s', exc)
 
@@ -326,59 +356,123 @@ class AIService:
             )
 
         last_user = ''
+        recent_user = ''
         for msg in reversed(payload.messages):
             if msg.role == 'user' and msg.content.strip():
-                last_user = msg.content.strip()
-                break
+                if not last_user:
+                    last_user = msg.content.strip()
+                elif not recent_user:
+                    recent_user = msg.content.strip()
+                    break
         if not last_user:
             last_user = 'Merhaba'
 
-        quick = quick_assistant_reply(last_user, payload.city, payload.district or '')
+        area = extract_area_from_messages(payload.messages, payload.city, payload.district)
+        where = payload.city if not area else f'{area}, {payload.city}'
+
+        quick = quick_assistant_reply(last_user, payload.city, area or payload.district)
         if quick:
             return AssistantChatResponse(reply=quick, source='rules')
 
         interests = ', '.join(payload.interests) if payload.interests else 'genel'
-        where = payload.city if not payload.district else f'{payload.district}, {payload.city}'
+        history = build_conversation_history(payload.messages)
+        intent = resolve_intent(last_user, recent_user)
+        lat, lng = self._resolve_assistant_coords(payload, area)
+
+        if intent in ('specific_venue', 'food') and settings.google_places_enabled:
+            venue_reply = await self._assistant_food_reply(
+                lat=lat, lng=lng, where=where, last_user=last_user, intent=intent
+            )
+            if venue_reply:
+                return venue_reply
 
         places_hint = ''
         if needs_travel_plan(last_user) and settings.google_places_enabled:
-            lat = payload.location_lat
-            lng = payload.location_lng
-            if lat is None or lng is None:
-                key = payload.city.strip().lower()
-                for name, coords in _CITY_POI.items():
-                    if name.lower() in key or key in name.lower():
-                        lat, lng = coords
-                        break
-                if lat is None:
-                    lat, lng = 41.0082, 28.9784
-            cat = _interest_to_category(payload.interests)
+            cat = detect_query_category(last_user, payload.interests)
             try:
                 nearby, _ = await google_places_service.search_nearby(
                     lat=float(lat),
                     lng=float(lng),
-                    radius_m=8000,
+                    radius_m=5000,
                     category=cat,
                 )
                 if nearby:
-                    names = ', '.join(p.name for p in nearby[:10])
-                    places_hint = names
+                    places_hint = format_places_detail(nearby[:10])
             except Exception as exc:
                 logger.debug('Assistant places lookup: %s', exc)
 
+        prompt_intent = 'rota' if intent == 'route_plan' else intent
         user = build_assistant_user(
             where=where,
             interests=interests,
             places_hint=places_hint,
             user_message=last_user,
+            intent=prompt_intent,
+            history=history,
         )
+        system = SYSTEM_ASSISTANT_VENUE if intent == 'food' else SYSTEM_ASSISTANT
         text = await llm_service.complete_text(
-            system=SYSTEM_ASSISTANT,
+            system=system,
             user=user,
-            temperature=0.35,
+            temperature=0.3,
             max_tokens=_LLM_ASSISTANT_MAX_TOKENS,
         )
         return AssistantChatResponse(reply=text.strip()[:2500], source='llm')
+
+    async def _assistant_food_reply(
+        self,
+        *,
+        lat: float,
+        lng: float,
+        where: str,
+        last_user: str,
+        intent: str,
+    ) -> AssistantChatResponse | None:
+        query = f'restoran {where}'
+        lower = last_user.lower()
+        if 'balık' in lower or 'balik' in lower:
+            query = f'balık restoranı {where}'
+        elif 'kebap' in lower:
+            query = f'kebap {where}'
+
+        places: list = []
+        try:
+            places, _ = await google_places_service.search_text(
+                query=query, lat=lat, lng=lng, radius_m=4000, client_key='assistant'
+            )
+        except Exception as exc:
+            logger.debug('Assistant text search: %s', exc)
+
+        if not places:
+            try:
+                places, _ = await google_places_service.search_nearby(
+                    lat=lat, lng=lng, radius_m=3000, category='restaurant', client_key='assistant'
+                )
+            except Exception as exc:
+                logger.debug('Assistant nearby food: %s', exc)
+
+        if not places:
+            return None
+
+        if intent == 'specific_venue' or is_food_query(last_user):
+            return AssistantChatResponse(
+                reply=format_venue_reply(places, where),
+                source='places',
+            )
+        return None
+
+    @staticmethod
+    def _resolve_assistant_coords(payload: AssistantChatRequest, area: str) -> tuple[float, float]:
+        if payload.location_lat is not None and payload.location_lng is not None:
+            return float(payload.location_lat), float(payload.location_lng)
+        dc = district_coords(area)
+        if dc:
+            return dc
+        key = payload.city.strip().lower()
+        for name, coords in _CITY_POI.items():
+            if name.lower() in key or key in name.lower():
+                return coords
+        return 41.0082, 28.9784
 
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']
