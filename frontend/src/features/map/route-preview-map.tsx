@@ -1,8 +1,9 @@
 import type { ReactElement } from 'react';
+import { useEffect, useState } from 'react';
 import { GoogleMap, Marker, Polyline, useJsApiLoader } from '@react-google-maps/api';
 
 import { decodePolyline } from '../../utils/polyline';
-import { LeafletRegionMap } from './leaflet-region-map';
+import { LeafletPickRouteMap } from './leaflet-pick-route-map';
 
 export function RoutePreviewMap({
   dest,
@@ -23,29 +24,36 @@ export function RoutePreviewMap({
   onPickWaypoint?: (lat: number, lng: number) => void;
   waypoints?: { lat: number; lng: number }[];
 }): ReactElement {
-  const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
-  const path = encodedPolyline ? decodePolyline(encodedPolyline) : [];
   const center = origin ?? dest;
+  const canPick = pickOrigin || pickWaypoint;
 
-  if (googleKey) {
+  if (canPick || !import.meta.env.VITE_GOOGLE_MAPS_API_KEY) {
     return (
-      <GoogleRoutePreview
-        apiKey={googleKey}
+      <LeafletPickRouteMap
         center={center}
         dest={dest}
         origin={origin}
-        path={path}
+        waypoints={waypoints}
+        encodedPolyline={encodedPolyline}
         pickOrigin={pickOrigin}
         pickWaypoint={pickWaypoint}
         onPickOrigin={onPickOrigin}
         onPickWaypoint={onPickWaypoint}
-        waypoints={waypoints}
+        heightClass="h-[min(48vh,360px)] min-h-[260px]"
       />
     );
   }
 
-  const places = [{ place_id: 'dest', name: dest.title ?? 'Hedef', lat: dest.lat, lng: dest.lng, address: '', types: [], google_maps_uri: '' }];
-  return <LeafletRegionMap center={center} zoom={14} places={places} />;
+  return (
+    <GoogleRoutePreview
+      apiKey={import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string}
+      center={center}
+      dest={dest}
+      origin={origin}
+      path={encodedPolyline ? decodePolyline(encodedPolyline) : []}
+      waypoints={waypoints}
+    />
+  );
 }
 
 function GoogleRoutePreview({
@@ -54,10 +62,6 @@ function GoogleRoutePreview({
   dest,
   origin,
   path,
-  pickOrigin,
-  pickWaypoint,
-  onPickOrigin,
-  onPickWaypoint,
   waypoints,
 }: {
   apiKey: string;
@@ -65,10 +69,6 @@ function GoogleRoutePreview({
   dest: { lat: number; lng: number; title?: string };
   origin?: { lat: number; lng: number } | null;
   path: { lat: number; lng: number }[];
-  pickOrigin?: boolean;
-  pickWaypoint?: boolean;
-  onPickOrigin?: (lat: number, lng: number) => void;
-  onPickWaypoint?: (lat: number, lng: number) => void;
   waypoints?: { lat: number; lng: number }[];
 }): ReactElement {
   const { isLoaded, loadError } = useJsApiLoader({
@@ -76,39 +76,36 @@ function GoogleRoutePreview({
     googleMapsApiKey: apiKey,
     version: 'weekly',
   });
+  const [useOsm, setUseOsm] = useState(false);
 
-  if (loadError) {
-    return <p className="text-sm text-red-700">Harita yüklenemedi.</p>;
+  useEffect(() => {
+    if (loadError) setUseOsm(true);
+  }, [loadError]);
+
+  if (useOsm || loadError) {
+    return (
+      <LeafletPickRouteMap
+        center={center}
+        dest={dest}
+        origin={origin}
+        waypoints={waypoints}
+        encodedPolyline=""
+        heightClass="h-[min(48vh,360px)] min-h-[260px]"
+      />
+    );
   }
+
   if (!isLoaded) {
-    return <div className="h-56 animate-pulse rounded-2xl bg-stone-200" aria-busy="true" />;
+    return <div className="h-[min(260px,48vh)] min-h-[260px] animate-pulse rounded-2xl bg-stone-200" aria-busy="true" />;
   }
-
-  const canPick = pickOrigin || pickWaypoint;
 
   return (
-    <div className="h-56 w-full overflow-hidden rounded-2xl border border-stone-900/10">
+    <div className="h-[min(48vh,360px)] min-h-[260px] w-full overflow-hidden rounded-2xl border border-stone-900/10">
       <GoogleMap
         mapContainerStyle={{ width: '100%', height: '100%' }}
         center={center}
         zoom={14}
         options={{ mapTypeControl: false, fullscreenControl: false }}
-        onClick={
-          canPick
-            ? (e) => {
-                if (!e.latLng) return;
-                const lat = e.latLng.lat();
-                const lng = e.latLng.lng();
-                if (pickWaypoint && onPickWaypoint) {
-                  onPickWaypoint(lat, lng);
-                  return;
-                }
-                if (pickOrigin && onPickOrigin) {
-                  onPickOrigin(lat, lng);
-                }
-              }
-            : undefined
-        }
       >
         {origin ? (
           <Marker
@@ -130,14 +127,6 @@ function GoogleRoutePreview({
             position={wp}
             label={{ text: String(i + 1), color: '#fff', fontSize: '11px', fontWeight: '700' }}
             title={`Ara durak ${i + 1}`}
-            icon={{
-              path: google.maps.SymbolPath.CIRCLE,
-              scale: 8,
-              fillColor: '#b45309',
-              fillOpacity: 1,
-              strokeColor: '#fff',
-              strokeWeight: 2,
-            }}
           />
         ))}
         <Marker position={dest} title={dest.title ?? 'Hedef'} />

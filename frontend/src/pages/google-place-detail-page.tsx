@@ -272,7 +272,7 @@ export default function GooglePlaceDetailPage(): ReactElement {
                     setRouteStep(3);
                   }}
                 >
-                  {t('route.addWaypoint', 'Haritadan ara durak seç')}
+                  {t('route.addWaypoint', 'Ara durak ekle')}
                 </button>
                 {waypoints.length > 0 ? (
                   <button

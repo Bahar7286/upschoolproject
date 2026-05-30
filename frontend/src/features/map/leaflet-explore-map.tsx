@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 
 import { Link } from 'react-router-dom';
 
-import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap } from 'react-leaflet';
+import { CircleMarker, MapContainer, Marker, Polyline, Popup, TileLayer, useMap, useMapEvents } from 'react-leaflet';
 
 import L from 'leaflet';
 
@@ -105,6 +105,22 @@ function FlyToCenter({ lat, lng, zoom }: { lat: number; lng: number; zoom: numbe
   return null;
 }
 
+function MapPickHandler({
+  active,
+  onPick,
+}: {
+  active: boolean;
+  onPick?: (lat: number, lng: number) => void;
+}) {
+  useMapEvents({
+    click(e) {
+      if (!active || !onPick) return;
+      onPick(e.latlng.lat, e.latlng.lng);
+    },
+  });
+  return null;
+}
+
 
 
 export function LeafletExploreMap({
@@ -127,6 +143,10 @@ export function LeafletExploreMap({
 
   googlePlaces = [],
 
+  onMapPick,
+
+  mapPickActive = false,
+
 }: {
 
   routes: RouteResponse[];
@@ -146,6 +166,10 @@ export function LeafletExploreMap({
   zoom?: number;
 
   googlePlaces?: GooglePlaceSummary[];
+
+  onMapPick?: (lat: number, lng: number) => void;
+
+  mapPickActive?: boolean;
 
 }): ReactElement {
 
@@ -169,11 +193,12 @@ export function LeafletExploreMap({
 
   return (
 
-    <div className="relative h-[min(52vh,400px)] w-full overflow-hidden rounded-2xl border border-stone-900/10 shadow-lift sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)] dark:border-white/10 dark:shadow-lift-dark">
+    <div className="relative h-[min(52vh,400px)] min-h-[280px] w-full overflow-hidden rounded-2xl border border-stone-900/10 shadow-lift sm:h-[min(62vh,480px)] sm:min-h-[320px] lg:h-[min(70vh,560px)] dark:border-white/10 dark:shadow-lift-dark">
 
-      <MapContainer center={mapCenter} zoom={zoom} className="z-0 h-full w-full" scrollWheelZoom>
+      <MapContainer center={mapCenter} zoom={zoom} className="z-0 h-full w-full min-h-[280px]" scrollWheelZoom>
 
         <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
+        <MapPickHandler active={mapPickActive} onPick={onMapPick} />
 
         {center ? <FlyToCenter lat={center.lat} lng={center.lng} zoom={zoom} /> : null}
 
@@ -378,6 +403,12 @@ export function LeafletExploreMap({
           : null}
 
       </MapContainer>
+
+      {mapPickActive ? (
+        <p className="pointer-events-none absolute bottom-3 left-3 right-3 rounded-lg bg-amber-100/95 px-3 py-2 text-center text-xs font-bold text-amber-950 shadow dark:bg-amber-950/90 dark:text-amber-100">
+          Haritaya dokunarak ara durak ekleyin
+        </p>
+      ) : null}
 
     </div>
 

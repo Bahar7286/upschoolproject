@@ -122,12 +122,16 @@ export default function DiscoverPage(): ReactElement {
   }, [searchParams.get('ai'), routes.length]);
 
   const display = useMemo(() => {
-    const base = recommendMutation.data?.length ? recommendMutation.data : routes;
+    const base = recommendMutation.data?.length
+      ? recommendMutation.data
+      : routes.length > 0
+        ? routes
+        : routeSource;
     if (!cityFilter) return base;
     const norm = cityFilter.toLowerCase();
     const filtered = base.filter((r) => r.city.toLowerCase().includes(norm));
     return filtered.length > 0 ? filtered : base;
-  }, [recommendMutation.data, routeSource, cityFilter]);
+  }, [recommendMutation.data, routes, routeSource, cityFilter]);
 
   const listError = isError ? mapError(error, 'discover') : null;
   const recommendError = recommendMutation.isError
@@ -266,7 +270,15 @@ export default function DiscoverPage(): ReactElement {
         </div>
       ) : null}
 
-      {recommendMutation.isPending ? <DiscoverLoading /> : null}
+      {recommendMutation.isPending && routes.length === 0 ? <DiscoverLoading /> : null}
+      {recommendMutation.isPending && routes.length > 0 ? (
+        <p
+          className="rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-dark dark:text-primary"
+          role="status"
+        >
+          Kişisel öneriler hazırlanıyor… Mevcut rotalar aşağıda listeleniyor.
+        </p>
+      ) : null}
       {slowRecommend && recommendMutation.isPending ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
           Öneriler biraz uzun sürdü. Popüler rotaları aşağıda inceleyebilirsin.
@@ -312,7 +324,7 @@ export default function DiscoverPage(): ReactElement {
         />
       ) : null}
 
-      {isPending ? (
+      {isPending && routes.length === 0 ? (
         <ListSkeleton count={6} />
       ) : display.length === 0 ? (
         <EmptyState {...EMPTY_STATES.search} />

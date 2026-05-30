@@ -63,6 +63,22 @@ export function GoogleExploreMap({
     }
   }, [map, center.lat, center.lng, zoom]);
 
+  useEffect(() => {
+    if (!map || !onLoadFailed || loadError) return;
+    let tilesSeen = false;
+    const failTimer = window.setTimeout(() => {
+      if (!tilesSeen) onLoadFailed();
+    }, 6000);
+    const listener = map.addListener('tilesloaded', () => {
+      tilesSeen = true;
+      window.clearTimeout(failTimer);
+    });
+    return () => {
+      window.clearTimeout(failTimer);
+      google.maps.event.removeListener(listener);
+    };
+  }, [map, onLoadFailed, loadError]);
+
   const polyPath = useMemo(() => {
     if (routePolyline && routePolyline.length > 1) return routePolyline;
     if (activeStops.length > 1) {

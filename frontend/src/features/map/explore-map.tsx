@@ -26,6 +26,8 @@ export interface ExploreMapProps {
   googlePlaces?: GooglePlaceSummary[];
   routePolyline?: { lat: number; lng: number }[] | null;
   preferGoogle?: boolean;
+  onMapPick?: (lat: number, lng: number) => void;
+  mapPickActive?: boolean;
 }
 
 export function ExploreMap({
@@ -40,7 +42,9 @@ export function ExploreMap({
   mapZoom = 13,
   googlePlaces = [],
   routePolyline = null,
-  preferGoogle = true,
+  preferGoogle = false,
+  onMapPick,
+  mapPickActive = false,
 }: ExploreMapProps): ReactElement {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const defaultCenter = mapCenter ?? { lat: 41.015137, lng: 28.97953 };
@@ -52,6 +56,12 @@ export function ExploreMap({
     setGoogleFailed(true);
     setEngine('leaflet');
   }, []);
+
+  useEffect(() => {
+    if (mapPickActive) {
+      setEngine('leaflet');
+    }
+  }, [mapPickActive]);
 
   useEffect(() => {
     if (!canUseGoogle || googleFailed || engine !== 'google') return;
@@ -127,6 +137,8 @@ export function ExploreMap({
           center={defaultCenter}
           zoom={mapZoom}
           googlePlaces={googlePlaces}
+          onMapPick={onMapPick}
+          mapPickActive={mapPickActive}
         />
       ) : null}
       {activeEngine === 'google' && googleKey ? (

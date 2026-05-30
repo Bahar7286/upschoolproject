@@ -27,7 +27,7 @@ import { completeRoute } from '../services/profile-service';
 import { fetchCurrentUser } from '../services/auth-service';
 import { useOnboardingStore } from '../stores/onboarding-store';
 
-import { ActiveRoutePlanner } from '../features/active-route/active-route-planner';
+import { ActiveRoutePlanner, useAddPlaceToActiveRoute } from '../features/active-route/active-route-planner';
 import { listTripExtraStops } from '../services/trip-extra-stop-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 
@@ -223,6 +223,9 @@ export default function MapPage(): ReactElement {
   const [completeMsg, setCompleteMsg] = useState('');
 
   const [busy, setBusy] = useState(false);
+  const [mapPickActive, setMapPickActive] = useState(false);
+  const [mapPickMsg, setMapPickMsg] = useState('');
+  const { addPlace } = useAddPlaceToActiveRoute();
 
   const focusRouteId = activeParam && Number.isFinite(routeParam) ? routeParam : activeRouteId;
 
@@ -240,6 +243,27 @@ export default function MapPage(): ReactElement {
       cancelled = true;
     };
   }, [accessToken, activeRouteId, setExtraStops]);
+
+  const handleMapPick = useCallback(
+    async (lat: number, lng: number) => {
+      if (!mapPickActive) return;
+      setMapPickMsg('');
+      const err = await addPlace({
+        title: `Ara durak (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+        latitude: lat,
+        longitude: lng,
+        description: 'Haritadan eklendi',
+        insertAfterCurrent: true,
+      });
+      if (err) {
+        setMapPickMsg(err);
+        return;
+      }
+      setMapPickMsg('Ara durak eklendi ✓');
+      setMapPickActive(false);
+    },
+    [addPlace, mapPickActive],
+  );
 
   const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
   const { speak } = useSpeechSynthesis();
@@ -538,7 +562,9 @@ export default function MapPage(): ReactElement {
         mapZoom={mapZoom}
         googlePlaces={sortedGooglePlaces}
         routePolyline={routePolyline}
-        preferGoogle={Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY)}
+        preferGoogle={false}
+        mapPickActive={mapPickActive}
+        onMapPick={(lat, lng) => void handleMapPick(lat, lng)}
       />
 
 
@@ -642,6 +668,33 @@ export default function MapPage(): ReactElement {
 
           {focusRouteId && mergedStops.length > 0 ? (
             <div className="mt-4 border-t border-stone-900/10 pt-4 dark:border-white/10">
+              <button
+                type="button"
+                className={`tap-scale mb-3 inline-flex min-h-[44px] w-full items-center justify-center rounded-xl border-2 px-4 text-sm font-bold ${
+                  mapPickActive
+                    ? 'border-amber-600 bg-amber-100 text-amber-950 dark:bg-amber-950/50 dark:text-amber-100'
+                    : 'border-amber-500 bg-amber-50 text-amber-950 dark:bg-amber-950/40'
+                }`}
+                onClick={() => {
+                  setMapPickMsg('');
+                  setMapPickActive((v) => !v);
+                }}
+              >
+                {mapPickActive ? 'İptal — harita seçimi' : 'Ara durak ekle (haritaya dokun)'}
+              </button>
+              {mapPickActive ? (
+                <p className="mb-3 text-xs font-semibold text-amber-800 dark:text-amber-200" role="status">
+                  Haritada eklemek istediğiniz noktaya dokunun.
+                </p>
+              ) : null}
+              {mapPickMsg ? (
+                <p
+                  className={`mb-3 text-xs font-medium ${mapPickMsg.includes('✓') ? 'text-primary' : 'text-red-700'}`}
+                  role="status"
+                >
+                  {mapPickMsg}
+                </p>
+              ) : null}
               <ActiveRoutePlanner
                 mergedStops={mergedStops}
                 currentStopIndex={currentStopIndex}

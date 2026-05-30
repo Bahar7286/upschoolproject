@@ -94,9 +94,12 @@ export default function AssistantPage(): ReactElement {
   };
 
   return (
-    <section className="mx-auto flex max-w-3xl flex-col gap-4 pb-4" aria-labelledby="asst-title">
+    <section
+      className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 pb-2"
+      aria-labelledby="asst-title"
+    >
       <BackButton to="/discover" />
-      <header className="space-y-1">
+      <header className="shrink-0 space-y-1">
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-theme sm:text-3xl" id="asst-title">
           AI Asistan
         </h1>
@@ -104,23 +107,25 @@ export default function AssistantPage(): ReactElement {
       </header>
 
       {import.meta.env.DEV ? (
-        <div className="rounded-xl border border-stone-900/10 bg-stone-50 px-3 py-2 text-xs text-stone-500 dark:border-white/10 dark:bg-zinc-900">
+        <div className="shrink-0 rounded-xl border border-stone-900/10 bg-stone-50 px-3 py-2 text-xs text-stone-500 dark:border-white/10 dark:bg-zinc-900">
           Geliştirici: {getApiBaseUrl()}
         </div>
       ) : null}
 
       {errorDetail ? (
-        <ErrorAlert error={errorDetail} onRetry={() => setErrorDetail(null)} />
+        <div className="shrink-0">
+          <ErrorAlert error={errorDetail} onRetry={() => setErrorDetail(null)} />
+        </div>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <div className="grid shrink-0 grid-cols-1 gap-2 sm:grid-cols-2">
         <div className="theme-card rounded-2xl p-3">
           <label className="text-xs font-bold uppercase tracking-[0.16em] text-theme-muted" htmlFor="asst-city">
             Şehir
           </label>
           <select
             id="asst-city"
-            className="mt-1 w-full bg-transparent text-sm outline-none"
+            className="mt-1 w-full bg-transparent text-base outline-none sm:text-sm"
             value={city}
             onChange={(e) => setCity(e.target.value)}
           >
@@ -141,7 +146,7 @@ export default function AssistantPage(): ReactElement {
           </label>
           <input
             id="asst-district"
-            className="mt-1 w-full bg-transparent text-sm outline-none"
+            className="mt-1 w-full bg-transparent text-base outline-none sm:text-sm"
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
             placeholder="Örn. Eminönü"
@@ -149,8 +154,8 @@ export default function AssistantPage(): ReactElement {
         </div>
       </div>
 
-      <div className="theme-card flex min-h-[50vh] max-h-[min(70vh,520px)] flex-col gap-3 rounded-2xl p-3 sm:p-4">
-        <div className="flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
+      <div className="theme-card flex min-h-[min(52dvh,480px)] flex-1 flex-col overflow-hidden rounded-2xl p-3 sm:min-h-[min(58dvh,560px)] sm:p-4">
+        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
           {msgs.map((m, idx) => (
             <div key={idx} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
               <div
@@ -180,12 +185,15 @@ export default function AssistantPage(): ReactElement {
         </div>
 
         {msgs.some((m) => m.role === 'assistant' && m.content.length > 20) ? (
-          <HelpfulFeedback contextKey={`assistant_${city}`} />
+          <div className="shrink-0 pt-2">
+            <HelpfulFeedback contextKey={`assistant_${city}`} />
+          </div>
         ) : null}
 
-        <div className="flex shrink-0 items-center gap-2 border-t border-stone-900/5 pt-2 dark:border-white/10">
-          <input
-            className="h-12 min-w-0 flex-1 rounded-xl border border-stone-900/10 bg-white px-3 text-base outline-none dark:border-white/10 dark:bg-zinc-900 sm:px-4 sm:text-sm"
+        <div className="sticky bottom-0 z-10 mt-2 flex shrink-0 items-end gap-2 border-t border-stone-900/5 bg-[var(--card-bg,theme(colors.white))] pt-3 dark:border-white/10 dark:bg-zinc-900">
+          <textarea
+            rows={1}
+            className="max-h-32 min-h-[48px] min-w-0 flex-1 resize-none rounded-xl border border-stone-900/10 bg-white px-3 py-3 text-base leading-snug outline-none focus:border-primary dark:border-white/10 dark:bg-zinc-950 sm:text-sm"
             placeholder="Soru sor…"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -198,7 +206,7 @@ export default function AssistantPage(): ReactElement {
           />
           <button
             type="button"
-            className="tap-scale inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-60"
+            className="tap-scale mb-0.5 inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary text-white disabled:opacity-60"
             onClick={handleSend}
             disabled={sendLoading}
             aria-busy={sendLoading}
