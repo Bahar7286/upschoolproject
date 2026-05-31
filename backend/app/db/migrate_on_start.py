@@ -92,24 +92,42 @@ async def _stamp_for_legacy_schema() -> None:
     _run_alembic('stamp', REVISION_BASELINE)
 
 
-async def _ensure_route_lifecycle_columns() -> None:
-    """Fix drift: alembic stamped past lifecycle but routes.status never added."""
+_REPAIR_ROUTES_LIFECYCLE_SQL = (
+    "ALTER TABLE routes ADD COLUMN IF NOT EXISTS status VARCHAR(32) NOT NULL DEFAULT 'published'",
+    "ALTER TABLE routes ADD COLUMN IF NOT EXISTS seo_description TEXT NOT NULL DEFAULT ''",
+    "ALTER TABLE routes ADD COLUMN IF NOT EXISTS moderation_note TEXT NOT NULL DEFAULT ''",
+    'ALTER TABLE routes ADD COLUMN IF NOT EXISTS submitted_at TIMESTAMP',
+    'ALTER TABLE routes ADD COLUMN IF NOT EXISTS published_at TIMESTAMP',
+    'CREATE INDEX IF NOT EXISTS ix_routes_status ON routes (status)',
+)
+
+
+async def _repair_routes_lifecycle_columns() -> None:
+    """Fix drift without re-running lifecycle migration (avoids duplicate-table crash)."""
     if await _column_exists('routes', 'status'):
         return
     if not await _table_exists('routes'):
         return
 
     current = await _current_revision()
-    if current is None:
+    if 'postgresql' not in str(engine.url):
+        print(
+            f'DRIFT: routes.status missing (alembic={current or "none"}); '
+            f'running alembic upgrade on non-Postgres…',
+            flush=True,
+        )
+        _run_alembic('stamp', REVISION_BASELINE)
+        _run_alembic('upgrade', 'head')
         return
 
     print(
-        f'DRIFT: routes.status missing at alembic {current}; '
-        f're-stamping {REVISION_BASELINE} and upgrading…',
+        f'DRIFT: routes.status missing (alembic={current or "none"}); repairing via SQL…',
         flush=True,
     )
-    _run_alembic('stamp', REVISION_BASELINE)
-    _run_alembic('upgrade', 'head')
+    async with engine.begin() as conn:
+        for stmt in _REPAIR_ROUTES_LIFECYCLE_SQL:
+            await conn.execute(text(stmt))
+    print('routes lifecycle columns repaired.', flush=True)
 
 
 async def _heal_schema_drift() -> None:
@@ -169,7 +187,7 @@ async def ensure_migrations() -> int:
         print('Legacy schema detected (cities exists, no alembic_version).', flush=True)
         await _stamp_for_legacy_schema()
 
-    await _ensure_route_lifecycle_columns()
+    await _repair_routes_lifecycle_columns()
     await _heal_schema_drift()
 
     print('Running alembic upgrade head…', flush=True)
@@ -178,7 +196,7 @@ async def ensure_migrations() -> int:
         print(f'alembic upgrade head failed with exit code {code}', flush=True)
         return code
 
-    await _ensure_route_lifecycle_columns()
+    await _repair_routes_lifecycle_columns()
     await _ensure_image_columns()
 
     final = await _current_revision()
