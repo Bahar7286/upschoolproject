@@ -10,6 +10,8 @@ from typing import Sequence, Union
 from alembic import op
 import sqlalchemy as sa
 
+from app.db.migration_utils import add_column_if_missing, has_table
+
 
 # revision identifiers, used by Alembic.
 revision: str = 'cea7936f46e5'
@@ -107,15 +109,26 @@ def upgrade() -> None:
             ondelete='CASCADE',
         )
 
-    with op.batch_alter_table('routes', schema=None) as batch_op:
-        batch_op.add_column(
+    if has_table('routes'):
+        add_column_if_missing(
+            'routes',
             sa.Column('status', sa.String(length=32), nullable=False, server_default='published'),
         )
-        batch_op.add_column(sa.Column('seo_description', sa.Text(), nullable=False, server_default=''))
-        batch_op.add_column(sa.Column('moderation_note', sa.Text(), nullable=False, server_default=''))
-        batch_op.add_column(sa.Column('submitted_at', sa.DateTime(), nullable=True))
-        batch_op.add_column(sa.Column('published_at', sa.DateTime(), nullable=True))
-        batch_op.create_index(batch_op.f('ix_routes_status'), ['status'], unique=False)
+        add_column_if_missing(
+            'routes',
+            sa.Column('seo_description', sa.Text(), nullable=False, server_default=''),
+        )
+        add_column_if_missing(
+            'routes',
+            sa.Column('moderation_note', sa.Text(), nullable=False, server_default=''),
+        )
+        add_column_if_missing('routes', sa.Column('submitted_at', sa.DateTime(), nullable=True))
+        add_column_if_missing('routes', sa.Column('published_at', sa.DateTime(), nullable=True))
+        bind = op.get_bind()
+        insp = sa.inspect(bind)
+        idx_names = {idx['name'] for idx in insp.get_indexes('routes')}
+        if 'ix_routes_status' not in idx_names:
+            op.create_index(op.f('ix_routes_status'), 'routes', ['status'], unique=False)
 
     # ### end Alembic commands ###
 

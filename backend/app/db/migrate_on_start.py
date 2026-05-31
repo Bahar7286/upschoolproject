@@ -10,11 +10,12 @@ from sqlalchemy import text
 
 from app.db.connection import engine
 
-# Last revision before preferred_city; matches partial / create_all legacy DBs.
-LEGACY_STAMP_REVISION = 'cea7936f46e5'
+REVISION_BASELINE = 'b03b7a457a90'
+REVISION_LIFECYCLE = 'cea7936f46e5'
 REVISION_PREFERRED_CITY = 'd4e8f1a2b3c4'
 REVISION_IMAGES = 'e7f8a9b0c1d2'
-HEAD_REVISION = REVISION_IMAGES
+REVISION_PLACE_VISITS = 'f2b3c4d5e6a7'
+HEAD_REVISION = 'g3c4d5e6a7b8'
 
 
 async def _table_exists(name: str) -> bool:
@@ -60,6 +61,57 @@ def _run_alembic(*args: str) -> int:
     return subprocess.call([sys.executable, '-m', 'alembic', '-c', str(ini), *args])
 
 
+async def _stamp_for_legacy_schema() -> None:
+    """Match alembic_version to columns that already exist — never skip lifecycle DDL."""
+    if await _column_exists('cities', 'image_url'):
+        if await _table_exists('premium_requests'):
+            print(f'Legacy schema at head; stamping {HEAD_REVISION}…', flush=True)
+            _run_alembic('stamp', HEAD_REVISION)
+        elif await _table_exists('place_visits'):
+            print(f'Legacy schema with place_visits; stamping {REVISION_PLACE_VISITS}…', flush=True)
+            _run_alembic('stamp', REVISION_PLACE_VISITS)
+        else:
+            print(f'Legacy schema with image_url; stamping {REVISION_IMAGES}…', flush=True)
+            _run_alembic('stamp', REVISION_IMAGES)
+        return
+
+    if await _column_exists('users', 'preferred_city') and await _column_exists('routes', 'status'):
+        print(f'Legacy schema with preferred_city; stamping {REVISION_PREFERRED_CITY}…', flush=True)
+        _run_alembic('stamp', REVISION_PREFERRED_CITY)
+        return
+
+    if await _column_exists('routes', 'status'):
+        print(f'Legacy schema with routes.status; stamping {REVISION_LIFECYCLE}…', flush=True)
+        _run_alembic('stamp', REVISION_LIFECYCLE)
+        return
+
+    print(
+        f'Legacy schema without routes.status; stamping {REVISION_BASELINE} then upgrading…',
+        flush=True,
+    )
+    _run_alembic('stamp', REVISION_BASELINE)
+
+
+async def _ensure_route_lifecycle_columns() -> None:
+    """Fix drift: alembic stamped past lifecycle but routes.status never added."""
+    if await _column_exists('routes', 'status'):
+        return
+    if not await _table_exists('routes'):
+        return
+
+    current = await _current_revision()
+    if current is None:
+        return
+
+    print(
+        f'DRIFT: routes.status missing at alembic {current}; '
+        f're-stamping {REVISION_BASELINE} and upgrading…',
+        flush=True,
+    )
+    _run_alembic('stamp', REVISION_BASELINE)
+    _run_alembic('upgrade', 'head')
+
+
 async def _heal_schema_drift() -> None:
     """Align alembic_version when columns exist from create_all or partial upgrades."""
     has_cities = await _table_exists('cities')
@@ -69,24 +121,28 @@ async def _heal_schema_drift() -> None:
     current = await _current_revision()
 
     if current is None:
-        print(f'No alembic_version; stamping {LEGACY_STAMP_REVISION}…', flush=True)
-        _run_alembic('stamp', LEGACY_STAMP_REVISION)
-        current = LEGACY_STAMP_REVISION
+        await _stamp_for_legacy_schema()
+        return
 
-    if await _column_exists('users', 'preferred_city'):
-        if current in (None, LEGACY_STAMP_REVISION):
-            print(
-                f'preferred_city already exists; stamping {REVISION_PREFERRED_CITY}…',
-                flush=True,
-            )
+    if await _column_exists('users', 'preferred_city') and await _column_exists('routes', 'status'):
+        if current == REVISION_LIFECYCLE:
+            print(f'preferred_city exists; stamping {REVISION_PREFERRED_CITY}…', flush=True)
             _run_alembic('stamp', REVISION_PREFERRED_CITY)
             current = REVISION_PREFERRED_CITY
 
-    # Only stamp images revision when columns exist (trip_extra_stops alone is not enough).
     if await _column_exists('cities', 'image_url'):
-        if current in (None, LEGACY_STAMP_REVISION, REVISION_PREFERRED_CITY):
-            print(f'image_url columns exist; stamping {REVISION_IMAGES}…', flush=True)
+        if current in (REVISION_LIFECYCLE, REVISION_PREFERRED_CITY):
+            print(f'image_url exists; stamping {REVISION_IMAGES}…', flush=True)
             _run_alembic('stamp', REVISION_IMAGES)
+            current = REVISION_IMAGES
+
+        if current == REVISION_IMAGES and await _table_exists('place_visits'):
+            print(f'place_visits exists; stamping {REVISION_PLACE_VISITS}…', flush=True)
+            _run_alembic('stamp', REVISION_PLACE_VISITS)
+
+        if current == REVISION_PLACE_VISITS and await _table_exists('premium_requests'):
+            print(f'premium_requests exists; stamping {HEAD_REVISION}…', flush=True)
+            _run_alembic('stamp', HEAD_REVISION)
 
 
 async def _ensure_image_columns() -> None:
@@ -94,10 +150,10 @@ async def _ensure_image_columns() -> None:
     if await _column_exists('cities', 'image_url'):
         return
     current = await _current_revision()
-    if current != REVISION_IMAGES:
+    if current not in (REVISION_IMAGES, REVISION_PLACE_VISITS, HEAD_REVISION):
         return
     print(
-        f'Alembic at {REVISION_IMAGES} but image_url missing; '
+        f'Alembic at {current} but image_url missing; '
         f're-stamping {REVISION_PREFERRED_CITY} and upgrading…',
         flush=True,
     )
@@ -110,14 +166,10 @@ async def ensure_migrations() -> int:
     has_alembic = await _table_exists('alembic_version')
 
     if has_cities and not has_alembic:
-        print(
-            f'Legacy schema detected (cities exists, no alembic_version). '
-            f'Stamping {LEGACY_STAMP_REVISION}…',
-            flush=True,
-        )
-        if _run_alembic('stamp', LEGACY_STAMP_REVISION) != 0:
-            return 1
+        print('Legacy schema detected (cities exists, no alembic_version).', flush=True)
+        await _stamp_for_legacy_schema()
 
+    await _ensure_route_lifecycle_columns()
     await _heal_schema_drift()
 
     print('Running alembic upgrade head…', flush=True)
@@ -126,6 +178,7 @@ async def ensure_migrations() -> int:
         print(f'alembic upgrade head failed with exit code {code}', flush=True)
         return code
 
+    await _ensure_route_lifecycle_columns()
     await _ensure_image_columns()
 
     final = await _current_revision()
