@@ -1,6 +1,6 @@
 # Historial-GO
 
-B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber / geofence, rehber pazaryeri, trip talepleri, gamification ve Stripe ödeme. **İnteraktif web + API** (statik site değil); LLM varsayılan olarak OpenRouter (ör. Gemma) üzerinden.
+B2B2C kültür turizmi uygulaması: yapay zeka ile rota keşfi, sesli rehber, rehber pazaryeri, trip talepleri, gamification. 
 
 ## Repo yapısı
 
