@@ -1,4 +1,4 @@
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Loader2, Send } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
@@ -12,8 +12,14 @@ import { assistantChat, type AssistantMessage } from '../services/ai-service';
 import { listCities } from '../services/city-service';
 import { HelpfulFeedback } from '../components/feedback/helpful-feedback';
 import { ErrorAlert } from '../components/ui/error-alert';
-import { getApiBaseUrl } from '../lib/api';
-import { mapError, type UserFacingError } from '../lib/user-errors';
+import {
+  ensureApiReady,
+  formatApiError,
+  getApiBaseUrl,
+  subscribeApiConnection,
+  type ApiConnectionState,
+} from '../lib/api';
+import { type UserFacingError } from '../lib/user-errors';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 
@@ -46,6 +52,13 @@ export default function AssistantPage(): ReactElement {
     },
   ]);
   const [errorDetail, setErrorDetail] = useState<UserFacingError | null>(null);
+  const [connState, setConnState] = useState<ApiConnectionState>('idle');
+
+  useEffect(() => subscribeApiConnection(setConnState), []);
+
+  useEffect(() => {
+    void ensureApiReady(75_000);
+  }, []);
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -75,6 +88,16 @@ export default function AssistantPage(): ReactElement {
 
     void run(async () => {
       try {
+        const ready = await ensureApiReady(75_000);
+        if (!ready) {
+          setErrorDetail({
+            kind: 'network',
+            message:
+              'Sunucu henüz uyanmadı. Render ücretsiz planda ilk istek 30–60 sn sürebilir; birkaç saniye bekleyip tekrar deneyin.',
+            actionLabel: 'Tekrar dene',
+          });
+          return;
+        }
         const apiMessages = next.filter(
           (m) => m.content.trim() && (m.role === 'user' || m.role === 'assistant'),
         );
@@ -88,7 +111,11 @@ export default function AssistantPage(): ReactElement {
         });
         setMsgs((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       } catch (err) {
-        setErrorDetail(mapError(err, 'assistant'));
+        setErrorDetail({
+          kind: 'network',
+          message: formatApiError(err),
+          actionLabel: 'Tekrar dene',
+        });
       }
     });
   };
@@ -109,6 +136,24 @@ export default function AssistantPage(): ReactElement {
       {import.meta.env.DEV ? (
         <div className="shrink-0 rounded-xl border border-stone-900/10 bg-stone-50 px-3 py-2 text-xs text-stone-500 dark:border-white/10 dark:bg-zinc-900">
           Geliştirici: {getApiBaseUrl()}
+        </div>
+      ) : null}
+
+      {connState === 'waking' ? (
+        <div
+          className="shrink-0 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/40 dark:text-amber-100"
+          role="status"
+        >
+          Sunucu uyanıyor… İlk bağlantı 30–60 saniye sürebilir.
+        </div>
+      ) : null}
+
+      {connState === 'offline' ? (
+        <div
+          className="shrink-0 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-900 dark:border-red-900/40 dark:bg-red-950/40 dark:text-red-100"
+          role="alert"
+        >
+          Sunucuya bağlanılamadı. Bağlantını kontrol edip tekrar dene.
         </div>
       ) : null}
 

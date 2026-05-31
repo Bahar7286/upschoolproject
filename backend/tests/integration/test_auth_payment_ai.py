@@ -216,6 +216,22 @@ def test_api_ai02_narration_audio(client: TestClient) -> None:
     assert body.get('audio_base64') is not None or body.get('fallback_browser_tts') is True
 
 
+def test_api_ai03_assistant_chat_greeting(client: TestClient) -> None:
+    response = client.post(
+        '/ai/assistant/chat',
+        json={
+            'city': 'İstanbul',
+            'district': '',
+            'interests': ['history', 'food'],
+            'messages': [{'role': 'user', 'content': 'selam'}],
+        },
+    )
+    assert response.status_code == 200
+    body = response.json()
+    assert body.get('reply')
+    assert body.get('source') in ('rules', 'llm', 'places')
+
+
 def test_api_z01_protected_without_token(client: TestClient) -> None:
     response = client.get('/auth/me')
     assert response.status_code == 401

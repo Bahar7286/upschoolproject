@@ -3,6 +3,34 @@ const MAX_NETWORK_RETRIES = 6;
 const RETRY_BASE_MS = 500;
 const HEALTH_TIMEOUT_MS = 25_000;
 const KEEPALIVE_MS = 4 * 60 * 1000;
+const DEFAULT_REQUEST_TIMEOUT_MS = 45_000;
+export const ASSISTANT_REQUEST_TIMEOUT_MS = 120_000;
+export const RECOMMEND_TIMEOUT_MS = 60_000;
+
+export type RequestJsonOptions = RequestInit & {
+  timeoutMs?: number;
+  skipWake?: boolean;
+};
+
+export type ApiConnectionState = 'idle' | 'waking' | 'ready' | 'offline';
+
+let connectionState: ApiConnectionState = 'idle';
+const connectionListeners = new Set<(s: ApiConnectionState) => void>();
+
+function setConnectionState(next: ApiConnectionState): void {
+  connectionState = next;
+  connectionListeners.forEach((fn) => fn(next));
+}
+
+export function getApiConnectionState(): ApiConnectionState {
+  return connectionState;
+}
+
+export function subscribeApiConnection(fn: (s: ApiConnectionState) => void): () => void {
+  connectionListeners.add(fn);
+  fn(connectionState);
+  return () => connectionListeners.delete(fn);
+}
 
 function isRenderWebHost(): boolean {
   return typeof window !== 'undefined' && window.location.hostname.includes('onrender.com');
@@ -55,17 +83,24 @@ export class ApiError extends Error {
 
 async function requestJsonImpl<T>(
   path: string,
-  init: RequestInit | undefined,
+  init: RequestJsonOptions | undefined,
   accessToken: string | null | undefined,
 ): Promise<T> {
-  if (isRenderWebHost() && !apiReady) {
-    await ensureApiReady();
+  const timeoutMs = init?.timeoutMs ?? DEFAULT_REQUEST_TIMEOUT_MS;
+  const skipWake = init?.skipWake ?? false;
+
+  if (isRenderWebHost() && !apiReady && !skipWake) {
+    setConnectionState('waking');
+    const ok = await ensureApiReady(60_000);
+    setConnectionState(ok ? 'ready' : 'offline');
   }
+
   const base = getApiBaseUrl().replace(/\/$/, '');
   const rel = path.startsWith('/') ? path : `/${path}`;
+  const { timeoutMs: _t, skipWake: _s, ...fetchInit } = init ?? {};
   const headers: Record<string, string> = {
     'Content-Type': 'application/json',
-    ...(init?.headers as Record<string, string> | undefined),
+    ...(fetchInit.headers as Record<string, string> | undefined),
   };
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
@@ -74,19 +109,29 @@ async function requestJsonImpl<T>(
   let response!: Response;
   let lastNetworkError: unknown;
   for (let attempt = 0; attempt < MAX_NETWORK_RETRIES; attempt += 1) {
+    const controller = new AbortController();
+    const timer = window.setTimeout(() => controller.abort(), timeoutMs);
     try {
       response = await fetch(`${base}${rel}`, {
-        ...init,
+        ...fetchInit,
         headers,
+        signal: controller.signal,
       });
+      window.clearTimeout(timer);
       lastNetworkError = undefined;
       break;
     } catch (err) {
+      window.clearTimeout(timer);
       lastNetworkError = err;
+      const aborted = err instanceof DOMException && err.name === 'AbortError';
+      if (aborted && attempt === MAX_NETWORK_RETRIES - 1) {
+        throw new ApiError('İstek zaman aşımına uğradı. Sunucu uyanıyor olabilir; tekrar deneyin.', 0, '');
+      }
       if (attempt < MAX_NETWORK_RETRIES - 1 && isRetryableNetworkError(err)) {
         if (isRenderWebHost()) {
           apiReady = false;
-          await ensureApiReady(45_000);
+          setConnectionState('waking');
+          await ensureApiReady(30_000);
         }
         await sleep(RETRY_BASE_MS * 2 ** attempt);
         continue;
@@ -111,6 +156,7 @@ async function requestJsonImpl<T>(
 
   if (response.ok) {
     markApiReady();
+    setConnectionState('ready');
   }
 
   if (response.status === 204 || text.length === 0) {
@@ -120,14 +166,14 @@ async function requestJsonImpl<T>(
   return JSON.parse(text) as T;
 }
 
-export async function requestJson<T>(path: string, init?: RequestInit): Promise<T> {
+export async function requestJson<T>(path: string, init?: RequestJsonOptions): Promise<T> {
   return requestJsonImpl<T>(path, init, undefined);
 }
 
 export async function requestJsonWithAuth<T>(
   path: string,
   accessToken: string | null,
-  init?: RequestInit,
+  init?: RequestJsonOptions,
 ): Promise<T> {
   return requestJsonImpl<T>(path, init, accessToken);
 }
@@ -168,19 +214,29 @@ export async function pingHealth(): Promise<boolean> {
 }
 
 /** Render cold start — ilk istekten önce API'yi uyandır. */
-export async function ensureApiReady(maxWaitMs = 75_000): Promise<boolean> {
-  if (apiReady) return true;
-  if (!isRenderWebHost()) {
-    apiReady = true;
+export async function ensureApiReady(maxWaitMs = 60_000): Promise<boolean> {
+  if (apiReady) {
+    setConnectionState('ready');
     return true;
   }
+  if (!isRenderWebHost()) {
+    apiReady = true;
+    setConnectionState('ready');
+    return true;
+  }
+  setConnectionState('waking');
   if (!wakeInFlight) {
     wakeInFlight = wakeUpApi(maxWaitMs).finally(() => {
       wakeInFlight = null;
     });
   }
   const ok = await wakeInFlight;
-  if (ok) apiReady = true;
+  if (ok) {
+    apiReady = true;
+    setConnectionState('ready');
+  } else {
+    setConnectionState('offline');
+  }
   return ok;
 }
 
@@ -248,6 +304,9 @@ export function formatApiError(error: unknown): string {
       return 'Girdi doğrulanamadı. Alanları kontrol edin.';
     }
     if (error.status === 0 || error.message.toLowerCase().includes('failed to fetch')) {
+      if (error.message.includes('zaman aşımı')) {
+        return 'Sunucu yanıt vermedi (zaman aşımı). Render ücretsiz planda ilk istek 30–60 sn sürebilir; tekrar deneyin.';
+      }
       if (typeof window !== 'undefined' && window.location.hostname.includes('onrender.com')) {
         return 'Sunucu uyanıyor olabilir (30–60 sn). Birkaç saniye bekleyip tekrar deneyin veya sayfayı yenileyin.';
       }

@@ -1,4 +1,4 @@
-import { requestJson } from '../lib/api';
+import { ASSISTANT_REQUEST_TIMEOUT_MS, RECOMMEND_TIMEOUT_MS, requestJson } from '../lib/api';
 
 export interface AIRecommendationItem {
   route_id: number;
@@ -18,7 +18,7 @@ export interface AIStatusResponse {
 }
 
 export async function fetchAiStatus(): Promise<AIStatusResponse> {
-  return requestJson<AIStatusResponse>('/ai/status');
+  return requestJson<AIStatusResponse>('/ai/status', { skipWake: true, timeoutMs: 15_000 });
 }
 
 export interface AIRecommendPayload {
@@ -33,6 +33,7 @@ export interface AIRecommendPayload {
 export async function recommendWithAi(payload: AIRecommendPayload): Promise<AIRecommendationItem[]> {
   return requestJson<AIRecommendationItem[]>('/ai/recommend', {
     method: 'POST',
+    timeoutMs: RECOMMEND_TIMEOUT_MS,
     body: JSON.stringify({
       location_lat: 41.0082,
       location_lng: 28.9784,
@@ -140,6 +141,7 @@ export interface AssistantChatResponse {
 export async function assistantChat(payload: AssistantChatPayload): Promise<AssistantChatResponse> {
   return requestJson<AssistantChatResponse>('/ai/assistant/chat', {
     method: 'POST',
+    timeoutMs: ASSISTANT_REQUEST_TIMEOUT_MS,
     body: JSON.stringify(payload),
   });
 }

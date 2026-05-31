@@ -1,14 +1,18 @@
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.repositories.route_repository import RouteRepository
 from app.repositories.stop_repository import StopRepository
 from app.schemas.ai_schema import (
     AIRecommendationRequest,
+    AssistantChatRequest,
+    AssistantMessage,
     GeofenceCheckRequest,
     StopNarrationRequest,
 )
 from app.services.ai_service import AIService
+from app.services.llm_service import LLMServiceError
 from app.services.route_service import RouteService
 from app.services.stop_service import StopService
 
@@ -93,3 +97,41 @@ async def test_ai_u05_preview_narration_scripts(db_session: AsyncSession) -> Non
     assert 'tr' in result.scripts
     assert 'en' in result.scripts
     assert 'de' in result.scripts
+
+
+@pytest.mark.asyncio
+async def test_ai_u06_assistant_greeting_rules() -> None:
+    service = AIService(route_service=MagicMock(), stop_service=MagicMock())
+    with patch('app.services.ai_service.settings') as mock_settings:
+        mock_settings.llm_enabled = True
+        mock_settings.google_places_enabled = False
+        result = await service.chat_assistant(
+            AssistantChatRequest(
+                city='İstanbul',
+                district='',
+                interests=['history'],
+                messages=[AssistantMessage(role='user', content='selam')],
+            )
+        )
+    assert result.source == 'rules'
+    assert len(result.reply) > 10
+
+
+@pytest.mark.asyncio
+async def test_ai_u07_assistant_llm_fallback_on_error() -> None:
+    service = AIService(route_service=MagicMock(), stop_service=MagicMock())
+    with patch('app.services.ai_service.settings') as mock_settings:
+        mock_settings.llm_enabled = True
+        mock_settings.google_places_enabled = False
+        with patch('app.services.ai_service.llm_service') as mock_llm:
+            mock_llm.complete_text = AsyncMock(side_effect=LLMServiceError('timeout'))
+            result = await service.chat_assistant(
+                AssistantChatRequest(
+                    city='İstanbul',
+                    district='Eminönü',
+                    interests=['history'],
+                    messages=[AssistantMessage(role='user', content='1 günlük rota planla')],
+                )
+            )
+    assert result.source == 'rules'
+    assert 'Keşfet' in result.reply or 'Harita' in result.reply

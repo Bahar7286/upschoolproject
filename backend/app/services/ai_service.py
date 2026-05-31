@@ -78,6 +78,7 @@ _LLM_RECOMMEND_TIMEOUT_SEC = 12.0
 _LLM_CATALOG_LIMIT = 30
 _LLM_RECOMMEND_MAX_TOKENS = 700
 _LLM_ASSISTANT_MAX_TOKENS = 500
+_LLM_ASSISTANT_TIMEOUT_SEC = 28.0
 _LLM_NARRATION_MAX_TOKENS = 1400
 
 
@@ -411,13 +412,48 @@ class AIService:
             history=history,
         )
         system = SYSTEM_ASSISTANT_VENUE if intent == 'food' else SYSTEM_ASSISTANT
-        text = await llm_service.complete_text(
-            system=system,
-            user=user,
-            temperature=0.3,
-            max_tokens=_LLM_ASSISTANT_MAX_TOKENS,
+        try:
+            text = await asyncio.wait_for(
+                llm_service.complete_text(
+                    system=system,
+                    user=user,
+                    temperature=0.3,
+                    max_tokens=_LLM_ASSISTANT_MAX_TOKENS,
+                ),
+                timeout=_LLM_ASSISTANT_TIMEOUT_SEC,
+            )
+            return AssistantChatResponse(reply=text.strip()[:2500], source='llm')
+        except (asyncio.TimeoutError, LLMServiceError) as exc:
+            logger.warning('Assistant LLM failed, rules fallback: %s', exc)
+            return self._assistant_rules_fallback(
+                where=where,
+                last_user=last_user,
+                places_hint=places_hint,
+            )
+
+    @staticmethod
+    def _assistant_rules_fallback(
+        *,
+        where: str,
+        last_user: str,
+        places_hint: str,
+    ) -> AssistantChatResponse:
+        if places_hint and places_hint != 'yok':
+            return AssistantChatResponse(
+                reply=(
+                    f'{where} için yakın mekan önerileri:\n\n{places_hint}\n\n'
+                    'Detay ve harita için **Harita** sekmesine bakabilirsin.'
+                ),
+                source='rules',
+            )
+        return AssistantChatResponse(
+            reply=(
+                f'Şu an AI yanıtı gecikiyor; kısa özet: {where} bölgesinde gezi planı için '
+                f'**Keşfet** ve **Harita** sekmelerinden rotaları inceleyebilirsin. '
+                f'Sorun: "{last_user[:80]}" — birkaç dakika sonra tekrar dene.'
+            ),
+            source='rules',
         )
-        return AssistantChatResponse(reply=text.strip()[:2500], source='llm')
 
     async def _assistant_food_reply(
         self,
