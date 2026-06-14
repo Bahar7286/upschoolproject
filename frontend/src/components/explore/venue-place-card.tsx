@@ -2,6 +2,7 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
 import { resolvePlaceImage } from '../../lib/region-images';
+import { usePlaceImage } from '../../hooks/use-place-image';
 import { RegionThumb } from '../ui/region-thumb';
 import type { PlaceCategory } from '../../types/place';
 import { PLACE_CATEGORY_LABELS } from '../../types/place';
@@ -12,6 +13,7 @@ export function VenuePlaceCard({
   category,
   subtitle,
   imageUrl,
+  cityName,
   to,
 }: {
   placeId: number;
@@ -19,15 +21,17 @@ export function VenuePlaceCard({
   category: PlaceCategory;
   subtitle?: string;
   imageUrl?: string | null;
+  cityName?: string;
   to: string;
 }): ReactElement {
   const img = resolvePlaceImage(placeId, category, imageUrl, name);
+  const displayImg = usePlaceImage(img, name, cityName);
 
   return (
     <Link to={to} className="tap-scale group block overflow-hidden rounded-2xl border border-stone-900/8 bg-white shadow-sm dark:border-white/10 dark:bg-zinc-900">
       <div className="relative aspect-[16/10] overflow-hidden">
         <RegionThumb
-          src={img}
+          src={displayImg}
           alt={name}
           label={name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"

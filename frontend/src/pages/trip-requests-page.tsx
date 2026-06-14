@@ -4,6 +4,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Plus, Users } from 'lucide-react';
 
 import { EmptyState } from '../components/ui/empty-state';
+import { BackButton } from '../components/ui/back-button';
 import { ErrorAlert } from '../components/ui/error-alert';
 import { EMPTY_STATES } from '../content/empty-states';
 import { mapError } from '../lib/user-errors';
@@ -93,6 +94,7 @@ export default function TripRequestsPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-2xl space-y-6">
+      <BackButton />
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight">

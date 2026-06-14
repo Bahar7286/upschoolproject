@@ -6,6 +6,7 @@ import { Link } from 'react-router-dom';
 import { ListSkeleton } from '../components/loading/page-skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import { ErrorAlert } from '../components/ui/error-alert';
+import { BackButton } from '../components/ui/back-button';
 import { EMPTY_STATES } from '../content/empty-states';
 import { mapError } from '../lib/user-errors';
 import { listPurchasesByUser } from '../services/purchase-service';
@@ -46,6 +47,7 @@ export default function PurchasesPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-2xl space-y-6" aria-labelledby="pur-title">
+      <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="pur-title">
           Satın alımlarım

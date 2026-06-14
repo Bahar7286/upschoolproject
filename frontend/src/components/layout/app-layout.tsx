@@ -167,7 +167,7 @@ export function AppLayout(): ReactElement {
             >
               <Settings className="h-5 w-5 text-theme-muted" aria-hidden="true" strokeWidth={2} />
             </NavLink>
-            <ThemeToggle />
+            <ThemeToggle compact />
             <AuthHeaderActions
               accessToken={accessToken}
               userName={user?.full_name}

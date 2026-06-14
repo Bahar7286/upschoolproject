@@ -7,6 +7,7 @@ import { GuideRoutesPanel } from '../components/guide/guide-routes-panel';
 import { MiniBarChart } from '../components/ui/mini-bar-chart';
 import { StatCard } from '../components/ui/stat-card';
 import { ButtonLink } from '../components/ui/button';
+import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
 import {
   fetchMyGuideAnalytics,
@@ -102,6 +103,7 @@ export default function GuideDashboardPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-2xl space-y-6" aria-labelledby="gd-title">
+      <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="gd-title">
           Gelir paneli

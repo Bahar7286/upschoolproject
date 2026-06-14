@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import { Check, ExternalLink, X } from 'lucide-react';
 
 import { formatApiError } from '../lib/api';
+import { BackButton } from '../components/ui/back-button';
 import {
   documentUrl,
   listOpenReports,
@@ -121,6 +122,7 @@ export default function AdminPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
+      <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold tracking-tight">Yönetim paneli</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">

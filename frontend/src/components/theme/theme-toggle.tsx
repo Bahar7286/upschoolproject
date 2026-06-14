@@ -27,13 +27,25 @@ function iconFor(pref: ThemePreference) {
   return Landmark;
 }
 
-export function ThemeToggle({ className = '' }: { className?: string }): ReactElement {
+const HEADER_ORDER: ThemePreference[] = ['system', 'light', 'dark'];
+
+export function ThemeToggle({
+  className = '',
+  compact = false,
+}: {
+  className?: string;
+  /** Üst menüde yalnızca sistem/açık/koyu — profilde tüm temalar */
+  compact?: boolean;
+}): ReactElement {
   const preference = useThemeStore((s) => s.preference);
   const setPreference = useThemeStore((s) => s.setPreference);
 
+  const order = compact ? HEADER_ORDER : ORDER;
+
   const cycle = () => {
-    const idx = ORDER.indexOf(preference);
-    setPreference(ORDER[(idx + 1) % ORDER.length]);
+    const idx = order.indexOf(preference);
+    const next = idx >= 0 ? order[(idx + 1) % order.length] : order[0];
+    setPreference(next);
   };
 
   const Icon = iconFor(preference);

@@ -48,8 +48,8 @@ export function ExploreMap({
 }: ExploreMapProps): ReactElement {
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const defaultCenter = mapCenter ?? { lat: 41.015137, lng: 28.97953 };
-  const canUseGoogle = Boolean(googleKey && preferGoogle);
-  const [engine, setEngine] = useState<Engine>('leaflet');
+  const hasGoogleKey = Boolean(googleKey?.trim());
+  const [engine, setEngine] = useState<Engine>(() => (preferGoogle && hasGoogleKey ? 'google' : 'leaflet'));
   const [googleFailed, setGoogleFailed] = useState(false);
 
   const fallbackToLeaflet = useCallback(() => {
@@ -64,12 +64,12 @@ export function ExploreMap({
   }, [mapPickActive]);
 
   useEffect(() => {
-    if (!canUseGoogle || googleFailed || engine !== 'google') return;
+    if (engine !== 'google' || googleFailed || !hasGoogleKey) return;
     const timer = window.setTimeout(() => {
       fallbackToLeaflet();
     }, GOOGLE_LOAD_TIMEOUT_MS);
     return () => window.clearTimeout(timer);
-  }, [canUseGoogle, engine, googleFailed, fallbackToLeaflet, defaultCenter.lat, defaultCenter.lng]);
+  }, [engine, googleFailed, hasGoogleKey, fallbackToLeaflet, defaultCenter.lat, defaultCenter.lng]);
 
   const activeEngine = googleFailed ? 'leaflet' : engine;
 
@@ -110,13 +110,17 @@ export function ExploreMap({
           </button>
           <button
             type="button"
-            disabled={!googleKey}
-            title={googleKey ? 'Google Haritalar' : 'VITE_GOOGLE_MAPS_API_KEY tanımlı değil'}
+            disabled={!hasGoogleKey}
+            title={
+              hasGoogleKey
+                ? 'Google Haritalar (API anahtarı gerekir)'
+                : 'VITE_GOOGLE_MAPS_API_KEY tanımlı değil — OSM kullanın'
+            }
             className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
               activeEngine === 'google' ? 'bg-heritage-ink text-white shadow' : 'text-stone-600'
             }`}
             onClick={() => {
-              if (!googleKey) return;
+              if (!hasGoogleKey) return;
               setGoogleFailed(false);
               setEngine('google');
             }}
@@ -141,7 +145,7 @@ export function ExploreMap({
           mapPickActive={mapPickActive}
         />
       ) : null}
-      {activeEngine === 'google' && googleKey ? (
+      {activeEngine === 'google' && hasGoogleKey && googleKey ? (
         <GoogleExploreMap
           routes={routes}
           apiKey={googleKey}

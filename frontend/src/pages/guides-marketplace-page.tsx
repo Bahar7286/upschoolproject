@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import { VerifiedGuideBadge } from '../components/guide/verified-guide-badge';
+import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
 import { listVerifiedGuides, type GuideMarketplaceItem } from '../services/guide-profile-service';
 
@@ -27,6 +28,7 @@ export default function GuidesMarketplacePage(): ReactElement {
 
   return (
     <section className="space-y-6" aria-labelledby="guides-title">
+      <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold text-heritage-ink dark:text-stone-50" id="guides-title">
           Onaylı rehberler

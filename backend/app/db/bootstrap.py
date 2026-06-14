@@ -300,7 +300,7 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
 
 
 async def ensure_images_seeded(session: AsyncSession) -> None:
-    """Eksik city image_url alanlarını Wikipedia'dan doldur."""
+    """Eksik city/place image_url alanlarını Wikipedia'dan doldur."""
     import logging
 
     from sqlalchemy import func, or_
@@ -308,18 +308,34 @@ async def ensure_images_seeded(session: AsyncSession) -> None:
     from app.services.image_sync_service import ImageSyncService
 
     log = logging.getLogger(__name__)
-    missing_result = await session.execute(
-        select(func.count())
-        .select_from(City)
-        .where(or_(City.image_url.is_(None), City.image_url == ''))
-    )
-    missing = missing_result.scalar() or 0
-    if missing == 0:
+    svc = ImageSyncService(session)
+
+    missing_cities = (
+        await session.execute(
+            select(func.count())
+            .select_from(City)
+            .where(or_(City.image_url.is_(None), City.image_url == ''))
+        )
+    ).scalar() or 0
+
+    missing_places = (
+        await session.execute(
+            select(func.count())
+            .select_from(Place)
+            .where(or_(Place.image_url.is_(None), Place.image_url == ''))
+        )
+    ).scalar() or 0
+
+    if missing_cities == 0 and missing_places == 0:
         return
+
     try:
-        svc = ImageSyncService(session)
-        result = await svc.sync_cities(limit=81, force=False)
-        log.info('Wikipedia image sync: %s/%s cities updated', result.updated, missing)
+        if missing_cities:
+            result = await svc.sync_cities(limit=81, force=False)
+            log.info('Wikipedia city images: %s/%s updated', result.updated, missing_cities)
+        if missing_places:
+            result = await svc.sync_places(limit=min(missing_places, 250), force=False)
+            log.info('Wikipedia place images: %s/%s updated', result.updated, missing_places)
     except Exception as exc:
         log.warning('Wikipedia image sync skipped: %s', exc)
 

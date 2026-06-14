@@ -4,6 +4,7 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
 import { ListSkeleton } from '../components/loading/page-skeleton';
+import { BackButton } from '../components/ui/back-button';
 import { EmptyState } from '../components/ui/empty-state';
 import { ErrorAlert } from '../components/ui/error-alert';
 import { EMPTY_STATES } from '../content/empty-states';
@@ -45,6 +46,7 @@ export default function FavoritesPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="fav-title">
+      <BackButton />
       <header className="space-y-2">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="fav-title">
           Favoriler

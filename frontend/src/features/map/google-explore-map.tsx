@@ -70,8 +70,15 @@ export function GoogleExploreMap({
       if (!tilesSeen) onLoadFailed();
     }, 6000);
     const listener = map.addListener('tilesloaded', () => {
-      tilesSeen = true;
-      window.clearTimeout(failTimer);
+      const imgs = map.getDiv()?.querySelectorAll('img');
+      let realTiles = 0;
+      imgs?.forEach((img) => {
+        if (img.naturalWidth > 64 && img.naturalHeight > 64) realTiles += 1;
+      });
+      if (realTiles > 0) {
+        tilesSeen = true;
+        window.clearTimeout(failTimer);
+      }
     });
     return () => {
       window.clearTimeout(failTimer);
@@ -140,7 +147,13 @@ export function GoogleExploreMap({
         zoom={zoom}
         mapContainerClassName="rounded-2xl"
         onLoad={setMap}
-        options={{ fullscreenControl: false, mapTypeControl: false }}
+        options={{
+          fullscreenControl: false,
+          mapTypeControl: false,
+          mapTypeId: 'roadmap',
+          streetViewControl: true,
+          zoomControl: true,
+        }}
       >
         {activeStops.map((stop, idx) => (
           <Marker

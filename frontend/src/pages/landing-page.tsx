@@ -10,6 +10,7 @@ import {
 import { Link } from 'react-router-dom';
 
 import { BrandLogo } from '../components/brand/brand-logo';
+import { AuthPageShell } from '../components/layout/auth-page-shell';
 import { ThemeToggle } from '../components/theme/theme-toggle';
 import { SiteFooter } from '../components/legal/site-footer';
 import { JsonLd } from '../components/seo/json-ld';
@@ -58,7 +59,7 @@ const FEATURES = [
 
 export default function LandingPage(): ReactElement {
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
+    <AuthPageShell>
       <PageMeta
         title="İstanbul Tarihi Rotaları ve Sesli Rehber"
         description={getDefaultDescription()}
@@ -81,20 +82,11 @@ export default function LandingPage(): ReactElement {
           },
         ]}
       />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40"
-        aria-hidden="true"
-        style={{
-          backgroundImage:
-            'radial-gradient(900px 520px at 80% -10%, rgb(201 162 39 / 22%), transparent 55%), radial-gradient(700px 420px at 10% 90%, rgb(29 185 84 / 12%), transparent 50%)',
-        }}
-      />
-
       <div className="relative mx-auto max-w-6xl px-4 py-6 md:px-8">
         <header className="flex items-center justify-between gap-4 pt-safe">
           <BrandLogo to="/" size="md" />
           <div className="flex items-center gap-2">
-            <ThemeToggle />
+            <ThemeToggle compact />
             <ButtonLink variant="secondary" className="min-h-[44px] px-3 text-xs sm:px-4 sm:text-sm" to="/login">
               Giriş
             </ButtonLink>
@@ -104,16 +96,17 @@ export default function LandingPage(): ReactElement {
           </div>
         </header>
 
-        <section className="relative mt-12 overflow-hidden rounded-[28px] border border-stone-900/10 bg-gradient-to-br from-heritage-ink via-stone-900 to-stone-800 p-8 text-white shadow-lift dark:border-white/10 md:p-12">
+        <section className="relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-heritage-ink via-stone-900 to-stone-800 p-8 text-white shadow-lift md:p-12">
           <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-300">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            İstanbul · AI · Kültür Turizmi
+            Kültür Turizmi
           </p>
-          <h1 className="mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
+          <h1 className="mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight tracking-tight text-white md:text-5xl">
             Şehri kendi hikayenle keşfet
           </h1>
-          <p className="mt-4 max-w-xl text-base leading-relaxed text-stone-300 md:text-lg">
-            İlgi alanlarına göre AI rotaları, harita üzerinde duraklar, çok dilli sesli rehberlik ve oyunlaştırılmış kültür puanları.
+          <p className="mt-4 max-w-xl text-base leading-relaxed text-stone-200 md:text-lg">
+            İlgi alanına göre kişisel rotalar oluştur, durakları haritada takip et, sesli rehberle dinle ve gezdikçe
+            kültür puanı kazan.
           </p>
           <div className="mt-8 flex flex-wrap gap-3">
             <ButtonLink className="min-h-[52px] px-8" to="/register">
@@ -130,13 +123,13 @@ export default function LandingPage(): ReactElement {
             <Link
               key={title}
               to={to}
-              className="group rounded-[22px] border border-stone-900/10 bg-white/90 p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift focus-ring dark:border-white/10 dark:bg-zinc-900/95"
+              className="theme-card group rounded-[22px] p-6 shadow-sm transition hover:-translate-y-1 hover:border-primary/40 hover:shadow-lift focus-ring"
             >
               <div className="mb-4 flex h-11 w-11 items-center justify-center rounded-xl bg-primary/10 text-primary transition group-hover:bg-primary group-hover:text-white">
                 <Icon className="h-5 w-5" aria-hidden="true" strokeWidth={2} />
               </div>
-              <h2 className="font-display text-lg font-bold text-heritage-ink dark:text-stone-50">{title}</h2>
-              <p className="mt-2 text-sm leading-relaxed text-stone-600 dark:text-stone-400">{text}</p>
+              <h2 className="font-display text-lg font-bold text-theme">{title}</h2>
+              <p className="mt-2 text-sm leading-relaxed text-theme-muted">{text}</p>
               <p className="mt-3 text-xs font-bold text-primary">Keşfet →</p>
             </Link>
           ))}
@@ -144,6 +137,6 @@ export default function LandingPage(): ReactElement {
 
         <SiteFooter className="mt-16" />
       </div>
-    </div>
+    </AuthPageShell>
   );
 }

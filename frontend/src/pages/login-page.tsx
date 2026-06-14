@@ -4,6 +4,7 @@ import { ArrowLeft, Lock, LogIn } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { BrandLogo } from '../components/brand/brand-logo';
+import { AuthPageShell } from '../components/layout/auth-page-shell';
 import { PageMeta } from '../components/seo/page-meta';
 import { ThemeToggle } from '../components/theme/theme-toggle';
 import { LoadingButton } from '../components/ui/loading-button';
@@ -58,22 +59,36 @@ export default function LoginPage(): ReactElement {
     });
   };
 
-  return (
-    <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] px-4 py-8 text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
-      <PageMeta title="Giriş" description="Historial GO hesabınıza giriş yapın." path="/login" noindex />
-      <div
-        className="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40"
-        aria-hidden="true"
-        style={{
-          backgroundImage:
-            'radial-gradient(900px 520px at 80% -10%, rgb(201 162 39 / 22%), transparent 55%), radial-gradient(700px 420px at 10% 90%, rgb(29 185 84 / 12%), transparent 50%)',
-        }}
-      />
+  const handleDemoLogin = async (demoEmail: string, demoPassword: string) => {
+    setError('');
+    setEmail(demoEmail);
+    setPassword(demoPassword);
+    await run(async () => {
+      try {
+        const tokens = await loginUser({ email: demoEmail, password: demoPassword });
+        const me = await fetchCurrentUser(tokens.access_token);
+        setSession(tokens.access_token, me);
+        useOnboardingStore.getState().hydrateFromUser(me);
+        let fallback = '/discover';
+        if (me.role === 'admin') fallback = '/admin';
+        else if (me.role === 'guide') fallback = '/guide';
+        else if (!me.onboarding_completed) fallback = '/onboarding';
+        navigate(redirectTarget && redirectTarget !== '/login' ? redirectTarget : fallback, {
+          replace: true,
+        });
+      } catch (err) {
+        setError(formatApiError(err));
+      }
+    });
+  };
 
+  return (
+    <AuthPageShell className="px-4 py-8">
+      <PageMeta title="Giriş" description="Historial GO hesabınıza giriş yapın." path="/login" noindex />
       <div className="relative mx-auto flex w-full max-w-md flex-col gap-8">
         <header className="flex items-start justify-between gap-4">
           <BrandLogo to="/" size="md" />
-          <ThemeToggle />
+            <ThemeToggle compact />
         </header>
 
         <section
@@ -113,16 +128,15 @@ export default function LoginPage(): ReactElement {
                 key={acc.email}
                 type="button"
                 className="tap-scale rounded-xl border border-stone-900/10 bg-stone-50/90 px-3 py-2.5 text-left text-xs dark:border-white/10 dark:bg-zinc-950/80"
-                onClick={() => {
-                  setEmail(acc.email);
-                  setPassword(acc.password);
-                }}
+                disabled={loading}
+                onClick={() => void handleDemoLogin(acc.email, acc.password)}
               >
                 <strong className="text-theme">{acc.role}</strong>
                 <span className="mx-1 text-theme-muted">·</span>
-                <code className="font-mono">{acc.email}</code>
-                <span className="mx-1 text-theme-muted">/</span>
-                <code className="font-mono">{acc.password}</code>
+                <span className="text-theme-muted">Tek tıkla giriş</span>
+                <span className="mt-0.5 block font-mono text-[10px] text-theme-muted">
+                  {acc.email} / {acc.password}
+                </span>
               </button>
             ))}
           </div>
@@ -221,6 +235,6 @@ export default function LoginPage(): ReactElement {
           Oturum açınca JWT saklanır; çıkış yapana kadar cihazınızda tutulur. Üretimde HTTPS ve güçlü şifre politikası kullanın.
         </p>
       </div>
-    </div>
+    </AuthPageShell>
   );
 }

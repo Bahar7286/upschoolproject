@@ -281,6 +281,7 @@ export default function DistrictPlacesPage(): ReactElement {
             category={p.category}
             subtitle={p.description || `${p.district}, ${p.city}`}
             imageUrl={p.image_url}
+            cityName={p.city}
             to={`/places/${p.place_id}`}
           />
         ))}

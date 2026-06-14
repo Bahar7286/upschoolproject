@@ -109,6 +109,7 @@ export default function CityPlacesPage(): ReactElement {
             category={p.category}
             subtitle={p.description || `${p.district} / ${p.city}`}
             imageUrl={p.image_url}
+            cityName={city?.name_tr}
             to={`/places/${p.place_id}`}
           />
         ))}
