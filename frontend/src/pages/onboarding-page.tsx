@@ -43,11 +43,7 @@ const POPULAR_CITIES = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Ka
 const TOTAL_STEPS = 5;
 const RECOMMEND_TIMEOUT_MS = 10_000;
 
-function filterByCity(routes: RouteResponse[], city: string): RouteResponse[] {
-  const norm = city.trim().toLowerCase();
-  const matched = routes.filter((r) => r.city.trim().toLowerCase().includes(norm));
-  return matched.length > 0 ? matched : routes;
-}
+import { filterRoutesByCity } from '../utils/city-match';
 
 function scoreByInterests(routes: RouteResponse[], interestIds: string[]): RouteResponse[] {
   if (interestIds.length === 0) return routes;
@@ -126,7 +122,7 @@ export default function OnboardingPage(): ReactElement {
       } catch {
         routes = await listRoutes();
       }
-      const byCity = filterByCity(routes, preferredCity);
+      const byCity = filterRoutesByCity(routes, preferredCity);
       const ranked = scoreByInterests(byCity, interests);
       setRecommended(ranked.slice(0, 3));
       if (ranked.length === 0) {

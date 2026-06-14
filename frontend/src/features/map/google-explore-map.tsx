@@ -65,24 +65,43 @@ export function GoogleExploreMap({
 
   useEffect(() => {
     if (!map || !onLoadFailed || loadError) return;
+
+    const hasVtTiles = (): boolean => {
+      const imgs = map.getDiv()?.querySelectorAll('img') ?? [];
+      for (const img of imgs) {
+        const src = img.src || '';
+        if (
+          (src.includes('maps/vt') || src.includes('khms') || src.includes('google.com/vt')) &&
+          img.naturalWidth > 80 &&
+          img.naturalHeight > 80
+        ) {
+          return true;
+        }
+      }
+      return false;
+    };
+
     let tilesSeen = false;
     const failTimer = window.setTimeout(() => {
       if (!tilesSeen) onLoadFailed();
-    }, 6000);
-    const listener = map.addListener('tilesloaded', () => {
-      const imgs = map.getDiv()?.querySelectorAll('img');
-      let realTiles = 0;
-      imgs?.forEach((img) => {
-        if (img.naturalWidth > 64 && img.naturalHeight > 64) realTiles += 1;
-      });
-      if (realTiles > 0) {
+    }, 4500);
+
+    const checkTiles = () => {
+      if (hasVtTiles()) {
         tilesSeen = true;
         window.clearTimeout(failTimer);
       }
+    };
+
+    const listener = map.addListener('tilesloaded', checkTiles);
+    const idleListener = map.addListener('idle', () => {
+      window.setTimeout(checkTiles, 400);
     });
+
     return () => {
       window.clearTimeout(failTimer);
       google.maps.event.removeListener(listener);
+      google.maps.event.removeListener(idleListener);
     };
   }, [map, onLoadFailed, loadError]);
 

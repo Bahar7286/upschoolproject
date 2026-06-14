@@ -22,23 +22,12 @@ import { recommendRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 import type { RouteResponse } from '../types/route';
+import { cityNamesMatch, filterRoutesByCity } from '../utils/city-match';
 
 type ScoredRoute = RouteResponse & { aiScore?: number; aiReason?: string };
 
 function isScoredRoute(route: RouteResponse | ScoredRoute): route is ScoredRoute {
   return 'aiScore' in route && typeof (route as ScoredRoute).aiScore === 'number';
-}
-
-function cityNameMatches(routeCity: string, preferred: string): boolean {
-  const norm = (s: string) =>
-    s
-      .toLocaleLowerCase('tr-TR')
-      .normalize('NFD')
-      .replace(/\p{M}/gu, '')
-      .replace(/\s+/g, '');
-  const a = norm(routeCity);
-  const b = norm(preferred);
-  return a.includes(b) || b.includes(a);
 }
 
 export default function DiscoverPage(): ReactElement {
@@ -72,7 +61,7 @@ export default function DiscoverPage(): ReactElement {
   });
 
   const matchedCity = useMemo(
-    () => cities.find((c) => cityNameMatches(c.name_tr, effectiveCity)) ?? null,
+    () => cities.find((c) => cityNamesMatch(c.name_tr, effectiveCity)) ?? null,
     [cities, effectiveCity],
   );
 
@@ -178,9 +167,8 @@ export default function DiscoverPage(): ReactElement {
             scored.push(route);
           }
         }
-        if (scored.length === 0) return routeSource.filter((r) => cityNameMatches(r.city, effectiveCity));
-        const cityFiltered = scored.filter((r) => cityNameMatches(r.city, effectiveCity));
-        return cityFiltered;
+        if (scored.length === 0) return filterRoutesByCity(routeSource, effectiveCity);
+        return filterRoutesByCity(scored, effectiveCity);
       } finally {
         window.clearTimeout(slowTimer);
         setSlowRecommend(false);
@@ -204,7 +192,16 @@ export default function DiscoverPage(): ReactElement {
       : routes.length > 0
         ? routes
         : routeSource;
-    return base.filter((r) => cityNameMatches(r.city, effectiveCity));
+    return filterRoutesByCity(base, effectiveCity);
+  }, [recommendMutation.data, routes, routeSource, effectiveCity]);
+
+  const strictCityEmpty = useMemo(() => {
+    const base = recommendMutation.data?.length
+      ? recommendMutation.data
+      : routes.length > 0
+        ? routes
+        : routeSource;
+    return base.length > 0 && base.every((r) => !cityNamesMatch(r.city, effectiveCity));
   }, [recommendMutation.data, routes, routeSource, effectiveCity]);
 
   const listError = isError ? mapError(error, 'discover') : null;
@@ -423,11 +420,33 @@ export default function DiscoverPage(): ReactElement {
         />
       ) : null}
 
+      {strictCityEmpty ? (
+        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100" role="status">
+          <strong>{effectiveCity}</strong> için henüz kayıtlı rota yok; mevcut rotalar gösteriliyor.{' '}
+          <Link className="font-bold text-primary underline" to="/cities">
+            İlleri keşfet
+          </Link>
+        </p>
+      ) : null}
+
       {isPending && routes.length === 0 ? (
         <ListSkeleton count={6} />
       ) : display.length === 0 && !personalRoute ? (
-        <EmptyState {...EMPTY_STATES.search} />
+        <EmptyState
+          {...EMPTY_STATES.search}
+          title="Henüz rota yok"
+          description={`${effectiveCity} için rehber rotası bulunamadı. İllere göz atabilir veya AI ile kişisel rota oluşturabilirsin.`}
+          actionLabel="İlleri keşfet"
+          actionTo="/cities"
+        />
       ) : display.length > 0 ? (
+        <>
+          <h2 className="font-display text-lg font-bold text-theme">
+            {recommendMutation.data?.length ? 'Sana önerilen rotalar' : 'Rehber rotaları'}
+          </h2>
+          <p className="text-sm text-theme-muted">
+            İlgi alanına ({effectiveInterests.slice(0, 3).join(', ')}) ve {effectiveCity} tercihine göre listeleniyor.
+          </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {display.map((route) => (
             <article
@@ -481,6 +500,7 @@ export default function DiscoverPage(): ReactElement {
             </article>
           ))}
         </div>
+        </>
       ) : null}
 
       <p className="text-center text-sm text-stone-500">
@@ -488,8 +508,8 @@ export default function DiscoverPage(): ReactElement {
           Onaylı rehberlerden seç →
         </Link>
         {' · '}
-        <Link className="font-bold text-primary hover:underline" to="/map">
-          Haritada tüm İstanbul yerlerini gör →
+        <Link className="font-bold text-primary hover:underline" to={`/map?city=${encodeURIComponent(effectiveCity)}`}>
+          Haritada {effectiveCity} yerlerini gör →
         </Link>
       </p>
     </section>

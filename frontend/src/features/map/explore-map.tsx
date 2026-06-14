@@ -49,7 +49,7 @@ export function ExploreMap({
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const defaultCenter = mapCenter ?? { lat: 41.015137, lng: 28.97953 };
   const hasGoogleKey = Boolean(googleKey?.trim());
-  const [engine, setEngine] = useState<Engine>(() => (preferGoogle && hasGoogleKey ? 'google' : 'leaflet'));
+  const [engine, setEngine] = useState<Engine>('leaflet');
   const [googleFailed, setGoogleFailed] = useState(false);
 
   const fallbackToLeaflet = useCallback(() => {
