@@ -6,7 +6,7 @@ Thin route-level shells — iş mantığı `features/` altında:
 |-------|----------------|
 | discover-page | `features/discover/` |
 | profile-page | `features/profile/` (hooks + shared components) |
-| map-page | `features/map-session/` + `features/map/` |
+| map-page | `features/map-session/` (filtreler, oturum, aktif rota) + `features/map/` |
 | onboarding-page | onboarding store + page |
 | route-detail-page | components/routes |
 | purchases-page | services/purchase |

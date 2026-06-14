@@ -106,7 +106,7 @@ export default function DiscoverPage(): ReactElement {
   }, [searchParams.get('ai')]);
 
   return (
-    <section className="space-y-6" aria-labelledby="disc-title">
+    <section className="min-w-0 space-y-6" aria-labelledby="disc-title">
       <DiscoverHero
         firstName={firstName}
         effectiveCity={effectiveCity}
@@ -180,9 +180,9 @@ export default function DiscoverPage(): ReactElement {
           hasRecommendData={Boolean(recommendMutation.data?.length)}
         />
       ) : null}
-      <p className="text-center text-sm text-stone-500">
+      <p className="flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-center text-sm text-stone-500">
         <Link className="font-bold text-primary hover:underline" to="/rehberler">Onaylı rehberlerden seç →</Link>
-        {' · '}
+        <span className="hidden sm:inline" aria-hidden="true">·</span>
         <Link className="font-bold text-primary hover:underline" to={`/map?city=${encodeURIComponent(effectiveCity)}`}>
           Haritada {effectiveCity} yerlerini gör →
         </Link>

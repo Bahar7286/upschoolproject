@@ -73,9 +73,9 @@ export function ExploreMap({
   const activeEngine = engine;
 
   return (
-    <div className="space-y-4">
+    <div className="min-w-0 space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <p className="text-sm text-stone-600 dark:text-stone-400">
+        <p className="min-w-0 text-sm text-stone-600 dark:text-stone-400">
           {activeEngine === 'google' ? (
             <>
               <strong>Google Haritalar</strong> — canlı mekan pinleri.
@@ -87,10 +87,10 @@ export function ExploreMap({
             </>
           )}
         </p>
-        <div className="inline-flex rounded-full border border-stone-900/10 bg-white/70 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-900/70">
+        <div className="inline-flex w-full rounded-full border border-stone-900/10 bg-white/70 p-1 shadow-sm backdrop-blur dark:border-white/10 dark:bg-zinc-900/70 sm:w-auto">
           <button
             type="button"
-            className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition ${
+            className={`tap-scale min-h-[44px] flex-1 rounded-full px-3 py-2 text-xs font-semibold transition sm:flex-none sm:px-4 sm:text-sm ${
               activeEngine === 'leaflet'
                 ? 'bg-heritage-ink text-white shadow dark:bg-stone-100 dark:text-heritage-ink'
                 : 'text-stone-600 dark:text-stone-400'
@@ -107,7 +107,7 @@ export function ExploreMap({
                 ? 'Google Haritalar (API anahtarı gerekir)'
                 : 'VITE_GOOGLE_MAPS_API_KEY tanımlı değil — OSM kullanın'
             }
-            className={`tap-scale min-h-[44px] rounded-full px-4 py-2 text-sm font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 ${
+            className={`tap-scale min-h-[44px] flex-1 rounded-full px-3 py-2 text-xs font-semibold transition disabled:cursor-not-allowed disabled:opacity-50 sm:flex-none sm:px-4 sm:text-sm ${
               activeEngine === 'google' ? 'bg-heritage-ink text-white shadow' : 'text-stone-600'
             }`}
             onClick={() => {

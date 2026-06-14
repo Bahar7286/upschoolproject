@@ -77,6 +77,16 @@ body {
     overflow-wrap: anywhere;
     word-break: break-word;
   }
+
+  .touch-scroll-x {
+    @apply flex gap-2 overflow-x-auto overscroll-x-contain pb-1;
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .touch-scroll-x::-webkit-scrollbar {
+    display: none;
+  }
 }
 
 /* ─── Tema token setleri ─── */

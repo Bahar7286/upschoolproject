@@ -165,26 +165,28 @@ export default function ProfilePage(): ReactElement {
 
       {tab === 'overview' ? (
         <div className="space-y-4">
-          <div className="theme-card flex items-center gap-4 p-5">
-            <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-primary text-xl font-bold">
+          <div className="theme-card flex flex-col gap-4 p-4 sm:flex-row sm:items-center sm:p-5">
+            <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-primary text-xl font-bold">
               {initials}
             </div>
-            <div>
-              <h2 className="font-display text-xl font-bold text-theme">{user?.full_name}</h2>
-              <p className="text-sm text-theme-muted">{user?.email}</p>
-              <span className="badge-pill mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-bold">
-                {user?.role === 'guide' ? t('profile.guide', 'Rehber') : t('profile.tourist', 'Turist')}
-              </span>
-              {user?.is_premium ? (
-                <span className="badge-pill ml-2 mt-1 inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-100">
-                  <Crown className="h-3.5 w-3.5" aria-hidden="true" />
-                  Premium
+            <div className="min-w-0 flex-1">
+              <h2 className="truncate font-display text-xl font-bold text-theme">{user?.full_name}</h2>
+              <p className="truncate text-sm text-theme-muted">{user?.email}</p>
+              <div className="mt-1 flex flex-wrap items-center gap-2">
+                <span className="badge-pill inline-block rounded-full px-2 py-0.5 text-xs font-bold">
+                  {user?.role === 'guide' ? t('profile.guide', 'Rehber') : t('profile.tourist', 'Turist')}
                 </span>
-              ) : (
-                <Link className="ml-2 mt-1 inline-flex text-xs font-bold text-primary underline" to="/premium">
-                  {t('profile.goPremium', "Premium'a geç")}
-                </Link>
-              )}
+                {user?.is_premium ? (
+                  <span className="badge-pill inline-flex items-center gap-1 rounded-full bg-amber-500/20 px-2 py-0.5 text-xs font-bold text-amber-900 dark:text-amber-100">
+                    <Crown className="h-3.5 w-3.5" aria-hidden="true" />
+                    Premium
+                  </span>
+                ) : (
+                  <Link className="inline-flex text-xs font-bold text-primary underline" to="/premium">
+                    {t('profile.goPremium', "Premium'a geç")}
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
           <ProfileQuickLinks />
@@ -212,10 +214,10 @@ export default function ProfilePage(): ReactElement {
               )}
             </p>
           </div>
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-3 gap-2 sm:gap-3">
             <StatCard icon={Zap} value={String(xp)} label="XP" />
             <StatCard icon={Flame} value={String(streak)} label="Streak" />
-            <StatCard icon={Award} value={`#${rank}`} label={t('profile.weekly', 'Haftalık')} />
+            <StatCard icon={Award} value={rank != null ? `#${rank}` : '—'} label={t('profile.weekly', 'Haftalık')} />
           </div>
           <div className="theme-card p-5">
             <div className="flex justify-between text-sm font-semibold text-theme">
@@ -361,13 +363,13 @@ export default function ProfilePage(): ReactElement {
                 (rule) => (
                   <li
                     key={rule.id}
-                    className="list-row flex items-center justify-between rounded-xl px-3 py-2 text-sm"
+                    className="list-row flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm"
                   >
-                    <span>
+                    <span className="min-w-0 flex-1">
                       <strong className="text-theme">{rule.title}</strong>
                       <span className="block text-xs text-theme-muted">{rule.description}</span>
                     </span>
-                    <span className="font-bold text-primary">+{rule.xp} XP</span>
+                    <span className="shrink-0 font-bold text-primary">+{rule.xp} XP</span>
                   </li>
                 ),
               )}
@@ -390,7 +392,7 @@ export default function ProfilePage(): ReactElement {
                 className={`theme-card rounded-[18px] border p-4 ${reward.owned ? 'opacity-70' : ''}`}
               >
                 <div className="flex justify-between gap-2">
-                  <h3 className="font-bold text-theme">{reward.title}</h3>
+                  <h3 className="min-w-0 flex-1 font-bold text-theme">{reward.title}</h3>
                   <span className="badge-pill shrink-0 rounded-full px-2 py-0.5 text-xs font-bold">
                     {reward.value_label}
                   </span>
@@ -469,15 +471,15 @@ export default function ProfilePage(): ReactElement {
                 return (
                   <li
                     key={entry.user_id}
-                    className={`list-row flex items-center justify-between rounded-xl px-3 py-2 text-sm ${
+                    className={`list-row flex items-center justify-between gap-2 rounded-xl px-3 py-2 text-sm ${
                       entry.rank <= 3 ? 'font-bold ring-1 ring-[var(--hg-primary)]' : ''
                     } ${isYou ? 'border-2 border-[var(--hg-primary)]' : ''}`}
                   >
-                    <span className="text-theme">
+                    <span className="min-w-0 flex-1 truncate text-theme">
                       #{entry.rank} {entry.full_name}
                       {isYou ? ` (${t('common.you', 'Sen')})` : ''}
                     </span>
-                    <span className="font-bold text-primary">{entry.xp} XP</span>
+                    <span className="shrink-0 font-bold text-primary">{entry.xp} XP</span>
                   </li>
                 );
               })

@@ -31,15 +31,16 @@ export function AuthHeaderActions({
           <span className="max-w-[120px] truncate text-sm font-semibold text-theme">{userName ?? t('auth.traveler', 'Gezgin')}</span>
         </div>
         <button
-          className="app-chip tap-scale focus-ring inline-flex min-h-[44px] items-center gap-1.5 rounded-full px-2.5 text-sm font-semibold shadow-sm sm:gap-2 sm:px-3"
+          className="app-chip tap-scale focus-ring inline-flex min-h-[44px] min-w-[44px] items-center justify-center gap-1.5 rounded-full px-2.5 text-sm font-semibold shadow-sm sm:min-w-0 sm:gap-2 sm:px-3"
           type="button"
+          aria-label={t('auth.logout', 'Çıkış')}
           onClick={() => {
             logout();
             navigate('/', { replace: true });
           }}
         >
           <LogOut className="h-4 w-4 text-theme-muted" aria-hidden="true" strokeWidth={2} />
-          <span className="text-theme">{t('auth.logout', 'Çıkış')}</span>
+          <span className="hidden text-theme sm:inline">{t('auth.logout', 'Çıkış')}</span>
         </button>
       </>
     );

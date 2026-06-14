@@ -14,7 +14,7 @@ type Props = {
 
 export function ProfileTabsNav({ tabs, active, onSelect, ariaLabel }: Props): ReactElement {
   return (
-    <nav className="flex gap-2 overflow-x-auto pb-1" aria-label={ariaLabel}>
+    <nav className="touch-scroll-x -mx-1 px-1" aria-label={ariaLabel}>
       {tabs.map(({ id, label, icon: Icon }) => (
         <button
           key={id}

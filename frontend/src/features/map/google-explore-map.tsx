@@ -47,8 +47,8 @@ export function GoogleExploreMap({
   onLoadFailed,
 }: GoogleExploreMapProps): ReactElement {
   const shellHeight = compact
-    ? 'h-[min(42vh,360px)]'
-    : 'h-[min(52vh,400px)] sm:h-[min(62vh,480px)] lg:h-[min(70vh,560px)]';
+    ? 'h-[min(42vh,360px)] min-h-[260px]'
+    : 'h-[min(52vh,400px)] min-h-[280px] sm:h-[min(62vh,480px)] sm:min-h-[320px] lg:h-[min(70vh,560px)]';
   const navigate = useNavigate();
   const { isLoaded, loadError } = useJsApiLoader({
     id: 'historial-google-maps-script',

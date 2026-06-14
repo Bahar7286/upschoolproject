@@ -154,7 +154,7 @@ export default function AssistantPage(): ReactElement {
 
   return (
     <section
-      className="mx-auto flex h-full min-h-[calc(100dvh-10rem)] w-full max-w-3xl flex-1 flex-col gap-3 pb-2 lg:min-h-0"
+      className="mx-auto flex h-full min-h-[calc(100dvh-10rem)] w-full min-w-0 max-w-3xl flex-1 flex-col gap-3 pb-2 lg:min-h-0"
       aria-labelledby="asst-title"
     >
       <BackButton />
