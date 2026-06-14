@@ -11,7 +11,8 @@ from app.core.config import settings
 _WINDOW_SEC = 60
 _MAX_REQUESTS = 120
 _AUTH_MAX = 30
-_AI_MAX = 20
+_AI_ANON_MAX = 8
+_AI_AUTH_MAX = 30
 
 _buckets: dict[str, list[float]] = defaultdict(list)
 
@@ -57,7 +58,8 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         if path.startswith('/auth'):
             limit = _AUTH_MAX
         elif path.startswith('/ai'):
-            limit = _AI_MAX
+            has_auth = bool(request.headers.get('authorization', '').lower().startswith('bearer '))
+            limit = _AI_AUTH_MAX if has_auth else _AI_ANON_MAX
 
         if not _allow(f'{key}:{path.split("/")[1] if path.startswith("/") else "root"}', limit):
             return JSONResponse(

@@ -3,7 +3,13 @@ from pathlib import Path
 from fastapi import APIRouter, Depends, File, HTTPException, Query, UploadFile, status
 
 from app.api.auth_deps import get_current_user_id
-from app.api.dependencies import get_guide_profile_service, get_guide_service, get_moderation_service
+from app.api.dependencies import (
+    get_guide_profile_service,
+    get_guide_service,
+    get_moderation_service,
+    require_admin,
+    require_guide_self_or_admin,
+)
 from app.services.moderation_service import ModerationService
 from app.core.config import settings
 from app.core.exceptions import (
@@ -148,6 +154,7 @@ async def list_guides(
 @router.post('', response_model=GuideResponse, status_code=status.HTTP_201_CREATED)
 async def create_guide(
     payload: GuideCreate,
+    _: int = Depends(require_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> GuideResponse:
     try:
@@ -159,8 +166,11 @@ async def create_guide(
 @router.post('/payout', response_model=GuidePayoutResponse)
 async def request_payout(
     payload: GuidePayoutRequest,
+    user_id: int = Depends(get_current_user_id),
     service: GuideService = Depends(get_guide_service),
 ) -> GuidePayoutResponse:
+    if payload.guide_id != user_id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Access denied')
     try:
         return await service.request_payout(payload)
     except GuideNotFoundError as exc:
@@ -184,6 +194,7 @@ async def get_guide(
 async def update_guide(
     guide_id: int,
     payload: GuideUpdate,
+    _: int = Depends(require_guide_self_or_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> GuideResponse:
     if guide_id <= 0:
@@ -199,6 +210,7 @@ async def update_guide(
 @router.delete('/{guide_id}', response_model=dict[str, str])
 async def delete_guide(
     guide_id: int,
+    _: int = Depends(require_guide_self_or_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> dict[str, str]:
     if guide_id <= 0:
@@ -213,6 +225,7 @@ async def delete_guide(
 @router.get('/{guide_id}/earnings', response_model=GuideEarningsResponse)
 async def get_earnings(
     guide_id: int,
+    _: int = Depends(require_guide_self_or_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> GuideEarningsResponse:
     if guide_id <= 0:
@@ -240,6 +253,7 @@ async def list_guide_routes(
 async def create_guide_route(
     guide_id: int,
     payload: GuideRouteCreate,
+    _: int = Depends(require_guide_self_or_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> RouteResponse:
     if guide_id <= 0:
@@ -271,6 +285,7 @@ async def update_guide_route(
     guide_id: int,
     route_id: int,
     payload: RouteUpdate,
+    _: int = Depends(require_guide_self_or_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> RouteResponse:
     if guide_id <= 0 or route_id <= 0:
@@ -335,6 +350,7 @@ async def publish_guide_route(
 async def delete_guide_route(
     guide_id: int,
     route_id: int,
+    _: int = Depends(require_guide_self_or_admin),
     service: GuideService = Depends(get_guide_service),
 ) -> dict[str, str]:
     if guide_id <= 0 or route_id <= 0:

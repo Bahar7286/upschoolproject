@@ -1,10 +1,14 @@
 import logging
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.auth_deps import get_current_user_id
 from app.core.config import settings
-from app.api.dependencies import get_db, get_password_reset_service, get_premium_request_service, get_user_service
+from app.api.dependencies import (
+    get_password_reset_service,
+    get_premium_request_service,
+    get_profile_service,
+    get_user_service,
+)
 from app.core.exceptions import EmailAlreadyExistsError, InvalidCredentialsError, UserNotFoundError
 from app.schemas.auth_schema import (
     ForgotPasswordRequest,
@@ -26,13 +30,7 @@ from app.schemas.user_schema import (
     UserResponse,
 )
 from app.services.premium_request_service import PremiumRequestService
-from app.services.profile_service import (
-    complete_route,
-    get_gamification,
-    get_leaderboard,
-    redeem_reward,
-    update_preferences,
-)
+from app.services.profile_service import ProfileService
 from app.services.email_service import email_service
 from app.services.password_reset_service import PasswordResetService
 from app.services.user_service import UserService
@@ -140,9 +138,9 @@ async def read_current_user(
 async def update_current_user_preferences(
     payload: UserPreferencesUpdate,
     user_id: int = Depends(get_current_user_id),
-    session: AsyncSession = Depends(get_db),
+    service: ProfileService = Depends(get_profile_service),
 ) -> UserResponse:
-    return await update_preferences(session, user_id, payload)
+    return await service.update_preferences(user_id, payload)
 
 
 @router.get(
@@ -152,9 +150,9 @@ async def update_current_user_preferences(
 )
 async def read_leaderboard(
     user_id: int = Depends(get_current_user_id),
-    session: AsyncSession = Depends(get_db),
+    service: ProfileService = Depends(get_profile_service),
 ) -> LeaderboardResponse:
-    return await get_leaderboard(session, viewer_id=user_id)
+    return await service.get_leaderboard(viewer_id=user_id)
 
 
 @router.get(
@@ -164,9 +162,9 @@ async def read_leaderboard(
 )
 async def read_gamification(
     user_id: int = Depends(get_current_user_id),
-    session: AsyncSession = Depends(get_db),
+    service: ProfileService = Depends(get_profile_service),
 ) -> GamificationResponse:
-    return await get_gamification(session, user_id)
+    return await service.get_gamification(user_id)
 
 
 @router.post(
@@ -177,9 +175,9 @@ async def read_gamification(
 async def redeem_user_reward(
     payload: RedeemRewardRequest,
     user_id: int = Depends(get_current_user_id),
-    session: AsyncSession = Depends(get_db),
+    service: ProfileService = Depends(get_profile_service),
 ) -> RedeemRewardResponse:
-    return await redeem_reward(session, user_id, payload.reward_id)
+    return await service.redeem_reward(user_id, payload.reward_id)
 
 
 @router.post(
@@ -190,11 +188,11 @@ async def redeem_user_reward(
 async def complete_user_route(
     route_id: int,
     user_id: int = Depends(get_current_user_id),
-    session: AsyncSession = Depends(get_db),
+    service: ProfileService = Depends(get_profile_service),
 ) -> CompleteRouteResponse:
     if route_id <= 0:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail='Invalid route id')
-    return await complete_route(session, user_id, route_id)
+    return await service.complete_route(user_id, route_id)
 
 
 @router.get(

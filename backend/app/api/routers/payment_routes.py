@@ -148,6 +148,15 @@ async def list_user_purchases(
     return await service.list_user_purchases(user_id)
 
 
+@router.get('/history', response_model=list[PurchaseResponse])
+async def purchase_history(
+    user_id: int = Depends(get_current_user_id),
+    service: PaymentService = Depends(get_payment_service),
+) -> list[PurchaseResponse]:
+    """Oturumdaki kullanıcının satın alma geçmişi (`GET /payments/users/{id}` alias)."""
+    return await service.list_user_purchases(user_id)
+
+
 @router.get('/{purchase_id}', response_model=PurchaseResponse)
 async def get_purchase(
     purchase_id: int,

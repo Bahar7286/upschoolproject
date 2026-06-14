@@ -321,8 +321,21 @@ def test_plans_notes_reviews(client: TestClient) -> None:
 
 
 def test_guide_crud(client: TestClient) -> None:
+    admin = admin_token(client)
+    admin_headers = auth_headers(admin)
+
+    assert client.post(
+        '/guides',
+        json={
+            'full_name': 'New Guide',
+            'email': 'new.guide@example.com',
+            'password': 'securepass',
+        },
+    ).status_code == 401
+
     create = client.post(
         '/guides',
+        headers=admin_headers,
         json={
             'full_name': 'New Guide',
             'email': 'new.guide@example.com',
@@ -331,6 +344,7 @@ def test_guide_crud(client: TestClient) -> None:
     )
     assert create.status_code == 201
     guide_id = create.json()['guide_id']
+    guide_auth = auth_headers(login(client, 'new.guide@example.com', 'securepass'))
 
     listing = client.get('/guides')
     assert listing.status_code == 200
@@ -338,14 +352,21 @@ def test_guide_crud(client: TestClient) -> None:
     get_one = client.get(f'/guides/{guide_id}')
     assert get_one.status_code == 200
 
+    assert client.patch(
+        f'/guides/{guide_id}',
+        json={'full_name': 'Hacker'},
+    ).status_code == 401
+
     patch = client.patch(
         f'/guides/{guide_id}',
+        headers=guide_auth,
         json={'full_name': 'Updated Guide'},
     )
     assert patch.status_code == 200
 
     route = client.post(
         f'/guides/{guide_id}/routes',
+        headers=guide_auth,
         json={
             'title': 'Guide Route',
             'city': 'Istanbul',
@@ -360,19 +381,22 @@ def test_guide_crud(client: TestClient) -> None:
     routes = client.get(f'/guides/{guide_id}/routes')
     assert routes.status_code == 200
 
-    earnings = client.get(f'/guides/{guide_id}/earnings')
+    assert client.get(f'/guides/{guide_id}/earnings').status_code == 401
+
+    earnings = client.get(f'/guides/{guide_id}/earnings', headers=guide_auth)
     assert earnings.status_code == 200
 
     payout = client.post(
         '/guides/payout',
+        headers=guide_auth,
         json={'guide_id': guide_id, 'amount': 1.0},
     )
     assert payout.status_code == 200
 
-    delete_route = client.delete(f'/guides/{guide_id}/routes/{route_id}')
+    delete_route = client.delete(f'/guides/{guide_id}/routes/{route_id}', headers=guide_auth)
     assert delete_route.status_code == 200
 
-    delete_guide = client.delete(f'/guides/{guide_id}')
+    delete_guide = client.delete(f'/guides/{guide_id}', headers=admin_headers)
     assert delete_guide.status_code == 200
 
 

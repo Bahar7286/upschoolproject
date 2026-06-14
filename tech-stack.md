@@ -1,6 +1,6 @@
 # tech-stack.md — Teknoloji yığını ve seçim gerekçeleri
 
-**Proje:** Historial-GO · **Son güncelleme:** Mayıs 2026
+**Proje:** Historial-GO · **Son güncelleme:** Haziran 2026
 
 ---
 
@@ -18,7 +18,7 @@
 | Ödeme | Stripe API | Yoksa demo checkout |
 | LLM (ürün) | OpenRouter (örn. Gemma) veya doğrudan Gemini API | `httpx` ile REST |
 | Harita | Leaflet + opsiyonel Google Maps | `VITE_GOOGLE_MAPS_API_KEY` |
-| Test BE | pytest, pytest-asyncio, coverage | 141 test; `tests/unit`, `tests/integration`, `test_api.py` |
+| Test BE | pytest, pytest-asyncio, coverage | 147 test (111 unit + 36 integration); minimal seed fixture |
 | Google API | Places + Routes (backend proxy) | `GOOGLE_PLACES_API_KEY` sunucuda |
 | i18n FE | Özel `I18nProvider` + JSON locale | TR / EN |
 | Test FE | Vitest | `src/**/*.test.ts` |
@@ -39,13 +39,13 @@
 
 - **Neden:** İlişkisel veri (kullanıcı, rota, durak, satın alma, trip talebi); üretimde güvenilir.
 - **Geliştirme:** `docker-compose.yml` ile yerel PG; testlerde SQLite (`aiosqlite`) hız için.
-- **Karar:** Alembic migration (`backend/alembic/`); seed ve demo veri `bootstrap.py`.
+- **Karar:** Alembic migration (`backend/alembic/`); `seed_minimal_data` (test) / `seed_full_geo_data` (81 il) ayrımı `bootstrap.py`.
 
 ### 2.3 React + Vite (frontend)
 
 - **Neden:** Bileşen tabanlı UI, TypeScript ile servis katmanı (`src/services/`), Vite ile hızlı geliştirme.
 - **Alternatif:** Next.js — SSR bu projede zorunlu değil; API ayrı host’ta.
-- **Karar:** SPA + `VITE_API_BASE_URL` ile backend ayrımı (kabul kriteri).
+- **Karar:** SPA + `VITE_API_BASE_URL` ile backend ayrımı (kabul kriteri). Ağır sayfa orchestration `src/features/*` altında (discover, profile, map-session).
 
 ### 2.4 Capacitor (mobil)
 

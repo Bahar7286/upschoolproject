@@ -1,6 +1,6 @@
 # Plan.md — PRD’den türetilen teknik plan
 
-**Kaynak:** [PRD.md](PRD.md) · **Durum:** MVP tamamlandı (Mayıs 2026) · **Test:** backend 141 pytest geçer
+**Kaynak:** [PRD.md](PRD.md) · **Durum:** MVP tamamlandı (Haziran 2026) · **Test:** backend 147 pytest geçer
 
 ---
 
@@ -71,7 +71,8 @@
 
 | ID | Kullanıcı hikayesi | Teknik adımlar | Durum |
 |----|-------------------|----------------|-------|
-| E7.1 | Regresyon testi | pytest 141, Vitest, coverage servis ~%90 | ✅ |
+| E7.1 | Regresyon testi | pytest 147 (minimal seed), Vitest 34, coverage servis ~%90 | ✅ |
+| E7.5 | Güvenlik sertleştirme | Guide JWT/sahiplik, AI rate limit, quotes 410 | ✅ |
 | E7.2 | Standart repo yapısı | `frontend/`, `backend/`, `prodocs/` | ✅ |
 | E7.3 | Canlı demo | Render, README URL | ✅ |
 | E7.4 | Production güvenlik | Rate limit (prod), hata maskeleme, `/ready` | ✅ |

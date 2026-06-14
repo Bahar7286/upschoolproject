@@ -107,7 +107,9 @@
 | Alembic migration | ✅ `backend/alembic/versions/` |
 | AR avatar | v2 |
 | Google Places proxy + keşif sayfaları | ✅ Mayıs 2026 |
-| Backend rate limit / `/ready` | ✅ prod-only limit, 141 pytest |
+| Backend rate limit / `/ready` | ✅ prod-only limit, AI anon/auth bucket |
+| Guide mutasyon auth | ✅ JWT + `require_guide_self_or_admin` |
+| Integration test hızı | ✅ `seed_minimal_data` + `client_full_geo` (~56 sn) |
 
 ---
 
@@ -162,7 +164,19 @@
 
 ---
 
-## Komut özeti (doğrulanmış)
+## Faz 11 — Denetim düzeltmeleri (Haziran 2026)
+
+| Yapılan | Karar |
+|---------|--------|
+| Guide CRUD/earnings/payout JWT + sahiplik | `require_guide_self_or_admin`, admin-only `POST /guides` |
+| AI POST opsiyonel auth + anon/auth rate limit | `get_optional_user_id`, `_AI_ANON_MAX=8` |
+| `seed_minimal_data` / `seed_full_geo_data` | Integration ~56 sn (önceden saatler) |
+| `GET /payments/history` alias | api-map hizalandı |
+| `/quotes` → 410 Gone | FE quotes-page kaldırıldı |
+| SeoService, ProfileService, ModerationDecisionRepository | Katman temizliği |
+| features/discover, profile, map-session | Sayfa orchestration feature'lara taşındı |
+
+---
 
 ```powershell
 docker compose up -d

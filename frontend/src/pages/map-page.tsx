@@ -11,10 +11,9 @@ import { useQuery } from '@tanstack/react-query';
 import { BackButton } from '../components/ui/back-button';
 import { ExploreMap } from '../features/map/explore-map';
 import { decodePolyline } from '../utils/polyline';
-import { isValidMapCenter, parseOptionalCoord } from '../utils/map-coords';
-import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
+import { isValidMapCenter } from '../utils/map-coords';
+import { fetchGooglePlacesNearby } from '../services/google-service';
 import { fetchRegionGooglePlaces } from '../services/region-venues-service';
-import { listCities, listDistrictsByCity } from '../services/city-service';
 
 import { usePlacesQuery } from '../hooks/use-places-query';
 
@@ -37,34 +36,10 @@ import { ActiveRoutePlanner, useAddPlaceToActiveRoute } from '../features/active
 import { listTripExtraStops } from '../services/trip-extra-stop-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 
+import { useMapFilters, useMapSession, MapControlsPanel } from '../features/map-session';
 import { filterGoogleByCity, filterGoogleByDistrict } from '../utils/district-filter';
-
 import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
-import { PLACE_CATEGORY_COLORS, type PlaceCategory } from '../types/place';
-
-
-
-const ALL_CATEGORIES: PlaceCategory[] = [
-
-  'museum',
-
-  'palace',
-
-  'historical',
-
-  'mosque',
-
-  'bazaar',
-
-  'street',
-
-  'restaurant',
-
-  'accommodation',
-
-];
-
-
+import { type PlaceCategory } from '../types/place';
 
 export default function MapPage(): ReactElement {
   const { t } = useI18n();
@@ -74,10 +49,6 @@ export default function MapPage(): ReactElement {
 
   const { data: routes = [], isPending, isError, error } = useRoutesQuery();
 
-  const [categoryFilter, setCategoryFilter] = useState<PlaceCategory | null>(null);
-
-  const [showPlaces, setShowPlaces] = useState(true);
-
   const [searchParams, setSearchParams] = useSearchParams();
   const effectiveCityName =
     searchParams.get('city') ?? user?.preferred_city ?? preferredCity ?? 'İstanbul';
@@ -86,95 +57,35 @@ export default function MapPage(): ReactElement {
   const cityIdParam = Number(searchParams.get('cityId'));
   const districtIdParam = Number(searchParams.get('districtId'));
   const categoryParam = (searchParams.get('category') as PlaceCategory | null) ?? null;
+  const {
+    categoryFilter,
+    setCategoryFilter,
+    showPlaces,
+    setShowPlaces,
+    placesRadius,
+    setPlacesRadius,
+    allCategories: ALL_CATEGORIES,
+  } = useMapFilters(categoryParam, districtIdParam);
   const polylineParam = searchParams.get('polyline');
-  const destLat = parseOptionalCoord(searchParams.get('destLat'));
-  const destLng = parseOptionalCoord(searchParams.get('destLng'));
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const hasGoogleKey = Boolean(googleKey?.trim());
-  const [placesRadius, setPlacesRadius] = useState(() => (districtIdParam > 0 ? 4000 : 10000));
   const [googlePlacesError, setGooglePlacesError] = useState('');
 
-  useEffect(() => {
-    if (categoryParam && ALL_CATEGORIES.includes(categoryParam)) {
-      setCategoryFilter(categoryParam);
-    }
-  }, [categoryParam]);
-
-  const { data: cities = [] } = useQuery({
-    queryKey: ['cities'],
-    queryFn: listCities,
-    staleTime: 60 * 60 * 1000,
+  const {
+    resolvedCityId,
+    resolvedDistrictName,
+    geoCenter,
+    mapCenter,
+    mapZoom,
+    destLat,
+  } = useMapSession({
+    effectiveCityName,
+    district,
+    cityIdParam,
+    districtIdParam,
+    destLatParam: searchParams.get('destLat'),
+    destLngParam: searchParams.get('destLng'),
   });
-  const resolvedCityId = useMemo(() => {
-    if (Number.isFinite(cityIdParam) && cityIdParam > 0) return cityIdParam;
-    const norm = (s: string) =>
-      s
-        .trim()
-        .toLocaleLowerCase('tr-TR')
-        .replace(/ı/g, 'i')
-        .replace(/ğ/g, 'g')
-        .replace(/ü/g, 'u')
-        .replace(/ş/g, 's')
-        .replace(/ö/g, 'o')
-        .replace(/ç/g, 'c');
-    const cityNorm = norm(city);
-    const found = cities.find(
-      (c) => norm(c.name_tr) === cityNorm || c.slug === city.toLowerCase(),
-    );
-    return found?.city_id;
-  }, [cities, city, cityIdParam]);
-
-  const cityFallbackCenter = useMemo(() => {
-    if (!resolvedCityId) return null;
-    const c = cities.find((x) => x.city_id === resolvedCityId);
-    if (!c) return null;
-    const center = { lat: c.center_lat, lng: c.center_lng };
-    return isValidMapCenter(center) ? center : null;
-  }, [cities, resolvedCityId]);
-
-  const { data: districts = [] } = useQuery({
-    queryKey: ['districts', resolvedCityId],
-    queryFn: () => listDistrictsByCity(resolvedCityId!),
-    enabled: Boolean(resolvedCityId && resolvedCityId > 0),
-    staleTime: 24 * 60 * 60 * 1000,
-  });
-
-  const resolvedDistrictName = useMemo(() => {
-    if (district?.trim()) return district;
-    if (districtIdParam > 0) {
-      return districts.find((d) => d.district_id === districtIdParam)?.name_tr ?? '';
-    }
-    return '';
-  }, [district, districtIdParam, districts]);
-
-  const { data: geoCenter } = useQuery({
-    queryKey: ['geo-center', resolvedCityId, districtIdParam],
-    queryFn: () =>
-      fetchGeoCenter({
-        cityId: districtIdParam > 0 ? undefined : resolvedCityId,
-        districtId: districtIdParam > 0 ? districtIdParam : undefined,
-      }),
-    enabled: Boolean((resolvedCityId && resolvedCityId > 0) || (districtIdParam > 0)),
-    staleTime: 24 * 60 * 60 * 1000,
-  });
-
-  const mapCenter = useMemo(() => {
-    if (destLat != null && destLng != null) {
-      const dest = { lat: destLat, lng: destLng };
-      if (isValidMapCenter(dest)) return dest;
-    }
-    if (geoCenter && isValidMapCenter(geoCenter)) {
-      return { lat: geoCenter.lat, lng: geoCenter.lng };
-    }
-    if (cityFallbackCenter) return cityFallbackCenter;
-    return { lat: 41.015137, lng: 28.97953 };
-  }, [geoCenter, destLat, destLng, cityFallbackCenter]);
-
-  const mapZoom = useMemo(() => {
-    if (destLat != null) return 15;
-    if (districtIdParam > 0) return 14;
-    return 12;
-  }, [destLat, districtIdParam]);
 
   const effectiveCategory = categoryFilter ?? categoryParam;
 
@@ -528,68 +439,16 @@ export default function MapPage(): ReactElement {
 
 
 
-      <div className="flex flex-wrap items-center gap-2 sm:gap-2">
-
-        <button
-
-          className={`tap-scale touch-chip text-xs ${categoryFilter === null ? 'bg-primary text-white' : 'border border-stone-900/15 dark:border-white/15'}`}
-
-          type="button"
-
-          onClick={() => setCategoryFilter(null)}
-
-        >
-
-          {t('map.allCategories', 'Tümü')}
-
-        </button>
-
-        {ALL_CATEGORIES.map((cat) => (
-
-          <button
-
-            className={`tap-scale touch-chip gap-1.5 text-xs ${categoryFilter === cat ? 'bg-primary text-white' : 'border border-stone-900/15 dark:border-white/15'}`}
-
-            key={cat}
-
-            type="button"
-
-            onClick={() => {
-              const next = categoryFilter === cat ? null : cat;
-              setCategoryFilter(next);
-              const params = new URLSearchParams(searchParams);
-              if (next) params.set('category', next);
-              else params.delete('category');
-              setSearchParams(params, { replace: true });
-            }}
-
-          >
-
-            <span
-
-              className="inline-block h-2 w-2 rounded-full"
-
-              style={{ backgroundColor: PLACE_CATEGORY_COLORS[cat] }}
-
-              aria-hidden="true"
-
-            />
-
-            {categoryLabels[cat]}
-
-          </button>
-
-        ))}
-
-        <label className="inline-flex min-h-[44px] w-full items-center gap-2 text-sm font-semibold sm:ml-auto sm:w-auto">
-
-          <input checked={showPlaces} type="checkbox" onChange={(e) => setShowPlaces(e.target.checked)} />
-
-          {t('map.poiPins', 'POI pinleri')}
-
-        </label>
-
-      </div>
+      <MapControlsPanel
+        allCategories={ALL_CATEGORIES}
+        categoryFilter={categoryFilter}
+        categoryLabels={categoryLabels}
+        showPlaces={showPlaces}
+        searchParams={searchParams}
+        setSearchParams={setSearchParams}
+        onCategoryChange={setCategoryFilter}
+        onShowPlacesChange={setShowPlaces}
+      />
 
 
 

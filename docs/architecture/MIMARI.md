@@ -55,8 +55,10 @@
 | Plan | `plan_routes` | `PlanService` | `PlanRepository` |
 | Not / Yorum | `social_routes` | `NoteService`, `ReviewService` | `NoteRepository`, `ReviewRepository` |
 | Yerler (POI) | `place_routes` | `PlaceService` | `PlaceRepository` |
-| Auth / Profil | `auth_routes` | `auth_service`, `profile_service` | (geçiş aşamasında) |
+| Auth / Profil | `auth_routes` | `ProfileService`, `auth_service` | `UserRepository` |
 | Rehber | `guide_routes` | `guide_service` | (geçiş aşamasında) |
+| SEO | `seo_routes` | `SeoService` | — |
+| Moderasyon | `moderation_routes` | `ModerationService` | `ModerationDecisionRepository` |
 | AI | `ai_routes` | `AIService` | — |
 
 ---
@@ -78,10 +80,21 @@ Koordinatlar WGS84 (Google/OSM uyumlu). Harita: OpenStreetMap + opsiyonel Google
 
 ---
 
-## Bilinen Eksikler (Yol Haritası)
+## Frontend feature modülleri
+
+| Modül | İçerik |
+|-------|--------|
+| `features/discover/` | Keşfet hero, AI panel, rota önerileri, kota hook |
+| `features/profile/` | Sekme hook'ları, paylaşılan kartlar, `ProfileTabsNav` |
+| `features/map-session/` | Harita filtreleri, şehir/ilçe oturumu, kontrol paneli |
+| `features/map/` | Leaflet/Google harita bileşenleri |
+
+Sayfa dosyaları (`pages/`) yalnızca routing ve orchestration tutar; ağır UI `features/*` altında.
+
+---
 
 1. Alembic migration (şu an `create_all` + bootstrap ALTER)  
 2. Tüm servislerde repository tam geçişi  
-3. Auth zorunluluğu hassas uçlarda (payments, user CRUD)  
+3. Auth zorunluluğu hassas uçlarda (payments, user CRUD, **guide mutasyonları**) — kısmen giderildi (Haziran 2026)
 4. PostGIS / spatial index (yüksek hacimde)  
 5. OSM Overpass canlı zenginleştirme (v1.1)

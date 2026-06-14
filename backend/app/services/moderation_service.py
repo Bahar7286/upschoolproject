@@ -4,6 +4,7 @@ from app.core.exceptions import RouteNotFoundError
 from app.models.moderation_model import ContentReport, ModerationDecision
 from app.models.route_model import Route
 from app.repositories.content_report_repository import ContentReportRepository
+from app.repositories.moderation_decision_repository import ModerationDecisionRepository
 from app.repositories.route_repository import RouteRepository
 from app.repositories.stop_repository import StopRepository
 from app.repositories.user_repository import UserRepository
@@ -27,12 +28,14 @@ class ModerationService:
         reports: ContentReportRepository,
         users: UserRepository,
         route_service: RouteService,
+        decisions: ModerationDecisionRepository,
     ) -> None:
         self.routes = routes
         self.stops = stops
         self.reports = reports
         self.users = users
         self.route_service = route_service
+        self.decisions = decisions
 
     async def list_pending_routes(self) -> list[AdminPendingRoute]:
         rows = await self.routes.list_by_status('in_review')
@@ -85,8 +88,7 @@ class ModerationService:
             public_feedback=payload.public_feedback,
             created_at=utc_now(),
         )
-        self.routes.db.add(decision)
-        await self.routes.db.commit()
+        await self.decisions.create(decision)
         return self.route_service._to_response(route)
 
     async def submit_route_for_review(self, route_id: int, guide_id: int) -> RouteResponse:

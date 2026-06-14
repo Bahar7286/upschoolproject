@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import os
 
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -23,7 +24,8 @@ from app.models.user_model import User
 _DEMO_PASSWORD = 'demo123'
 
 
-async def seed_initial_data(session: AsyncSession) -> None:
+async def seed_minimal_data(session: AsyncSession) -> None:
+    """Demo kullanıcılar, rotalar, duraklar, İstanbul POI — geo bulk seed yok."""
     existing_users = await session.execute(select(User.user_id).limit(1))
     if not existing_users.first():
         demo_hash = hash_password(_DEMO_PASSWORD)
@@ -215,12 +217,21 @@ async def seed_initial_data(session: AsyncSession) -> None:
         session.add_all(places)
         await session.commit()
 
+
+async def seed_full_geo_data(session: AsyncSession) -> None:
+    """81 il, 973 ilçe, landmark POI, şehir rotaları — integration geo testleri için."""
     await ensure_cities_seeded(session)
     await ensure_districts_seeded(session)
     await ensure_city_landmark_places_seeded(session)
     await ensure_city_routes_seeded(session)
     await ensure_route_stops_seeded(session)
     await ensure_co_visit_seed(session)
+
+
+async def seed_initial_data(session: AsyncSession) -> None:
+    """Tam geliştirme/üretim bootstrap — minimal + geo."""
+    await seed_minimal_data(session)
+    await seed_full_geo_data(session)
 
 
 async def ensure_city_landmark_places_seeded(session: AsyncSession) -> None:
@@ -339,6 +350,8 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
 
 async def ensure_images_seeded(session: AsyncSession) -> None:
     """Eksik city/place image_url alanlarını Wikipedia'dan doldur."""
+    if os.getenv('TESTING') == '1':
+        return
     import logging
 
     from sqlalchemy import func, or_

@@ -8,7 +8,9 @@
 - [x] [DesignSystem.md](DesignSystem.md) — renk, tipografi, bileşenler
 - [x] [Progress.md](Progress.md) — iş / karar / hata kaydı
 - [x] Gizli anahtarlar repoda yok (yalnızca `.env.example`)
-- [x] API güvenliği: kullanıcı/rota/ödeme uçları JWT + rol; duraklar satın alma kilidi
+- [x] API güvenliği: guide mutasyonları JWT + sahiplik; AI anon/auth rate limit; duraklar satın alma kilidi
+- [x] `/quotes` deprecated (410); FE quotes sayfası kaldırıldı
+- [x] Integration testler `seed_minimal_data` ile hızlandırıldı (~56 sn)
 
 ## Kabul kriterleri
 

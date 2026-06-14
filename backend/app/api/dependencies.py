@@ -17,6 +17,7 @@ from app.repositories.favorite_repository import FavoriteRepository
 from app.repositories.quote_repository import QuoteRepository
 from app.repositories.review_repository import ReviewRepository
 from app.repositories.content_report_repository import ContentReportRepository
+from app.repositories.moderation_decision_repository import ModerationDecisionRepository
 from app.repositories.route_repository import RouteRepository
 from app.repositories.trip_request_repository import TripRequestRepository
 from app.repositories.stop_repository import StopRepository
@@ -44,7 +45,9 @@ from app.services.trip_request_service import TripRequestService
 from app.services.stop_service import StopService
 from app.services.trip_extra_stop_service import TripExtraStopService
 from app.services.password_reset_service import PasswordResetService
+from app.services.profile_service import ProfileService
 from app.services.route_access_service import RouteAccessService
+from app.services.seo_service import SeoService
 from app.services.user_service import UserService
 
 
@@ -108,6 +111,10 @@ def get_content_report_repository(db: AsyncSession = Depends(get_db)) -> Content
     return ContentReportRepository(db=db)
 
 
+def get_moderation_decision_repository(db: AsyncSession = Depends(get_db)) -> ModerationDecisionRepository:
+    return ModerationDecisionRepository(db=db)
+
+
 def get_route_service(repo: RouteRepository = Depends(get_route_repository)) -> RouteService:
     return RouteService(repository=repo)
 
@@ -118,6 +125,7 @@ def get_moderation_service(
     report_repo: ContentReportRepository = Depends(get_content_report_repository),
     user_repo: UserRepository = Depends(get_user_repository),
     route_service: RouteService = Depends(get_route_service),
+    decision_repo: ModerationDecisionRepository = Depends(get_moderation_decision_repository),
 ) -> ModerationService:
     return ModerationService(
         routes=route_repo,
@@ -125,7 +133,16 @@ def get_moderation_service(
         reports=report_repo,
         users=user_repo,
         route_service=route_service,
+        decisions=decision_repo,
     )
+
+
+def get_seo_service(
+    route_repo: RouteRepository = Depends(get_route_repository),
+    city_repo: CityRepository = Depends(get_city_repository),
+    place_repo: PlaceRepository = Depends(get_place_repository),
+) -> SeoService:
+    return SeoService(route_repo=route_repo, city_repo=city_repo, place_repo=place_repo)
 
 
 def get_stop_service(
@@ -211,6 +228,13 @@ def get_premium_request_service(
 
 def get_user_service(repo: UserRepository = Depends(get_user_repository)) -> UserService:
     return UserService(repository=repo)
+
+
+def get_profile_service(
+    user_repo: UserRepository = Depends(get_user_repository),
+    purchase_repo: PurchaseRepository = Depends(get_purchase_repository),
+) -> ProfileService:
+    return ProfileService(user_repo=user_repo, purchase_repo=purchase_repo)
 
 
 def get_password_reset_service(
@@ -360,6 +384,21 @@ async def require_guide_or_admin(
     if not user or user.role not in ('guide', 'admin'):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Guide access required')
     return user_id
+
+
+async def require_guide_self_or_admin(
+    guide_id: int,
+    user_id: int = Depends(get_current_user_id),
+    user_repo: UserRepository = Depends(get_user_repository),
+) -> int:
+    user = await user_repo.get_by_id(user_id)
+    if not user:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Access denied')
+    if user.role == 'admin':
+        return user_id
+    if user.role == 'guide' and user_id == guide_id:
+        return user_id
+    raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail='Access denied')
 
 
 async def require_route_owner_or_admin(

@@ -8,6 +8,7 @@ from app.models.purchase_model import Purchase
 from app.models.user_model import User
 from app.core.gamification import REWARD_CATALOG, XP_RULES
 from app.repositories.user_repository import UserRepository
+from app.repositories.purchase_repository import PurchaseRepository
 from app.schemas.user_schema import (
     CompleteRouteResponse,
     GamificationResponse,
@@ -291,3 +292,108 @@ async def complete_route(
         new_badges=new_badges,
         level_name=level_name,
     )
+
+
+class ProfileService:
+    def __init__(
+        self,
+        user_repo: UserRepository,
+        purchase_repo: PurchaseRepository,
+    ) -> None:
+        self.users = user_repo
+        self.purchases = purchase_repo
+
+    async def update_preferences(
+        self,
+        user_id: int,
+        payload: UserPreferencesUpdate,
+    ) -> UserResponse:
+        user = await self.users.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+        user.interests = _join_csv(payload.interests)
+        user.duration_minutes = payload.duration_minutes
+        user.budget = payload.budget
+        user.theme_preference = payload.theme_preference
+        user.preferred_language = payload.preferred_language
+        user.preferred_city = (payload.preferred_city or '').strip() or None
+        user.onboarding_completed = payload.onboarding_completed
+        _touch_streak(user)
+        saved = await self.users.save(user)
+        return user_to_response(saved)
+
+    async def get_gamification(self, user_id: int) -> GamificationResponse:
+        user = await self.users.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+        resp = gamification_response(user)
+        resp.weekly_rank = await self.users.rank_by_xp(user_id, role='tourist')
+        return resp
+
+    async def get_leaderboard(self, viewer_id: int | None = None) -> LeaderboardResponse:
+        users = await self.users.top_by_xp(limit=10, role='tourist')
+        entries = [
+            LeaderboardEntry(
+                rank=idx,
+                user_id=u.user_id,
+                full_name=u.full_name,
+                xp=u.xp,
+                streak_days=u.streak_days,
+                badge_count=len(_split_csv(u.badges)),
+            )
+            for idx, u in enumerate(users, start=1)
+        ]
+        your_rank = await self.users.rank_by_xp(viewer_id, role='tourist') if viewer_id else None
+        return LeaderboardResponse(entries=entries, your_rank=your_rank)
+
+    async def redeem_reward(self, user_id: int, reward_id: str) -> RedeemRewardResponse:
+        user = await self.users.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+        offer = next((r for r in REWARD_CATALOG if r.id == reward_id), None)
+        if not offer:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='Reward not found')
+        redeemed = _split_csv(user.redeemed_rewards)
+        if reward_id in redeemed:
+            raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail='Reward already redeemed')
+        if user.xp < offer.cost_xp:
+            raise HTTPException(
+                status_code=status.HTTP_402_PAYMENT_REQUIRED,
+                detail=f'Need {offer.cost_xp} XP, you have {user.xp}',
+            )
+        user.xp -= offer.cost_xp
+        redeemed.append(reward_id)
+        user.redeemed_rewards = _join_csv(redeemed)
+        saved = await self.users.save(user)
+        code = f'HG-{reward_id.upper()}-{saved.user_id:04d}'
+        return RedeemRewardResponse(
+            reward_id=reward_id,
+            title=offer.title,
+            code=code,
+            remaining_xp=saved.xp,
+            message=f'{offer.title} aktif. Ödeme ekranında kodu girin: {code}',
+        )
+
+    async def complete_route(self, user_id: int, route_id: int) -> CompleteRouteResponse:
+        user = await self.users.get_by_id(user_id)
+        if not user:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
+        purchases = await self.purchases.list_by_user(user_id)
+        if not any(p.route_id == route_id and p.status == 'confirmed' for p in purchases):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail='Bu rotayı tamamlamak için önce satın almalısınız.',
+            )
+        new_badges: list[str] = []
+        _add_xp(user, 100)
+        if _award_badge(user, 'route_explorer'):
+            new_badges.append('route_explorer')
+        saved = await self.users.save(user)
+        _, level_name, _ = _level_info(saved.xp)
+        return CompleteRouteResponse(
+            xp_gained=100,
+            total_xp=saved.xp,
+            streak_days=saved.streak_days,
+            new_badges=new_badges,
+            level_name=level_name,
+        )

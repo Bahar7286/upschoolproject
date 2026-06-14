@@ -55,7 +55,8 @@ Base: `http://127.0.0.1:8000` (geliştirme) — Swagger: `/docs`
 | Method | Path | Açıklama |
 |--------|------|----------|
 | POST | `/payments/checkout` | Stripe veya demo |
-| GET | `/payments/history` | Satın alımlar |
+| GET | `/payments/history` | Oturumdaki kullanıcının satın alımları (JWT; alias) |
+| GET | `/payments/users/{id}` | Belirtilen kullanıcının satın alımları (kendi hesap veya admin) |
 
 ## Diğer
 

@@ -12,54 +12,45 @@ import {
 } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 import { formatApiError } from '../lib/api';
-import { listPlans } from '../services/plan-service';
-import { listPurchasesByUser } from '../services/purchase-service';
-import { fetchGamification, fetchLeaderboard, redeemReward, updatePreferences } from '../services/profile-service';
-import type { LeaderboardResponse } from '../types/user';
-import type { RewardItem } from '../types/user';
-import { listMyNotes, saveMyRouteNote } from '../services/social-service';
-import { useRoutesQuery } from '../hooks/use-routes-query';
-import { useAuthStore } from '../stores/auth-store';
-import { useOnboardingStore } from '../stores/onboarding-store';
-import type { GamificationResponse } from '../types/user';
+import { LanguageSwitcher, useI18n } from '../lib/i18n';
+import { FONT_META, THEME_META } from '../lib/theme-meta';
+import { fetchGamification, redeemReward, updatePreferences } from '../services/profile-service';
+import { saveMyRouteNote } from '../services/social-service';
 import { useBadgeLabels } from '../hooks/use-badge-labels';
 import { useFontLabels, useThemeLabels } from '../hooks/use-theme-labels';
-import type { NoteResponse } from '../types/social';
-import type { PlanResponse } from '../types/plan';
-import { LanguageSwitcher, useI18n } from '../lib/i18n';
-import { ProfileQuickLinks } from '../components/profile/profile-quick-links';
-import { SiteFooter } from '../components/legal/site-footer';
+import { useRoutesQuery } from '../hooks/use-routes-query';
 import { ErrorAlert } from '../components/ui/error-alert';
-import { mapError } from '../lib/user-errors';
+import { SiteFooter } from '../components/legal/site-footer';
+import { ProfileQuickLinks } from '../components/profile/profile-quick-links';
 import { ThemePreviewCard } from '../components/theme/theme-preview-card';
-import { FONT_META, THEME_META } from '../lib/theme-meta';
+import { useProfileData, useProfileTabs, ProfileTabsNav, EmptyHint, HistoryRow, SectionTitle, StatCard } from '../features/profile';
+import { useAuthStore } from '../stores/auth-store';
+import { useOnboardingStore } from '../stores/onboarding-store';
 import {
   useThemeStore,
   type FontPreference,
   type ThemePreference,
 } from '../stores/theme-store';
+import type { RewardItem } from '../types/user';
 
 const ALL_BADGES = ['welcome', 'first_step', 'route_explorer', 'streak_3', 'streak_7'] as const;
-
-type Tab = 'overview' | 'history' | 'notes' | 'play' | 'look';
 
 export default function ProfilePage(): ReactElement {
   const { t, locale } = useI18n();
   const themeLabels = useThemeLabels();
   const fontLabels = useFontLabels();
   const badgeLabels = useBadgeLabels();
-  const TABS: { id: Tab; label: string; icon: typeof Award }[] = [
-    { id: 'overview', label: t('profile.tabs.overview', 'Özet'), icon: Award },
-    { id: 'history', label: t('profile.tabs.history', 'Geçmiş'), icon: History },
-    { id: 'notes', label: t('profile.tabs.notes', 'Notlarım'), icon: BookOpen },
-    { id: 'play', label: t('profile.tabs.play', 'Oyun'), icon: Trophy },
-    { id: 'look', label: t('profile.tabs.look', 'Görünüm'), icon: Palette },
+  const TABS = [
+    { id: 'overview' as const, label: t('profile.tabs.overview', 'Özet'), icon: Award },
+    { id: 'history' as const, label: t('profile.tabs.history', 'Geçmiş'), icon: History },
+    { id: 'notes' as const, label: t('profile.tabs.notes', 'Notlarım'), icon: BookOpen },
+    { id: 'play' as const, label: t('profile.tabs.play', 'Oyun'), icon: Trophy },
+    { id: 'look' as const, label: t('profile.tabs.look', 'Görünüm'), icon: Palette },
   ];
   const navigate = useNavigate();
-  const location = useLocation();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const setUser = useAuthStore((s) => s.setUser);
@@ -75,47 +66,24 @@ export default function ProfilePage(): ReactElement {
   const { data: routes = [] } = useRoutesQuery();
   const routeById = useMemo(() => new Map(routes.map((r) => [r.route_id, r])), [routes]);
 
-  const [tab, setTab] = useState<Tab>('overview');
-  const [stats, setStats] = useState<GamificationResponse | null>(null);
-  const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
-  const [plans, setPlans] = useState<PlanResponse[]>([]);
-  const [notes, setNotes] = useState<NoteResponse[]>([]);
+  const { tab, setTab } = useProfileTabs();
+  const {
+    stats,
+    setStats,
+    leaderboard,
+    plans,
+    notes,
+    setNotes,
+    error,
+    setError,
+  } = useProfileData(accessToken, user?.user_id);
   const [noteRouteId, setNoteRouteId] = useState<number>(0);
   const [noteDraft, setNoteDraft] = useState('');
   const [noteBusy, setNoteBusy] = useState(false);
   const [noteMsg, setNoteMsg] = useState('');
-  const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
   const [redeemMsg, setRedeemMsg] = useState('');
   const [redeemBusy, setRedeemBusy] = useState('');
-
-  useEffect(() => {
-    if (!accessToken || !user) return;
-    let cancelled = false;
-    (async () => {
-      const results = await Promise.allSettled([
-        fetchGamification(accessToken),
-        listPlans(accessToken),
-        listMyNotes(accessToken),
-        fetchLeaderboard(accessToken),
-      ]);
-      if (cancelled) return;
-      const [gamR, plansR, notesR, boardR] = results;
-      if (gamR.status === 'fulfilled') setStats(gamR.value);
-      if (plansR.status === 'fulfilled') setPlans(plansR.value);
-      if (notesR.status === 'fulfilled') setNotes(notesR.value);
-      if (boardR.status === 'fulfilled') setLeaderboard(boardR.value);
-      const failed = results.filter((r) => r.status === 'rejected');
-      if (failed.length === results.length) {
-        setError(mapError((failed[0] as PromiseRejectedResult).reason).message);
-      } else if (failed.length > 0) {
-        setError('');
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [accessToken, user]);
 
   useEffect(() => {
     if (user?.interests?.length) setInterests(user.interests);
@@ -123,15 +91,6 @@ export default function ProfilePage(): ReactElement {
       setThemePreference(user.theme_preference as ThemePreference);
     }
   }, [user, setInterests, setThemePreference]);
-
-  useEffect(() => {
-    if (location.hash !== '#settings') return;
-    setTab('overview');
-    const timer = window.setTimeout(() => {
-      document.getElementById('settings')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-    return () => window.clearTimeout(timer);
-  }, [location.hash]);
 
   const handleSaveTheme = async (theme: ThemePreference, font?: FontPreference) => {
     setThemePreference(theme);
@@ -197,21 +156,12 @@ export default function ProfilePage(): ReactElement {
         </p>
       ) : null}
 
-      <nav className="flex gap-2 overflow-x-auto pb-1" aria-label={t('profile.tabsAria', 'Profil sekmeleri')}>
-        {TABS.map(({ id, label, icon: Icon }) => (
-          <button
-            key={id}
-            type="button"
-            className={`tap-scale inline-flex shrink-0 items-center gap-1.5 rounded-full px-4 py-2 text-sm font-bold ${
-              tab === id ? 'profile-tab--active' : 'profile-tab'
-            }`}
-            onClick={() => setTab(id)}
-          >
-            <Icon className="h-4 w-4" aria-hidden="true" />
-            {label}
-          </button>
-        ))}
-      </nav>
+      <ProfileTabsNav
+        tabs={TABS}
+        active={tab}
+        onSelect={setTab}
+        ariaLabel={t('profile.tabsAria', 'Profil sekmeleri')}
+      />
 
       {tab === 'overview' ? (
         <div className="space-y-4">
@@ -602,79 +552,5 @@ export default function ProfilePage(): ReactElement {
 
       <SiteFooter className="mt-10" />
     </section>
-  );
-}
-
-function StatCard({
-  icon: Icon,
-  value,
-  label,
-}: {
-  icon: typeof Zap;
-  value: string;
-  label: string;
-}): ReactElement {
-  return (
-    <div className="rounded-2xl border border-stone-900/10 bg-white p-4 text-center dark:border-white/10 dark:bg-zinc-900">
-      <Icon className="mx-auto h-5 w-5 text-primary" aria-hidden="true" />
-      <p className="mt-2 text-xl font-bold text-stone-900 dark:text-stone-50">{value}</p>
-      <p className="mt-1 text-xs font-semibold text-stone-600 dark:text-stone-300">{label}</p>
-    </div>
-  );
-}
-
-function SectionTitle({ title }: { title: string }): ReactElement {
-  return <h2 className="font-display text-lg font-bold text-theme">{title}</h2>;
-}
-
-function EmptyHint({
-  text,
-  link,
-  linkLabel,
-}: {
-  text: string;
-  link?: string;
-  linkLabel?: string;
-}): ReactElement {
-  return (
-    <p className="theme-card rounded-xl border border-dashed px-4 py-6 text-center text-sm text-theme-muted">
-      {text}
-      {link ? (
-        <>
-          {' '}
-          <Link className="font-bold text-primary hover:underline" to={link}>
-            {linkLabel}
-          </Link>
-        </>
-      ) : null}
-    </p>
-  );
-}
-
-function HistoryRow({
-  title,
-  subtitle,
-  routeId,
-  routeTitle,
-}: {
-  title: string;
-  subtitle: string;
-  routeId: number | null;
-  routeTitle?: string;
-}): ReactElement {
-  const { t } = useI18n();
-  return (
-    <li className="theme-card flex items-center justify-between gap-3 px-4 py-3">
-      <div>
-        <p className="font-semibold text-theme">{title}</p>
-        <p className="text-xs text-theme-muted">{subtitle}</p>
-        {routeTitle ? <p className="text-xs text-primary">{routeTitle}</p> : null}
-      </div>
-      {routeId != null ? (
-        <Link className="shrink-0 text-sm font-bold text-primary hover:underline" to={`/routes/${routeId}`}>
-          {t('common.open', 'Aç')}
-        </Link>
-      ) : null}
-    </li>
   );
 }

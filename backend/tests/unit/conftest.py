@@ -11,7 +11,7 @@ os.environ['TESTING'] = '1'
 import pytest
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from app.db.bootstrap import seed_initial_data
+from app.db.bootstrap import seed_minimal_data
 
 TEST_DATABASE_URL = os.environ['DATABASE_URL']
 _BACKEND_ROOT = Path(__file__).resolve().parents[2]
@@ -37,7 +37,7 @@ async def db_session() -> AsyncSession:
     session_factory = async_sessionmaker(bind=engine, expire_on_commit=False, class_=AsyncSession)
 
     async with session_factory() as session:
-        await seed_initial_data(session)
+        await seed_minimal_data(session)
         yield session
 
     await engine.dispose()
