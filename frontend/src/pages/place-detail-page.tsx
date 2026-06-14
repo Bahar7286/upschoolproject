@@ -7,7 +7,6 @@ import { AddToActiveRouteButton } from '../features/active-route/active-route-pl
 import { AlsoVisitedPanel } from '../components/explore/also-visited-panel';
 import { DirectionsCta, VenueDetailHero } from '../components/explore/venue-detail-hero';
 import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
-import { usePlaceImage } from '../hooks/use-place-image';
 import { useRecordPlaceVisit } from '../hooks/use-record-place-visit';
 import { getRichPlaceContent } from '../data/place-rich-content';
 import { resolvePlaceImage } from '../lib/region-images';
@@ -45,7 +44,6 @@ export default function PlaceDetailPage(): ReactElement {
     place?.image_url,
     place?.name,
   );
-  const heroImg = usePlaceImage(baseHeroImg, place?.name, place?.city);
 
   useEffect(() => {
     if (!id || id <= 0) return;
@@ -99,7 +97,8 @@ export default function PlaceDetailPage(): ReactElement {
       <VenueDetailHero
         title={place.name}
         locationLine={`${place.district}, ${place.city}`}
-        imageUrl={heroImg}
+        imageUrl={baseHeroImg}
+        cityName={place.city}
         backTo={backTo}
         favorited={fav}
         onFavorite={

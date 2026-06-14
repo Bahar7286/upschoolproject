@@ -30,6 +30,9 @@ function itemImage(item: AlsoVisitedItem): string {
 }
 
 function AlsoVisitedCard({ item }: { item: AlsoVisitedItem }): ReactElement {
+  const src = itemImage(item);
+  const cityName = item.city ?? undefined;
+
   return (
     <Link
       to={itemHref(item)}
@@ -37,9 +40,11 @@ function AlsoVisitedCard({ item }: { item: AlsoVisitedItem }): ReactElement {
     >
       <div className="relative aspect-[4/3] overflow-hidden">
         <RegionThumb
-          src={itemImage(item)}
+          src={src}
           alt={item.name}
           label={item.name}
+          placeName={item.name}
+          cityName={cityName}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <span className="absolute bottom-2 left-2 rounded-full bg-black/55 px-2 py-0.5 text-[10px] font-bold text-white backdrop-blur-sm">

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 
-import { isSvgPlaceholder } from '../lib/wikipedia-thumb';
-import { fetchWikipediaCityImage } from '../lib/wikipedia-thumb';
+import { fetchWikipediaPlaceImage, isSvgPlaceholder } from '../lib/wikipedia-thumb';
 
 /** Mekan kartları — DB görseli yoksa Wikipedia'dan küçük resim dener. */
 export function usePlaceImage(
@@ -16,8 +15,7 @@ export function usePlaceImage(
     if (!placeName?.trim() || !isSvgPlaceholder(src)) return;
 
     let cancelled = false;
-    const query = cityName ? `${placeName}, ${cityName}` : placeName;
-    void fetchWikipediaCityImage(query).then((url) => {
+    void fetchWikipediaPlaceImage(placeName, cityName).then((url) => {
       if (!cancelled && url) setResolved(url);
     });
     return () => {

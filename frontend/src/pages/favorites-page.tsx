@@ -11,6 +11,7 @@ import { useEmptyStates } from '../hooks/use-empty-states';
 import { useI18n } from '../lib/i18n';
 import { mapError } from '../lib/user-errors';
 import { resolvePlaceImage } from '../lib/region-images';
+import { RegionThumb } from '../components/ui/region-thumb';
 import { listFavorites, removeFavorite } from '../services/favorite-service';
 import { useAuthStore } from '../stores/auth-store';
 import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
@@ -81,11 +82,13 @@ export default function FavoritesPage(): ReactElement {
             >
               <Link to={`/places/${i.entity_id}`} className="group block">
                 <div className="relative h-36 overflow-hidden bg-stone-200 dark:bg-zinc-800">
-                  <img
+                  <RegionThumb
                     src={thumb}
-                    alt=""
+                    alt={place.name}
+                    label={place.name}
+                    placeName={place.name}
+                    cityName={place.city}
                     className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
-                    loading="lazy"
                   />
                   <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
                     {categoryLabels[place.category]}

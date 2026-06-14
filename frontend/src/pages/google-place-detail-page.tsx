@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 
 import { BackButton } from '../components/ui/back-button';
+import { RegionThumb } from '../components/ui/region-thumb';
 import { LoadingButton } from '../components/ui/loading-button';
 import { AlsoVisitedPanel } from '../components/explore/also-visited-panel';
 import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
@@ -171,9 +172,10 @@ export default function GooglePlaceDetailPage(): ReactElement {
       <BackButton to={backTo} label="Geri" />
 
       <div className="overflow-hidden rounded-[22px] border border-stone-900/10 dark:border-white/10">
-        <img
+        <RegionThumb
           src={resolveGooglePlaceImage(place.photo_url, place.name)}
           alt={place.name}
+          placeName={place.name}
           className="aspect-[16/10] w-full object-cover"
         />
       </div>

@@ -2,10 +2,14 @@ import { ArrowLeft, Heart, MapPin, Navigation, Share2 } from 'lucide-react';
 import type { ReactElement, ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 
+import { usePlaceImage } from '../../hooks/use-place-image';
+import { isSvgPlaceholder } from '../../lib/wikipedia-thumb';
+
 export function VenueDetailHero({
   title,
   locationLine,
   imageUrl,
+  cityName,
   backTo,
   onFavorite,
   favorited,
@@ -14,56 +18,67 @@ export function VenueDetailHero({
   title: string;
   locationLine: string;
   imageUrl: string;
+  cityName?: string;
   backTo: string;
   onFavorite?: () => void;
   favorited?: boolean;
   children?: ReactNode;
 }): ReactElement {
+  const displayUrl = usePlaceImage(imageUrl, title, cityName);
+  const loadingImage = isSvgPlaceholder(displayUrl);
+
   return (
     <div className="venue-hero -mx-3 sm:-mx-4 md:-mx-8">
-      <div className="venue-hero__bar relative px-4 pb-3 pt-3 sm:px-5 md:px-8">
-        <div className="flex items-center justify-between gap-2">
-          <Link
-            to={backTo}
-            className="tap-scale flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm"
-            aria-label="Geri"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <div className="flex gap-2">
-            {onFavorite ? (
+      <div className="relative min-h-[220px] w-full overflow-hidden sm:min-h-[280px]">
+        <img
+          src={displayUrl}
+          alt={title}
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-500 ${loadingImage ? 'opacity-90' : 'opacity-100'}`}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/35 to-black/45" />
+        <div className="relative flex min-h-[220px] flex-col justify-between px-4 pb-5 pt-3 sm:min-h-[280px] sm:px-5 md:px-8">
+          <div className="flex items-center justify-between gap-2">
+            <Link
+              to={backTo}
+              className="tap-scale flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm"
+              aria-label="Geri"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Link>
+            <div className="flex gap-2">
+              {onFavorite ? (
+                <button
+                  type="button"
+                  className="tap-scale flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm"
+                  onClick={onFavorite}
+                  aria-label={favorited ? 'Favoriden çıkar' : 'Favoriye ekle'}
+                >
+                  <Heart className={`h-5 w-5 ${favorited ? 'fill-white' : ''}`} />
+                </button>
+              ) : null}
               <button
                 type="button"
-                className="tap-scale flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm"
-                onClick={onFavorite}
-                aria-label={favorited ? 'Favoriden çıkar' : 'Favoriye ekle'}
+                className="tap-scale flex h-11 w-11 items-center justify-center rounded-full bg-black/35 text-white backdrop-blur-sm"
+                aria-label="Paylaş"
+                onClick={() => {
+                  if (navigator.share) void navigator.share({ title, text: locationLine, url: window.location.href });
+                }}
               >
-                <Heart className={`h-5 w-5 ${favorited ? 'fill-white' : ''}`} />
+                <Share2 className="h-5 w-5" />
               </button>
-            ) : null}
-            <button
-              type="button"
-              className="tap-scale flex h-11 w-11 items-center justify-center rounded-full bg-white/20 text-white backdrop-blur-sm"
-              aria-label="Paylaş"
-              onClick={() => {
-                if (navigator.share) void navigator.share({ title, text: locationLine, url: window.location.href });
-              }}
-            >
-              <Share2 className="h-5 w-5" />
-            </button>
+            </div>
+          </div>
+          <div className="mt-auto pt-6">
+            <h1 className="font-display text-2xl font-extrabold text-white sm:text-3xl">{title}</h1>
+            <p className="mt-1 flex items-center gap-1 text-sm text-white/90">
+              <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
+              {locationLine}
+            </p>
           </div>
         </div>
-        <h1 className="mt-3 text-center font-display text-xl font-extrabold text-white sm:text-2xl">{title}</h1>
-        <p className="mt-1 flex items-center justify-center gap-1 text-center text-sm text-white/90">
-          <MapPin className="h-4 w-4 shrink-0" aria-hidden="true" />
-          {locationLine}
-        </p>
-      </div>
-      <div className="relative aspect-[16/10] w-full overflow-hidden">
-        <img src={imageUrl} alt="" className="h-full w-full object-cover" />
       </div>
       {children ? (
-        <div className="relative z-10 -mt-8 mx-3 rounded-2xl border border-stone-900/8 bg-white p-4 shadow-lg dark:border-white/10 dark:bg-zinc-900 sm:mx-4 md:mx-8">
+        <div className="relative z-10 -mt-6 mx-3 rounded-2xl border border-stone-900/8 bg-white p-4 shadow-lg dark:border-white/10 dark:bg-zinc-900 sm:mx-4 md:mx-8">
           {children}
         </div>
       ) : null}
