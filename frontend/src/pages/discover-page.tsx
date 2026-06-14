@@ -12,6 +12,8 @@ import { DEMO_ROUTES } from '../data/demo-routes';
 import { EMPTY_STATES } from '../content/empty-states';
 import { useI18n } from '../lib/i18n';
 import { recommendWithAi, generatePersonalRoute, type AIRecommendationItem, type PersonalRouteGenerateResponse } from '../services/ai-service';
+import { listCities } from '../services/city-service';
+import { fetchGeoCenter } from '../services/google-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 import { PersonalRouteCard } from '../components/discover/personal-route-card';
 import { useRoutesQuery } from '../hooks/use-routes-query';
@@ -25,6 +27,18 @@ type ScoredRoute = RouteResponse & { aiScore?: number; aiReason?: string };
 
 function isScoredRoute(route: RouteResponse | ScoredRoute): route is ScoredRoute {
   return 'aiScore' in route && typeof (route as ScoredRoute).aiScore === 'number';
+}
+
+function cityNameMatches(routeCity: string, preferred: string): boolean {
+  const norm = (s: string) =>
+    s
+      .toLocaleLowerCase('tr-TR')
+      .normalize('NFD')
+      .replace(/\p{M}/gu, '')
+      .replace(/\s+/g, '');
+  const a = norm(routeCity);
+  const b = norm(preferred);
+  return a.includes(b) || b.includes(a);
 }
 
 export default function DiscoverPage(): ReactElement {
@@ -50,6 +64,24 @@ export default function DiscoverPage(): ReactElement {
 
   const effectiveCity =
     cityFilter || user?.preferred_city || preferredCity || 'İstanbul';
+
+  const { data: cities = [] } = useQuery({
+    queryKey: ['cities'],
+    queryFn: listCities,
+    staleTime: 60 * 60 * 1000,
+  });
+
+  const matchedCity = useMemo(
+    () => cities.find((c) => cityNameMatches(c.name_tr, effectiveCity)) ?? null,
+    [cities, effectiveCity],
+  );
+
+  const { data: geoCenter } = useQuery({
+    queryKey: ['geo-center-discover', matchedCity?.city_id],
+    queryFn: () => fetchGeoCenter({ cityId: matchedCity!.city_id }),
+    enabled: Boolean(matchedCity?.city_id),
+    staleTime: 60 * 60 * 1000,
+  });
 
   const canUseAi = () => {
     if (user?.is_premium) return true;
@@ -87,11 +119,13 @@ export default function DiscoverPage(): ReactElement {
       const slowTimer = window.setTimeout(() => setSlowRecommend(true), 8000);
       try {
         const personal = await generatePersonalRoute({
-          city: effectiveCity,
+          city: matchedCity?.name_tr ?? effectiveCity,
           interests: effectiveInterests,
           duration_minutes: effectiveDuration,
           budget: effectiveBudget,
           preferred_language: 'tr',
+          location_lat: geoCenter?.lat,
+          location_lng: geoCenter?.lng,
           max_stops: Math.min(8, Math.max(3, Math.round(effectiveDuration / 45))),
         });
         setPersonalRoute(personal);
@@ -144,10 +178,9 @@ export default function DiscoverPage(): ReactElement {
             scored.push(route);
           }
         }
-        if (scored.length === 0) return routeSource;
-        const cityNorm = effectiveCity.toLowerCase();
-        const cityFiltered = scored.filter((r) => r.city.toLowerCase().includes(cityNorm));
-        return cityFiltered.length > 0 ? cityFiltered : scored;
+        if (scored.length === 0) return routeSource.filter((r) => cityNameMatches(r.city, effectiveCity));
+        const cityFiltered = scored.filter((r) => cityNameMatches(r.city, effectiveCity));
+        return cityFiltered;
       } finally {
         window.clearTimeout(slowTimer);
         setSlowRecommend(false);
@@ -171,11 +204,8 @@ export default function DiscoverPage(): ReactElement {
       : routes.length > 0
         ? routes
         : routeSource;
-    if (!cityFilter) return base;
-    const norm = cityFilter.toLowerCase();
-    const filtered = base.filter((r) => r.city.toLowerCase().includes(norm));
-    return filtered.length > 0 ? filtered : base;
-  }, [recommendMutation.data, routes, routeSource, cityFilter]);
+    return base.filter((r) => cityNameMatches(r.city, effectiveCity));
+  }, [recommendMutation.data, routes, routeSource, effectiveCity]);
 
   const listError = isError ? mapError(error, 'discover') : null;
   const recommendError = recommendMutation.isError

@@ -41,3 +41,28 @@ def filter_by_district(items: list, district: str, *, address_attr: str = 'addre
         if address_matches_district(addr, district) or address_matches_district(name, district):
             out.append(item)
     return out
+
+
+def address_matches_city(address: str, city: str) -> bool:
+    if not city.strip():
+        return True
+    addr = _norm(address or '')
+    if not addr:
+        return False
+    for variant in district_name_variants(city):
+        v = _norm(variant)
+        if len(v) >= 3 and v in addr:
+            return True
+    return False
+
+
+def filter_by_city(items: list, city: str, *, address_attr: str = 'address') -> list:
+    if not city.strip():
+        return items
+    out = []
+    for item in items:
+        addr = getattr(item, address_attr, '') or ''
+        name = getattr(item, 'name', '') or ''
+        if address_matches_city(addr, city) or address_matches_city(name, city):
+            out.append(item)
+    return out

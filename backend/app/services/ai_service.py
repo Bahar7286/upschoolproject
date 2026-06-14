@@ -52,7 +52,8 @@ from app.schemas.ai_schema import NarrationSource
 from app.repositories.place_repository import PlaceRepository
 from app.services.route_service import RouteService
 from app.services.stop_service import StopService
-from app.utils.district_filter import filter_by_district
+from app.utils.district_filter import filter_by_city, filter_by_district
+from app.utils.city_coords import haversine_km, resolve_city_coords
 from app.utils.geolocation import calculate_distance_meters, is_user_near_location
 
 logger = logging.getLogger(__name__)
@@ -286,7 +287,19 @@ class AIService:
     async def generate_personal_route(
         self, payload: PersonalRouteGenerateRequest
     ) -> PersonalRouteGenerateResponse:
-        lat, lng = self._resolve_generate_coords(payload)
+        try:
+            lat, lng = self._resolve_generate_coords(payload)
+        except ValueError:
+            return PersonalRouteGenerateResponse(
+                title=f'{payload.city} gezi planı',
+                summary='Seçilen il için konum bilgisi bulunamadı. Lütfen geçerli bir il seçin.',
+                city=payload.city,
+                district=payload.district,
+                total_minutes=0,
+                estimated_cost=0,
+                stops=[],
+                source='rules',
+            )
         candidates = await self._collect_route_candidates(payload, lat, lng)
         if not candidates:
             area = f'{payload.district}, {payload.city}' if payload.district else payload.city
@@ -322,6 +335,21 @@ class AIService:
     ) -> list[dict[str, object]]:
         seen: set[str] = set()
         out: list[dict[str, object]] = []
+        max_km = 10.0 if payload.district.strip() else 35.0
+
+        def accept_candidate(plat: float, plng: float, address: str = '') -> bool:
+            dist = haversine_km(lat, lng, plat, plng)
+            if dist > max_km:
+                return False
+            if payload.district.strip():
+                from app.utils.district_filter import address_matches_district
+
+                return address_matches_district(address, payload.district) or dist <= 8.0
+            from app.utils.district_filter import address_matches_city
+
+            if address and address_matches_city(address, payload.city):
+                return True
+            return dist <= 25.0
 
         def add(
             cid: str,
@@ -355,29 +383,70 @@ class AIService:
                 limit=80,
             )
             for p in db_places:
+                addr = f'{p.district} {p.city}'
+                if payload.district.strip() and not accept_candidate(p.latitude, p.longitude, addr):
+                    continue
                 add(f'db-{p.place_id}', p.name, p.latitude, p.longitude, p.category, p.description, p.place_id)
 
         if settings.google_places_enabled:
             cat = _interest_to_category(payload.interests)
-            radius = 3500 if payload.district.strip() else 8000
+            radius = 4000 if payload.district.strip() else 25000
+            google_places: list = []
             try:
                 google_places, _ = await google_places_service.search_nearby(
                     lat=lat, lng=lng, radius_m=radius, category=cat or 'historical'
                 )
                 if payload.district.strip():
                     google_places = filter_by_district(google_places, payload.district)
-                for gp in google_places[:25]:
-                    gid = getattr(gp, 'place_id', '') or getattr(gp, 'name', '')
-                    add(
-                        f'g-{gid}',
-                        getattr(gp, 'name', ''),
+                else:
+                    google_places = filter_by_city(google_places, payload.city)
+                google_places = [
+                    gp
+                    for gp in google_places
+                    if accept_candidate(
                         float(getattr(gp, 'lat', lat)),
                         float(getattr(gp, 'lng', lng)),
-                        cat or 'historical',
-                        getattr(gp, 'address', ''),
+                        getattr(gp, 'address', '') or '',
                     )
+                ]
             except Exception as exc:
-                logger.debug('Personal route Google lookup: %s', exc)
+                logger.debug('Personal route Google nearby: %s', exc)
+
+            if len(google_places) < 3:
+                for query in (
+                    f'turistik yerler {payload.city}',
+                    f'müze {payload.city}',
+                    f'tarihi yer {payload.city}',
+                ):
+                    try:
+                        text_places, _ = await google_places_service.search_text(
+                            query=query,
+                            lat=lat,
+                            lng=lng,
+                            radius_m=35000,
+                            client_key='personal-route',
+                        )
+                        batch = filter_by_city(text_places, payload.city)
+                        for gp in batch:
+                            if accept_candidate(
+                                float(getattr(gp, 'lat', lat)),
+                                float(getattr(gp, 'lng', lng)),
+                                getattr(gp, 'address', '') or '',
+                            ):
+                                google_places.append(gp)
+                    except Exception as exc:
+                        logger.debug('Personal route Google text: %s', exc)
+
+            for gp in google_places[:25]:
+                gid = getattr(gp, 'place_id', '') or getattr(gp, 'name', '')
+                add(
+                    f'g-{gid}',
+                    getattr(gp, 'name', ''),
+                    float(getattr(gp, 'lat', lat)),
+                    float(getattr(gp, 'lng', lng)),
+                    cat or 'historical',
+                    getattr(gp, 'address', ''),
+                )
 
         return out[:40]
 
@@ -504,11 +573,14 @@ class AIService:
         dc = district_coords(payload.district)
         if dc:
             return dc
+        resolved = resolve_city_coords(payload.city)
+        if resolved:
+            return resolved
         key = payload.city.strip().lower()
         for name, coords in _CITY_POI.items():
             if name.lower() in key or key in name.lower():
                 return coords
-        return 41.0082, 28.9784
+        raise ValueError(f'İl koordinatı bulunamadı: {payload.city}')
 
     async def check_geofence(self, payload: GeofenceCheckRequest) -> GeofenceCheckResponse:
         if not self.stop_service:
@@ -760,6 +832,9 @@ class AIService:
         for name, coords in _CITY_POI.items():
             if name.lower() in key or key in name.lower():
                 return coords
+        resolved = resolve_city_coords(payload.city)
+        if resolved:
+            return resolved
         return 41.0082, 28.9784
 
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
