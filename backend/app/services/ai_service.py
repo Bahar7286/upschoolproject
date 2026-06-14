@@ -38,11 +38,11 @@ from app.services.assistant_intent import (
     resolve_intent,
 )
 from app.services.ai_prompts import (
-    SYSTEM_ASSISTANT,
     SYSTEM_ASSISTANT_VENUE,
     SYSTEM_NARRATION,
     SYSTEM_PERSONAL_ROUTE,
     SYSTEM_ROUTE_RECOMMEND,
+    assistant_system_for_locale,
     build_assistant_user,
     build_narration_user,
     build_personal_route_user,
@@ -797,6 +797,7 @@ class AIService:
                 )
 
         prompt_intent = 'rota' if intent == 'route_plan' else intent
+        locale = payload.preferred_language if payload.preferred_language in ('en', 'tr') else 'tr'
         user = build_assistant_user(
             where=where,
             interests=interests,
@@ -804,8 +805,13 @@ class AIService:
             user_message=last_user,
             intent=prompt_intent,
             history=history,
+            locale=locale,
         )
-        system = SYSTEM_ASSISTANT_VENUE if intent == 'food' else SYSTEM_ASSISTANT
+        system = (
+            SYSTEM_ASSISTANT_VENUE
+            if intent == 'food'
+            else assistant_system_for_locale(locale)
+        )
         try:
             text = await asyncio.wait_for(
                 llm_service.complete_text(

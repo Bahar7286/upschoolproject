@@ -15,6 +15,7 @@ import { inputErrorClass, validateEmail, validatePassword, type FieldErrors } fr
 import { fetchCurrentUser, loginUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import { syncThemeFromUserOnce } from '../lib/sync-user-theme';
 import { DEMO_ACCOUNTS } from '../config/contact';
 
 export default function LoginPage(): ReactElement {
@@ -47,6 +48,7 @@ export default function LoginPage(): ReactElement {
         const tokens = await loginUser({ email: email.trim(), password });
         const me = await fetchCurrentUser(tokens.access_token);
         setSession(tokens.access_token, me);
+        syncThemeFromUserOnce(me);
         useOnboardingStore.getState().hydrateFromUser(me);
         let fallback = '/discover';
         if (me.role === 'admin') fallback = '/admin';
@@ -70,6 +72,7 @@ export default function LoginPage(): ReactElement {
         const tokens = await loginUser({ email: demoEmail, password: demoPassword });
         const me = await fetchCurrentUser(tokens.access_token);
         setSession(tokens.access_token, me);
+        syncThemeFromUserOnce(me);
         useOnboardingStore.getState().hydrateFromUser(me);
         let fallback = '/discover';
         if (me.role === 'admin') fallback = '/admin';

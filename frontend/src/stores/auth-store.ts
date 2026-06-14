@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 
 import type { UserResponse } from '../types/user';
+import { resetThemeSync } from '../lib/sync-user-theme';
 
 export interface AuthState {
   accessToken: string | null;
@@ -18,7 +19,10 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       setSession: (accessToken, user) => set({ accessToken, user }),
       setUser: (user) => set({ user }),
-      logout: () => set({ accessToken: null, user: null }),
+      logout: () => {
+        resetThemeSync();
+        set({ accessToken: null, user: null });
+      },
     }),
     {
       name: 'historial_go_auth',

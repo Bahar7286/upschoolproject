@@ -563,7 +563,15 @@
     "sightseeing": "Sightseeing",
     "food": "Food & drink",
     "stay": "Stay",
-    "morePlaces": "More places in this city"
+    "morePlaces": "More places in this city",
+    "catDesc": {
+      "museum": "Archaeology, art and special collection museums",
+      "historical": "Castles, city walls, ancient sites and landmarks",
+      "mosque": "Mosques and places of worship",
+      "palace": "Palaces, mansions and Ottoman residences",
+      "restaurant": "Restaurants, cafés and local food spots",
+      "accommodation": "Hotels, boutique stays and guesthouses"
+    }
   },
   "place": {
     "narration": "Audio guide",

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { MapPin, Search, Utensils, BedDouble, Landmark } from 'lucide-react';
+import { MapPin, Search } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
@@ -7,6 +7,10 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { CategoryIconCard } from '../components/explore/category-icon-card';
 import { BackButton } from '../components/ui/back-button';
 import { ExploreHero } from '../components/explore/explore-hero';
+import { ResetActiveRouteButton } from '../components/trip/reset-active-route-button';
+import { DISTRICT_HUB_CATEGORIES } from '../config/explore-categories';
+import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
+import { formatGooglePlaceSubtitle, formatPlaceSubtitle } from '../lib/format-place-subtitle';
 import { useI18n } from '../lib/i18n';
 import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-card';
 import { VenuePlaceCard } from '../components/explore/venue-place-card';
@@ -54,6 +58,7 @@ function mergeVenues(
 
 export default function DistrictPlacesPage(): ReactElement {
   const { t } = useI18n();
+  const categoryLabels = usePlaceCategoryLabels();
   const { cityId, districtId } = useParams();
   const city_id = Number(cityId);
   const district_id = Number(districtId);
@@ -84,27 +89,12 @@ export default function DistrictPlacesPage(): ReactElement {
 
   const districtCategories = useMemo(
     () =>
-      [
-        {
-          id: 'museum' as const,
-          label: t('district.museum', 'Gezilecek'),
-          description: t('district.museumDesc', 'Müze, tarih ve turistik noktalar'),
-          icon: Landmark,
-        },
-        {
-          id: 'restaurant' as const,
-          label: t('district.restaurant', 'Yeme-İçme'),
-          description: t('district.restaurantDesc', 'Restoran, kafe ve lezzet durakları'),
-          icon: Utensils,
-        },
-        {
-          id: 'accommodation' as const,
-          label: t('district.accommodation', 'Konaklama'),
-          description: t('district.accommodationDesc', 'Otel ve konaklama seçenekleri'),
-          icon: BedDouble,
-        },
-      ] as const,
-    [t],
+      DISTRICT_HUB_CATEGORIES.map((cat) => ({
+        ...cat,
+        label: categoryLabels[cat.id] ?? t(cat.labelKey, cat.id),
+        description: t(cat.descKey, ''),
+      })),
+    [categoryLabels, t],
   );
 
   const { data: center } = useQuery({
@@ -159,8 +149,9 @@ export default function DistrictPlacesPage(): ReactElement {
 
   if (!category) {
     return (
-      <section className="mx-auto max-w-3xl space-y-4" aria-labelledby="district-hub-title">
+      <section className="page-container pb-8" aria-labelledby="district-hub-title">
         <BackButton to={cityBack} />
+        <ResetActiveRouteButton variant="bar" className="mt-2" />
         <ExploreHero
           title={district?.name_tr ?? 'İlçe'}
           subtitle={city?.name_tr ?? ''}
@@ -177,7 +168,7 @@ export default function DistrictPlacesPage(): ReactElement {
         <p className="px-1 text-sm text-theme-muted">
           {t('district.pickCategoryHint', 'Gezilecek yerler, yeme-içme ve konaklama mekanlarını görmek için bir kategori seçin.')}
         </p>
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
           {districtCategories.map(({ id, label, description, icon: Icon }) => (
             <CategoryIconCard
               key={id}
@@ -193,8 +184,9 @@ export default function DistrictPlacesPage(): ReactElement {
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-4" aria-labelledby="district-title">
+    <section className="page-container pb-8" aria-labelledby="district-title">
       <BackButton to={base} />
+      <ResetActiveRouteButton variant="bar" className="mt-2" />
       <ExploreHero
         title={district?.name_tr ?? 'İlçe'}
         subtitle={`${city?.name_tr ?? ''} · ${PLACE_CATEGORY_LABELS[category]}`}
@@ -220,10 +212,10 @@ export default function DistrictPlacesPage(): ReactElement {
         {district?.name_tr}
       </h1>
 
-      <div className="mb-4 flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+      <div className="mb-4 flex flex-wrap gap-2">
         <Link
           to={base}
-          className="tap-scale shrink-0 rounded-full border border-stone-900/10 bg-white px-4 py-2 text-sm font-semibold dark:border-white/10 dark:bg-zinc-900"
+          className="tap-scale rounded-full border border-stone-900/10 bg-white px-4 py-2 text-sm font-semibold dark:border-white/10 dark:bg-zinc-900"
         >
           {t('district.backCategories', '← Kategoriler')}
         </Link>
@@ -233,7 +225,7 @@ export default function DistrictPlacesPage(): ReactElement {
             <Link
               key={id}
               to={`${base}?category=${id}`}
-              className={`tap-scale shrink-0 rounded-full px-4 py-2 text-sm font-semibold ${
+              className={`tap-scale rounded-full px-4 py-2 text-sm font-semibold ${
                 active ? 'bg-primary text-white' : 'border border-stone-900/10 bg-white dark:border-white/10 dark:bg-zinc-900'
               }`}
             >
@@ -280,7 +272,7 @@ export default function DistrictPlacesPage(): ReactElement {
             placeId={p.place_id}
             name={p.name}
             category={p.category}
-            subtitle={p.description || `${p.district}, ${p.city}`}
+            subtitle={formatPlaceSubtitle(p)}
             imageUrl={p.image_url}
             cityName={p.city}
             to={`/places/${p.place_id}`}
@@ -294,11 +286,7 @@ export default function DistrictPlacesPage(): ReactElement {
               placeId={p.place_id}
               name={p.name}
               category={cat}
-              subtitle={
-                p.rating != null
-                  ? `★ ${p.rating}${p.user_rating_count ? ` · ${p.user_rating_count} yorum` : ''}${p.address ? ` · ${p.address}` : ''}`
-                  : p.address
-              }
+              subtitle={formatGooglePlaceSubtitle(p.address, p.rating, p.user_rating_count)}
               photoUrl={p.photo_url}
               to={googlePlaceDetailPath(p.place_id, { back: `${base}?category=${category}`, cityId: city_id })}
             />

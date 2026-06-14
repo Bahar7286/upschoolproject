@@ -43,8 +43,9 @@ export function ThemeToggle({
   const order = compact ? HEADER_ORDER : ORDER;
 
   const cycle = () => {
-    const idx = order.indexOf(preference);
-    const next = idx >= 0 ? order[(idx + 1) % order.length] : order[0];
+    const startPref = order.includes(preference) ? preference : order[0];
+    const idx = order.indexOf(startPref);
+    const next = order[(idx + 1) % order.length];
     setPreference(next);
   };
 

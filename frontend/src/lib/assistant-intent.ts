@@ -8,9 +8,21 @@ function isShortGreeting(text: string): boolean {
   return GREETING.test(t);
 }
 
-export function getQuickAssistantReply(text: string, city: string, district = ''): string | null {
+export function getQuickAssistantReply(
+  text: string,
+  city: string,
+  district = '',
+  lang: 'tr' | 'en' = 'tr',
+): string | null {
   const where = district ? `${district}, ${city}` : city;
   if (isShortGreeting(text)) {
+    if (lang === 'en') {
+      return (
+        `Hello! 👋 I am the Historial-GO assistant. ` +
+        `For a trip plan in ${where} (or another city), tell me how many days you have ` +
+        `and your interests (history, food, museums…).`
+      );
+    }
     return (
       `Selam! 👋 Ben Historial-GO asistanıyım. ` +
       `${where} veya başka bir il için gezi planı istersen kaç günün olduğunu ` +
@@ -18,7 +30,7 @@ export function getQuickAssistantReply(text: string, city: string, district = ''
     );
   }
   if (THANKS.test(text.trim())) {
-    return 'Rica ederim! Başka bir sorunda yazabilirsin.';
+    return lang === 'en' ? 'You are welcome! Feel free to ask anything else.' : 'Rica ederim! Başka bir sorunda yazabilirsin.';
   }
   return null;
 }

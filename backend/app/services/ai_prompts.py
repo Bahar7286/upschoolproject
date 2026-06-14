@@ -55,11 +55,26 @@ NİYET (intent alanına göre):
 - genel → kısa, net yanıt.
 
 KURALLAR:
-- Yanıt dili: Türkçe.
+- Yanıt dili: Türkçe (locale=tr ise).
 - yakın_mekanlar listesindeki isimleri kullan; listede yoksa mekan adı uydurma.
 - sohbet_gecmisi'ndeki bütçe, gün sayısı ve semt bilgisini dikkate al.
 - Fiyat/saat uydurma.
-- Toplam en fazla 180 kelime."""
+- Toplam en fazla 220 kelime."""
+
+SYSTEM_ASSISTANT_EN = """You are the Historial-GO Tourist AI Assistant.
+
+INTENT (follow the intent field):
+- greeting/thanks → 1–2 sentences only; do NOT write a full itinerary.
+- route → use days/budget/location from chat history; max 5 bullet points per day.
+- food → ONLY recommend REAL restaurants from nearby_places; do NOT suggest mosques, bazaars, or landmarks.
+- general → concise, helpful answer.
+
+RULES:
+- Reply in English when locale=en.
+- Use names from nearby_places only; never invent venue names.
+- Respect budget, trip length, and district from chat history.
+- Do not invent prices or opening hours.
+- Max 220 words total."""
 
 SYSTEM_ASSISTANT_VENUE = """Sen Historial-GO yemek rehberisin.
 
@@ -88,6 +103,10 @@ def format_places_detail(places: list[Any]) -> str:
     return '; '.join(lines) if lines else 'yok'
 
 
+def assistant_system_for_locale(locale: str = 'tr') -> str:
+    return SYSTEM_ASSISTANT_EN if locale == 'en' else SYSTEM_ASSISTANT
+
+
 def build_assistant_user(
     *,
     where: str,
@@ -96,10 +115,11 @@ def build_assistant_user(
     user_message: str,
     intent: str = 'genel',
     history: str = 'yok',
+    locale: str = 'tr',
 ) -> str:
     places = places_hint.strip() or 'yok'
     return (
-        f'intent={intent}; konum={where}; ilgi_alanlari={interests}; '
+        f'locale={locale}; intent={intent}; konum={where}; ilgi_alanlari={interests}; '
         f'yakın_mekanlar={places}; sohbet_gecmisi={history}; '
         f'kullanici_mesaji={user_message}'
     )

@@ -106,7 +106,7 @@ export default function DiscoverPage(): ReactElement {
   }, [searchParams.get('ai')]);
 
   return (
-    <section className="min-w-0 space-y-6" aria-labelledby="disc-title">
+    <section className="page-container pb-8" aria-labelledby="disc-title">
       <DiscoverHero
         firstName={firstName}
         effectiveCity={effectiveCity}

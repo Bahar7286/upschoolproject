@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 
 import { getQuickAssistantReply } from '../lib/assistant-intent';
+import { detectMessageLanguage } from '../lib/detect-message-language';
 import { AssistantMessageBody } from '../components/ai/assistant-message-body';
 import { BackButton } from '../components/ui/back-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
@@ -29,7 +30,7 @@ export default function AssistantPage(): ReactElement {
   const user = useAuthStore((s) => s.user);
   const interests = useOnboardingStore((s) => s.interests);
   const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
   const [searchParams] = useSearchParams();
   const effectiveInterests = useMemo(
     () => (interests.length ? interests : user?.interests?.length ? user.interests : ['history', 'art', 'food']),
@@ -83,7 +84,9 @@ export default function AssistantPage(): ReactElement {
     {
       role: 'assistant' as const,
       content:
-        'Merhaba! 👋 Ben Historial-GO AI asistanınızım. Tarihi ve kültürel yerler hakkında sorularınızı yanıtlayabilirim. Nereye gideceksiniz, kaç gününüz var?',
+        locale === 'en'
+          ? 'Hello! 👋 I am your Historial-GO AI assistant. I can help with historical and cultural places. Where are you going, and how many days do you have?'
+          : 'Merhaba! 👋 Ben Historial-GO AI asistanınızım. Tarihi ve kültürel yerler hakkında sorularınızı yanıtlayabilirim. Nereye gideceksiniz, kaç gününüz var?',
     },
   ]);
   const [errorDetail, setErrorDetail] = useState<UserFacingError | null>(null);
@@ -113,11 +116,13 @@ export default function AssistantPage(): ReactElement {
     setMsgs(next);
     setInput('');
 
-    const instant = getQuickAssistantReply(text, city, district);
+    const instant = getQuickAssistantReply(text, city, district, detectMessageLanguage(text));
     if (instant) {
       setMsgs((prev) => [...prev, { role: 'assistant', content: instant }]);
       return;
     }
+
+    const replyLang = detectMessageLanguage(text);
 
     void run(async () => {
       try {
@@ -139,7 +144,7 @@ export default function AssistantPage(): ReactElement {
           district,
           interests: effectiveInterests,
           messages: apiMessages,
-          preferred_language: preferredLanguage,
+          preferred_language: replyLang === 'en' ? 'en' : preferredLanguage,
         });
         setMsgs((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       } catch (err) {
@@ -154,7 +159,7 @@ export default function AssistantPage(): ReactElement {
 
   return (
     <section
-      className="mx-auto flex h-full min-h-[calc(100dvh-10rem)] w-full min-w-0 max-w-3xl flex-1 flex-col gap-3 pb-2 lg:min-h-0"
+      className="page-container flex min-w-0 flex-col gap-3 pb-6 lg:max-w-4xl"
       aria-labelledby="asst-title"
     >
       <BackButton />
@@ -231,7 +236,7 @@ export default function AssistantPage(): ReactElement {
         </div>
       </div>
 
-      <div className="theme-card flex min-h-[min(52dvh,480px)] flex-1 flex-col overflow-hidden rounded-2xl p-3 sm:p-4 lg:min-h-0">
+      <div className="theme-card flex min-h-[min(52dvh,480px)] flex-col overflow-hidden rounded-2xl p-3 sm:p-4 lg:min-h-[420px]">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
           {msgs.map((m, idx) => (
             <div key={idx} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>

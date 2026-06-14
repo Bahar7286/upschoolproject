@@ -87,10 +87,7 @@ export default function ProfilePage(): ReactElement {
 
   useEffect(() => {
     if (user?.interests?.length) setInterests(user.interests);
-    if (user?.theme_preference) {
-      setThemePreference(user.theme_preference as ThemePreference);
-    }
-  }, [user, setInterests, setThemePreference]);
+  }, [user, setInterests]);
 
   const handleSaveTheme = async (theme: ThemePreference, font?: FontPreference) => {
     setThemePreference(theme);

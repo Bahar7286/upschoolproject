@@ -95,7 +95,7 @@ export default function PlaceDetailPage(): ReactElement {
   const backTo = cityRow ? `/cities/${cityRow.city_id}` : '/cities';
 
   return (
-    <article className="mx-auto max-w-2xl space-y-5 pb-8">
+    <article className="page-container max-w-4xl pb-10 lg:max-w-5xl">
       <VenueDetailHero
         title={place.name}
         locationLine={`${place.district}, ${place.city}`}
@@ -121,7 +121,10 @@ export default function PlaceDetailPage(): ReactElement {
             : undefined
         }
       >
-        <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300">{story}</p>
+        <p className="text-sm leading-relaxed text-stone-700 dark:text-stone-300 sm:text-base">{story}</p>
+        {place.description?.trim() && place.description !== story ? (
+          <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-400">{place.description}</p>
+        ) : null}
         {place.tags.length ? (
           <div className="mt-3 flex flex-wrap gap-2">
             {place.tags.map((t) => (

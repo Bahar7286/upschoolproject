@@ -563,7 +563,15 @@
     "sightseeing": "Gezilecek",
     "food": "Yeme-İçme",
     "stay": "Konaklama",
-    "morePlaces": "Bu ilde daha fazla mekan"
+    "morePlaces": "Bu ilde daha fazla mekan",
+    "catDesc": {
+      "museum": "Arkeoloji, sanat ve özel koleksiyon müzeleri",
+      "historical": "Kale, sur, antik kent ve tarihi yapılar",
+      "mosque": "Cami, camii ve ibadethaneler",
+      "palace": "Saray, köşk ve Osmanlı konakları",
+      "restaurant": "Restoran, kafe ve yerel lezzet durakları",
+      "accommodation": "Otel, butik konaklama ve pansiyonlar"
+    }
   },
   "place": {
     "narration": "Sesli anlatım",

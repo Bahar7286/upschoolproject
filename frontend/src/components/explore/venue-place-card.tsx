@@ -43,7 +43,9 @@ export function VenuePlaceCard({
       </div>
       <div className="p-3">
         <p className="font-display text-base font-extrabold leading-snug text-theme">{name}</p>
-        {subtitle ? <p className="mt-1 line-clamp-2 text-xs text-theme-muted">{subtitle}</p> : null}
+        {subtitle ? (
+          <p className="mt-1 line-clamp-4 text-xs leading-relaxed text-theme-muted sm:text-sm">{subtitle}</p>
+        ) : null}
       </div>
     </Link>
   );

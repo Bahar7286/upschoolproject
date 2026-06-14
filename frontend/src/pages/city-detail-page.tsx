@@ -7,21 +7,13 @@ import { Link, useParams } from 'react-router-dom';
 import { CategoryIconCard } from '../components/explore/category-icon-card';
 import { DistrictRowCard } from '../components/explore/district-row-card';
 import { BackButton } from '../components/ui/back-button';
+import { ResetActiveRouteButton } from '../components/trip/reset-active-route-button';
 import { RegionInlineMap } from '../features/map/region-inline-map';
-
-import { useI18n } from '../lib/i18n';
+import { CITY_EXPLORE_CATEGORIES } from '../config/explore-categories';
 import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
+import { useI18n } from '../lib/i18n';
 import { listCities, listDistrictsByCity } from '../services/city-service';
 import { listPlaces } from '../services/place-service';
-import type { PlaceCategory } from '../types/place';
-
-const CATEGORIES: { id: PlaceCategory; labelKey: string; emoji: string }[] = [
-  { id: 'museum', labelKey: 'city.sightseeing', emoji: '🏛️' },
-  { id: 'historical', labelKey: 'city.sightseeing', emoji: '🏰' },
-  { id: 'mosque', labelKey: 'district.museum', emoji: '🕌' },
-  { id: 'restaurant', labelKey: 'city.food', emoji: '🍽️' },
-  { id: 'accommodation', labelKey: 'city.stay', emoji: '🛏️' },
-];
 
 export default function CityDetailPage(): ReactElement {
   const { t } = useI18n();
@@ -63,33 +55,35 @@ export default function CityDetailPage(): ReactElement {
 
   if (!Number.isFinite(id) || id <= 0) {
     return (
-      <section className="mx-auto max-w-3xl">
+      <section className="page-container">
         <p className="text-sm">{t('cityDetail.invalidCity', 'Geçersiz şehir.')}</p>
       </section>
     );
   }
 
   return (
-    <section className="mx-auto max-w-3xl space-y-5 pb-6" aria-labelledby="city-title">
+    <section className="page-container pb-8" aria-labelledby="city-title">
       <BackButton to="/cities" />
+      <ResetActiveRouteButton variant="bar" className="mt-2" />
 
       <header className="space-y-1 px-1">
         {city?.plate_code ? (
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Plaka {city.plate_code}</p>
         ) : null}
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="city-title">
+        <h1 className="font-display text-2xl font-extrabold tracking-tight text-theme sm:text-3xl" id="city-title">
           {city?.name_tr ?? t('cityDetail.loadingName', 'Yükleniyor…')}
         </h1>
         <p className="text-sm text-theme-muted">{t('city.pickDistrict', 'İlçe seç → mekanları gör')}</p>
       </header>
 
       <p className="px-1 text-xs font-bold uppercase tracking-wide text-primary">{t('city.categories', 'Mekan türleri')}</p>
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {CATEGORIES.map(({ id: catId, labelKey, emoji }) => (
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">
+        {CITY_EXPLORE_CATEGORIES.map(({ id: catId, labelKey, descKey, emoji }) => (
           <CategoryIconCard
             key={catId}
             to={`/cities/${id}/places?category=${catId}`}
-            label={t(labelKey, catId)}
+            label={categoryLabels[catId] ?? t(labelKey, catId)}
+            description={t(descKey, '')}
             emoji={emoji}
           />
         ))}
@@ -116,11 +110,7 @@ export default function CityDetailPage(): ReactElement {
         {isError ? (
           <div className="alert-error space-y-2 rounded-xl px-3 py-2 text-sm" role="alert">
             <p>{t('cityDetail.districtLoadError', 'İlçe listesi API\'den alınamadı; yerel liste deneniyor…')}</p>
-            <button
-              type="button"
-              className="font-bold text-primary underline"
-              onClick={() => void refetch()}
-            >
+            <button type="button" className="font-bold text-primary underline" onClick={() => void refetch()}>
               {t('city.retry', 'Yeniden dene')}
             </button>
           </div>

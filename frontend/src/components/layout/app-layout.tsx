@@ -24,6 +24,7 @@ import { MobileHeaderMenu } from './mobile-header-menu';
 import { ThemeToggle } from '../theme/theme-toggle';
 import { useI18n } from '../../lib/i18n';
 import { fetchCurrentUser } from '../../services/auth-service';
+import { syncThemeFromUserOnce } from '../../lib/sync-user-theme';
 import { useAuthStore } from '../../stores/auth-store';
 import { useOnboardingStore } from '../../stores/onboarding-store';
 
@@ -50,6 +51,7 @@ export function AppLayout(): ReactElement {
         const me = await fetchCurrentUser(accessToken);
         if (!cancelled) {
           setUser(me);
+          syncThemeFromUserOnce(me);
           useOnboardingStore.getState().hydrateFromUser(me);
         }
       } catch {
@@ -177,7 +179,7 @@ export function AppLayout(): ReactElement {
         </div>
       </header>
 
-      <main className="app-main mx-auto flex w-full min-w-0 max-w-7xl flex-1 min-h-0 flex-col overflow-y-auto overscroll-y-contain px-3 py-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
+      <main className="app-main mx-auto flex w-full min-w-0 max-w-7xl flex-1 min-h-0 flex-col overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 py-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
         <OnboardingGate>
           <div className="animate-fade-in-up flex min-h-0 min-w-0 flex-1 flex-col">
             <Outlet />

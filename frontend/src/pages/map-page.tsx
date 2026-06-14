@@ -7,6 +7,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
 import { BackButton } from '../components/ui/back-button';
+import { ResetActiveRouteButton } from '../components/trip/reset-active-route-button';
 import { ExploreMap } from '../features/map/explore-map';
 import {
   MapActiveRouteSection,
@@ -149,8 +150,9 @@ export default function MapPage(): ReactElement {
   const { data: places = [] } = usePlacesQuery(categoryFilter, effectiveCityName, resolvedDistrictName || undefined);
 
   return (
-    <section className="min-w-0 w-full space-y-6" aria-labelledby="map-title">
+    <section className="page-container pb-8" aria-labelledby="map-title">
       <BackButton label={t('common.back', 'Geri')} className="mb-1" />
+      <ResetActiveRouteButton variant="bar" />
 
       <header className="space-y-2">
         <h1

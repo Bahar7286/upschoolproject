@@ -6,8 +6,10 @@ import { useParams, useSearchParams } from 'react-router-dom';
 import { BackButton } from '../components/ui/back-button';
 import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-card';
 import { VenuePlaceCard } from '../components/explore/venue-place-card';
+import { ResetActiveRouteButton } from '../components/trip/reset-active-route-button';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
+import { formatGooglePlaceSubtitle, formatPlaceSubtitle } from '../lib/format-place-subtitle';
 import { googlePlaceDetailPath } from '../lib/routes';
 import { useI18n } from '../lib/i18n';
 import { listCities } from '../services/city-service';
@@ -74,11 +76,14 @@ export default function CityPlacesPage(): ReactElement {
   const extraGoogle = googlePlaces.filter((p) => !dbNames.has(p.name.toLowerCase()));
 
   return (
-    <section className="mx-auto max-w-3xl space-y-5" aria-labelledby="cityp-title">
+    <section className="page-container pb-8" aria-labelledby="cityp-title">
       <BackButton to={city ? `/cities/${city.city_id}` : '/cities'} />
+      <ResetActiveRouteButton variant="bar" className="mt-2" />
+
       <header className="space-y-2">
-        <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="cityp-title">
-          {city?.name_tr ?? t('cityPlaces.cityFallback', 'Şehir')} {category ? `· ${categoryLabels[category]}` : ''}
+        <h1 className="font-display text-2xl font-extrabold tracking-tight text-theme sm:text-3xl" id="cityp-title">
+          {city?.name_tr ?? t('cityPlaces.cityFallback', 'Şehir')}{' '}
+          {category ? `· ${categoryLabels[category]}` : ''}
         </h1>
         <p className="text-sm text-theme-muted">{t('cityPlaces.subtitle', 'Şehir genelinde mekanlar')}</p>
       </header>
@@ -108,14 +113,14 @@ export default function CityPlacesPage(): ReactElement {
         </p>
       ) : null}
 
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {places.map((p) => (
           <VenuePlaceCard
             key={p.place_id}
             placeId={p.place_id}
             name={p.name}
             category={p.category}
-            subtitle={p.description || `${p.district} / ${p.city}`}
+            subtitle={formatPlaceSubtitle(p)}
             imageUrl={p.image_url}
             cityName={city?.name_tr}
             to={`/places/${p.place_id}`}
@@ -128,7 +133,7 @@ export default function CityPlacesPage(): ReactElement {
                 placeId={p.place_id}
                 name={p.name}
                 category={(p.category as PlaceCategory) || category}
-                subtitle={p.address}
+                subtitle={formatGooglePlaceSubtitle(p.address, p.rating, p.user_rating_count)}
                 photoUrl={p.photo_url}
                 to={googlePlaceDetailPath(p.place_id, {
                   back: `/cities/${city_id}/places?category=${category}`,
