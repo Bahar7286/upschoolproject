@@ -202,8 +202,29 @@ def format_itinerary_reply(
             name = getattr(p, 'name', '')
             addr = getattr(p, 'address', '') or getattr(p, 'formatted_address', '') or ''
             rating = getattr(p, 'rating', None)
+            cat = str(getattr(p, 'category', '') or '').lower()
+            cat_labels_tr = {
+                'restaurant': 'Yeme-İçme',
+                'accommodation': 'Konaklama',
+                'museum': 'Müze',
+                'mosque': 'Cami',
+                'historical': 'Gezi',
+                'palace': 'Saray',
+                'bazaar': 'Çarşı',
+            }
+            cat_labels_en = {
+                'restaurant': 'Food',
+                'accommodation': 'Stay',
+                'museum': 'Museum',
+                'mosque': 'Mosque',
+                'historical': 'Sightseeing',
+                'palace': 'Palace',
+                'bazaar': 'Bazaar',
+            }
+            cat_label = (cat_labels_en if locale == 'en' else cat_labels_tr).get(cat, '')
+            tag = f' · {cat_label}' if cat_label else ''
             stars = f' ⭐ {rating}' if rating else ''
-            lines.append(f'{i}. **{name}**{stars}')
+            lines.append(f'{i}. **{name}**{tag}{stars}')
             if addr:
                 lines.append(f'   📍 {addr}')
 

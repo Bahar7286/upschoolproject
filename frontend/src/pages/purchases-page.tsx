@@ -7,7 +7,8 @@ import { ListSkeleton } from '../components/loading/page-skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import { ErrorAlert } from '../components/ui/error-alert';
 import { BackButton } from '../components/ui/back-button';
-import { EMPTY_STATES } from '../content/empty-states';
+import { useEmptyStates } from '../hooks/use-empty-states';
+import { useI18n } from '../lib/i18n';
 import { mapError } from '../lib/user-errors';
 import { listPurchasesByUser } from '../services/purchase-service';
 import { useRoutesQuery } from '../hooks/use-routes-query';
@@ -15,6 +16,8 @@ import { useAuthStore } from '../stores/auth-store';
 import type { PurchaseResponse } from '../types/purchase';
 
 export default function PurchasesPage(): ReactElement {
+  const { t } = useI18n();
+  const emptyStates = useEmptyStates();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const { data: routes = [] } = useRoutesQuery();
@@ -50,15 +53,17 @@ export default function PurchasesPage(): ReactElement {
       <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="pur-title">
-          Satın alımlarım
+          {t('purchases.title', 'Satın alımlarım')}
         </h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">İndirilebilir rota paketleri ve ödeme durumu</p>
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+          {t('purchases.subtitle', 'İndirilebilir rota paketleri ve ödeme durumu')}
+        </p>
       </header>
 
       {error ? <ErrorAlert error={mapError(new Error(error), 'purchases')} /> : null}
 
       {loading ? <ListSkeleton count={3} /> : items.length === 0 ? (
-        <EmptyState {...EMPTY_STATES.purchases} />
+        <EmptyState {...emptyStates.purchases} />
       ) : (
         <ul className="space-y-3">
           {items.map((p) => (
@@ -80,13 +85,13 @@ export default function PurchasesPage(): ReactElement {
                       : 'bg-stone-100 text-stone-600 dark:bg-zinc-800'
                   }`}
                 >
-                  {p.status === 'confirmed' ? 'Tamamlandı ✓' : p.status}
+                  {p.status === 'confirmed' ? t('purchases.confirmed', 'Tamamlandı ✓') : p.status}
                 </span>
                 <Link
                   className="tap-scale inline-flex min-h-[44px] items-center rounded-xl bg-primary px-4 text-sm font-bold text-white hover:bg-primary-dark"
                   to={`/routes/${p.route_id}`}
                 >
-                  Rotayı aç
+                  {t('purchases.openRoute', 'Rotayı aç')}
                 </Link>
               </div>
             </li>

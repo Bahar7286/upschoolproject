@@ -6,9 +6,11 @@ import { Link } from 'react-router-dom';
 import { VerifiedGuideBadge } from '../components/guide/verified-guide-badge';
 import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { listVerifiedGuides, type GuideMarketplaceItem } from '../services/guide-profile-service';
 
 export default function GuidesMarketplacePage(): ReactElement {
+  const { t } = useI18n();
   const [guides, setGuides] = useState<GuideMarketplaceItem[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -31,14 +33,13 @@ export default function GuidesMarketplacePage(): ReactElement {
       <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold text-heritage-ink dark:text-stone-50" id="guides-title">
-          Onaylı rehberler
+          {t('guides.title', 'Onaylı rehberler')}
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-stone-600 dark:text-stone-400">
-          Rehberlerin dijital rota içerikleri oluşturabildiği erken aşama platform. Listede yalnızca kokart doğrulaması
-          tamamlanmış rehberler yer alır.
+          {t('guides.subtitle', 'Rehberlerin dijital rota içerikleri oluşturabildiği erken aşama platform. Listede yalnızca kokart doğrulaması tamamlanmış rehberler yer alır.')}
         </p>
         <Link className="mt-2 inline-block text-sm font-bold text-primary hover:underline" to="/rehber-guven">
-          Doğrulama süreci nasıl işler? →
+          {t('guides.verifyProcess', 'Doğrulama süreci nasıl işler? →')}
         </Link>
       </header>
 
@@ -56,7 +57,7 @@ export default function GuidesMarketplacePage(): ReactElement {
         </div>
       ) : guides.length === 0 ? (
         <p className="rounded-[22px] border border-dashed border-stone-300 px-6 py-10 text-center text-sm text-stone-600">
-          Henüz onaylı rehber yok. Demo için <strong>guide@example.com</strong> hesabı doğrulanmıştır.
+          {t('guides.empty', 'Henüz onaylı rehber yok. Demo için guide@example.com hesabı doğrulanmıştır.')}
         </p>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -88,17 +89,17 @@ export default function GuidesMarketplacePage(): ReactElement {
                 </li>
                 <li className="flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                  Grup {g.min_group_size}–{g.max_group_size} kişi
+                  {t('guides.groupSize', { min: g.min_group_size, max: g.max_group_size }, 'Grup {min}–{max} kişi')}
                 </li>
               </ul>
               <p className="mt-3 text-sm font-bold text-primary">
-                Kişi başı ~₺{g.base_price_per_person.toFixed(0)} · {g.route_count} rota
+                {t('guides.perPerson', { price: g.base_price_per_person.toFixed(0), count: g.route_count }, 'Kişi başı ~₺{price} · {count} rota')}
               </p>
               <Link
                 className="tap-scale mt-4 inline-flex min-h-[44px] items-center justify-center rounded-xl bg-primary font-bold text-white"
                 to={`/rehberler/${g.guide_id}`}
               >
-                Profil ve teklif iste
+                {t('guides.profileOffer', 'Profil ve teklif iste')}
               </Link>
             </article>
           ))}

@@ -16,8 +16,10 @@ import {
   type GuideAnalyticsResponse,
 } from '../services/guide-service';
 import { useAuthStore } from '../stores/auth-store';
+import { useI18n } from '../lib/i18n';
 
 export default function GuideDashboardPage(): ReactElement {
+  const { t } = useI18n();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const [earnings, setEarnings] = useState<{ monthly_earnings: number; route_sales: number } | null>(null);
@@ -58,16 +60,16 @@ export default function GuideDashboardPage(): ReactElement {
     if (!earnings) return [];
     const m = earnings.monthly_earnings;
     return [
-      { label: '1. hafta', value: m * 0.18 },
-      { label: '2. hafta', value: m * 0.22 },
-      { label: '3. hafta', value: m * 0.28 },
-      { label: '4. hafta', value: m * 0.32 },
+      { label: t('common.week1', '1. hafta'), value: m * 0.18 },
+      { label: t('common.week2', '2. hafta'), value: m * 0.22 },
+      { label: t('common.week3', '3. hafta'), value: m * 0.28 },
+      { label: t('common.week4', '4. hafta'), value: m * 0.32 },
     ];
-  }, [analytics, earnings]);
+  }, [analytics, earnings, t]);
 
   const handlePayout = async () => {
     if (!user || !earnings || earnings.monthly_earnings < 100) {
-      setError('Minimum ödeme talebi ₺100 olmalıdır.');
+      setError(t('guide.payoutMinError', 'Minimum ödeme talebi ₺100 olmalıdır.'));
       return;
     }
     setBusy(true);
@@ -88,13 +90,13 @@ export default function GuideDashboardPage(): ReactElement {
     return (
       <section className="mx-auto max-w-lg space-y-6">
         <header>
-          <h1 className="font-display text-3xl font-extrabold tracking-tight">Rehber paneli</h1>
-          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">Bu alan yalnızca rehber rolü içindir.</p>
+          <h1 className="font-display text-3xl font-extrabold tracking-tight">{t('guide.panelTitle', 'Rehber paneli')}</h1>
+          <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{t('guide.panelForbidden', 'Bu alan yalnızca rehber rolü içindir.')}</p>
         </header>
         <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-6 dark:border-white/10 dark:bg-zinc-900/95">
-          <p className="text-sm">Rehber olarak kayıt ol ve rotalarını sat.</p>
+          <p className="text-sm">{t('guide.panelSignup', 'Rehber olarak kayıt ol ve rotalarını sat.')}</p>
           <ButtonLink className="mt-4" to="/register">
-            Rehber kaydı
+            {t('guide.registerCta', 'Rehber kaydı')}
           </ButtonLink>
         </div>
       </section>
@@ -106,9 +108,9 @@ export default function GuideDashboardPage(): ReactElement {
       <BackButton />
       <header>
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="gd-title">
-          Gelir paneli
+          {t('guide.earningsTitle', 'Gelir paneli')}
         </h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">%15 platform · %85 rehber payı</p>
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{t('guide.earningsSplit', '%15 platform · %85 rehber payı')}</p>
       </header>
 
       {error ? (
@@ -125,30 +127,30 @@ export default function GuideDashboardPage(): ReactElement {
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
         <StatCard
           icon={Banknote}
-          label="Bu ay net"
+          label={t('guide.monthlyNet', 'Bu ay net')}
           value={earnings ? `₺${earnings.monthly_earnings.toFixed(2)}` : '—'}
-          hint="Onaylı satışlardan"
+          hint={t('guide.fromApprovedSales', 'Onaylı satışlardan')}
           accent="primary"
         />
         <StatCard
           icon={ShoppingCart}
-          label="Satış adedi"
+          label={t('guide.salesCount', 'Satış adedi')}
           value={analytics ? analytics.route_sales : earnings ? earnings.route_sales : '—'}
-          hint={`${analytics?.route_count ?? 0} aktif rota`}
+          hint={t('guide.activeRoutes', { count: analytics?.route_count ?? 0 }, '{count} aktif rota')}
           accent="amber"
         />
         <StatCard
           icon={TrendingUp}
-          label="Brüt gelir"
+          label={t('guide.grossRevenue', 'Brüt gelir')}
           value={analytics ? `₺${analytics.gross_revenue.toFixed(2)}` : '—'}
-          hint="Platform öncesi"
+          hint={t('guide.beforePlatform', 'Platform öncesi')}
           accent="primary"
         />
         <StatCard
           icon={ShoppingCart}
-          label="Teklifler"
+          label={t('guide.offers', 'Teklifler')}
           value={analytics ? `${analytics.accepted_offers} / ${analytics.pending_offers}` : '—'}
-          hint="Kabul / bekleyen"
+          hint={t('guide.acceptedPending', 'Kabul / bekleyen')}
           accent="amber"
         />
       </div>
@@ -157,13 +159,13 @@ export default function GuideDashboardPage(): ReactElement {
         <div className="mb-4 flex items-center gap-2">
           <TrendingUp className="h-5 w-5 text-primary" aria-hidden="true" />
           <h2 className="font-display text-lg font-bold">
-            {analytics?.top_routes?.length ? 'Rota bazlı net gelir' : 'Aylık gelir grafiği'}
+            {analytics?.top_routes?.length ? t('guide.chartByRoute', 'Rota bazlı net gelir') : t('guide.chartMonthly', 'Aylık gelir grafiği')}
           </h2>
         </div>
         {chartData.length ? (
           <MiniBarChart data={chartData} />
         ) : (
-          <p className="text-sm text-stone-500">Henüz satış verisi yok.</p>
+          <p className="text-sm text-stone-500">{t('guide.noSalesData', 'Henüz satış verisi yok.')}</p>
         )}
         {analytics?.top_routes?.length ? (
           <ul className="mt-4 space-y-2 text-sm">
@@ -171,7 +173,7 @@ export default function GuideDashboardPage(): ReactElement {
               <li key={r.route_id} className="flex justify-between border-t border-stone-900/10 pt-2 dark:border-white/10">
                 <span className="font-semibold">{r.title}</span>
                 <span className="text-primary">
-                  {r.sales_count} satış · ₺{r.guide_net.toFixed(2)}
+                  {t('guide.salesSummary', { count: r.sales_count, amount: r.guide_net.toFixed(2) }, '{count} satış · ₺{amount}')}
                 </span>
               </li>
             ))}
@@ -182,9 +184,9 @@ export default function GuideDashboardPage(): ReactElement {
       <GuideRoutesPanel />
 
       <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-6 dark:border-white/10 dark:bg-zinc-900/95">
-        <p className="font-semibold">Ödeme talebi</p>
+        <p className="font-semibold">{t('guide.payoutTitle', 'Ödeme talebi')}</p>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Bekleyen bakiye: ₺{earnings?.monthly_earnings.toFixed(2) ?? '0.00'} · Min. ₺100
+          {t('guide.payoutBalance', { amount: earnings?.monthly_earnings.toFixed(2) ?? '0.00' }, 'Bekleyen bakiye: ₺{amount} · Min. ₺100')}
         </p>
         <div className="mt-4 flex flex-wrap gap-3">
           <button
@@ -193,13 +195,13 @@ export default function GuideDashboardPage(): ReactElement {
             disabled={busy || !earnings || earnings.monthly_earnings < 100}
             onClick={handlePayout}
           >
-            {busy ? 'Gönderiliyor…' : 'Ödeme talep et'}
+            {busy ? t('guide.submitting', 'Gönderiliyor…') : t('guide.requestPayout', 'Ödeme talep et')}
           </button>
           <Link className="tap-scale inline-flex min-h-[48px] items-center rounded-xl border-2 border-stone-300 px-5 font-semibold dark:border-zinc-600" to="/talepler">
-            Açık talepler
+            {t('guide.openRequests', 'Açık talepler')}
           </Link>
           <Link className="tap-scale inline-flex min-h-[48px] items-center rounded-xl border-2 border-stone-300 px-5 font-semibold dark:border-zinc-600" to="/guide/dogrulama">
-            Doğrulama
+            {t('guide.verification', 'Doğrulama')}
           </Link>
         </div>
       </div>

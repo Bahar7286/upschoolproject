@@ -6,8 +6,9 @@ import { Plus, Users } from 'lucide-react';
 import { EmptyState } from '../components/ui/empty-state';
 import { BackButton } from '../components/ui/back-button';
 import { ErrorAlert } from '../components/ui/error-alert';
-import { EMPTY_STATES } from '../content/empty-states';
+import { useEmptyStates } from '../hooks/use-empty-states';
 import { mapError } from '../lib/user-errors';
+import { useI18n } from '../lib/i18n';
 import {
   listMyTripRequests,
   listOpenTripRequests,
@@ -17,6 +18,8 @@ import {
 import { useAuthStore } from '../stores/auth-store';
 
 export default function TripRequestsPage(): ReactElement {
+  const { t } = useI18n();
+  const emptyStates = useEmptyStates();
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
@@ -83,10 +86,10 @@ export default function TripRequestsPage(): ReactElement {
   if (!accessToken) {
     return (
       <section className="mx-auto max-w-lg space-y-4 text-center">
-        <h1 className="font-display text-2xl font-bold">Gezi talepleri</h1>
-        <p className="text-sm text-stone-600 dark:text-stone-400">Talep oluşturmak veya teklif vermek için giriş yapın.</p>
+        <h1 className="font-display text-2xl font-bold">{t('trips.title', 'Taleplerim')}</h1>
+        <p className="text-sm text-stone-600 dark:text-stone-400">{t('trips.loginRequired', 'Talep oluşturmak için giriş yapın.')}</p>
         <Link className="tap-scale inline-flex min-h-[48px] items-center rounded-xl bg-primary px-6 font-bold text-white" to="/login">
-          Giriş yap
+          {t('trips.loginBtn', 'Giriş yap')}
         </Link>
       </section>
     );
@@ -95,15 +98,27 @@ export default function TripRequestsPage(): ReactElement {
   return (
     <section className="mx-auto max-w-2xl space-y-6">
       <BackButton />
+      <div className="rounded-2xl border border-primary/25 bg-primary/5 p-4 text-sm text-stone-800 dark:text-stone-200">
+        <p className="font-display text-base font-bold text-primary">{t('trips.betaTitle', 'Erken erişim — rehberli gezi altyapısı')}</p>
+        <p className="mt-2 leading-relaxed">{t('trips.betaBody', 'Rehber doğrulama ve güvenli ödeme altyapısı geliştiriliyor.')}</p>
+        <p className="mt-3 flex flex-wrap gap-3 text-xs font-semibold">
+          <Link className="text-primary underline" to="/rehber-dogrulama">
+            {t('trips.betaVerify', 'Rehber doğrulama')}
+          </Link>
+          <Link className="text-primary underline" to="/odeme-guvenligi">
+            {t('trips.betaPayment', 'Ödeme güvenliği')}
+          </Link>
+        </p>
+      </div>
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="font-display text-3xl font-extrabold tracking-tight">
-            {isGuide ? 'Açık gezi talepleri' : 'Taleplerim'}
+            {isGuide ? t('trips.guideTitle', 'Açık gezi talepleri') : t('trips.title', 'Taleplerim')}
           </h1>
           <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
             {isGuide
-              ? 'Onaylı rehber olarak taleplere teklif verin. 10+ kişide %10, 20+ kişide %15 grup indirimi otomatik uygulanır.'
-              : 'Rotanız veya “burayı gezmek istiyorum” talebiniz için rehberler teklif gönderir; platform içinde kabul edin.'}
+              ? t('trips.guideDesc', 'Onaylı rehber olarak taleplere teklif verin.')
+              : t('trips.touristDesc', 'Rehberler teklif gönderir; platform içinde kabul edin.')}
           </p>
         </div>
         {!isGuide ? (
@@ -112,7 +127,7 @@ export default function TripRequestsPage(): ReactElement {
             to="/talepler/yeni"
           >
             <Plus className="h-5 w-5" aria-hidden="true" />
-            Talep oluştur
+            {t('trips.create', 'Talep oluştur')}
           </Link>
         ) : null}
       </header>
@@ -121,14 +136,7 @@ export default function TripRequestsPage(): ReactElement {
 
       {requests.length === 0 ? (
         <EmptyState
-          {...(isGuide ? EMPTY_STATES.search : EMPTY_STATES.tripHistory)}
-          title={isGuide ? 'Şu an açık talep yok' : EMPTY_STATES.tripHistory.title}
-          description={
-            isGuide
-              ? 'Yeni turist talepleri geldiğinde burada listelenecek.'
-              : EMPTY_STATES.tripHistory.description
-          }
-          actionLabel={isGuide ? 'Keşfe git' : EMPTY_STATES.tripHistory.actionLabel}
+          {...(isGuide ? emptyStates.openTripsGuide : emptyStates.tripHistory)}
           actionTo={isGuide ? '/discover' : '/talepler/yeni'}
         />
       ) : (
@@ -148,14 +156,14 @@ export default function TripRequestsPage(): ReactElement {
                 {req.city} · {req.preferred_date} ·{' '}
                 <span className="inline-flex items-center gap-1">
                   <Users className="h-3.5 w-3.5" aria-hidden="true" />
-                  {req.group_size} kişi
+                  {req.group_size} {t('trips.people', 'kişi')}
                 </span>
                 {req.route_title ? ` · ${req.route_title}` : ''}
               </p>
               <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{req.message}</p>
               {req.planned_stops?.length > 0 ? (
                 <p className="mt-2 text-xs font-semibold text-primary">
-                  Güzergah: {req.planned_stops.map((s) => s.name).join(' → ')}
+                  {t('trips.itinerary', 'Güzergah:')} {req.planned_stops.map((s) => s.name).join(' → ')}
                 </p>
               ) : null}
 
@@ -165,14 +173,14 @@ export default function TripRequestsPage(): ReactElement {
                     <form className="space-y-3" onSubmit={(e) => handleOffer(e, req.request_id)}>
                       <textarea
                         className="w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2 text-[15px] dark:border-white/15 dark:bg-zinc-950"
-                        placeholder="Teklif mesajınız…"
+                        placeholder={t('trips.offerPlaceholder', 'Teklif mesajınız…')}
                         required
                         rows={3}
                         value={offerMessage}
                         onChange={(e) => setOfferMessage(e.target.value)}
                       />
                       <label className="block text-xs font-semibold text-stone-500">
-                        Toplam (indirim öncesi, ₺)
+                        {t('trips.offerTotal', 'Toplam (indirim öncesi, ₺)')}
                         <input
                           className="theme-input mt-1 w-full rounded-xl border px-3 py-2 text-[15px]"
                           min={1}
@@ -188,14 +196,14 @@ export default function TripRequestsPage(): ReactElement {
                           disabled={busy}
                           type="submit"
                         >
-                          Teklif gönder
+                          {t('trips.submitOffer', 'Teklif gönder')}
                         </button>
                         <button
                           className="rounded-xl border px-4 py-2 text-sm font-semibold"
                           type="button"
                           onClick={() => setOfferRequestId(null)}
                         >
-                          İptal
+                          {t('common.cancel', 'İptal')}
                         </button>
                       </div>
                     </form>
@@ -205,11 +213,11 @@ export default function TripRequestsPage(): ReactElement {
                       type="button"
                       onClick={() => {
                         setOfferRequestId(req.request_id);
-                        setOfferMessage(`Merhaba, ${req.title} için teklifim.`);
+                        setOfferMessage(t('trips.offerTemplate', { title: req.title }, 'Merhaba, {title} için teklifim.'));
                         setOfferTotal(req.budget > 0 ? req.budget : 500);
                       }}
                     >
-                      Teklif ver
+                      {t('trips.makeOffer', 'Teklif ver')}
                     </button>
                   )}
                 </div>
@@ -218,7 +226,7 @@ export default function TripRequestsPage(): ReactElement {
               {!isGuide && req.offers.length > 0 ? (
                 <ul className="mt-4 space-y-3 border-t border-stone-900/10 pt-4 dark:border-white/10">
                   <p className="text-xs font-bold uppercase tracking-wider text-stone-500">
-                    Gelen teklifler ({req.offer_count})
+                    {t('trips.offersCount', { count: req.offer_count }, 'Gelen teklifler ({count})')}
                   </p>
                   {req.offers.map((o) => (
                     <li
@@ -231,8 +239,11 @@ export default function TripRequestsPage(): ReactElement {
                       </div>
                       <p className="mt-1 text-lg font-extrabold text-primary">₺{o.offered_total.toFixed(2)}</p>
                       <p className="text-xs text-stone-500">
-                        Kişi başı ₺{o.offered_per_person.toFixed(2)} · {o.discount_label} · Platform ücreti ₺
-                        {o.platform_fee.toFixed(2)}
+                        {t('trips.perPersonFee', {
+                          amount: o.offered_per_person.toFixed(2),
+                          discount: o.discount_label,
+                          fee: o.platform_fee.toFixed(2),
+                        }, 'Kişi başı ₺{amount} · {discount} · Platform ücreti ₺{fee}')}
                       </p>
                       <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{o.message}</p>
                       {req.status === 'open' && o.status === 'pending' ? (
@@ -242,7 +253,7 @@ export default function TripRequestsPage(): ReactElement {
                           type="button"
                           onClick={() => goToCheckout(req, o)}
                         >
-                          Öde ve kabul et
+                          {t('trips.payAccept', 'Öde ve kabul et')}
                         </button>
                       ) : null}
                     </li>
@@ -251,7 +262,7 @@ export default function TripRequestsPage(): ReactElement {
               ) : null}
 
               {!isGuide && req.offer_count === 0 && req.status === 'open' ? (
-                <p className="mt-3 text-xs text-stone-500">Rehberlerden teklif bekleniyor…</p>
+                <p className="mt-3 text-xs text-stone-500">{t('trips.waitingOffers', 'Rehberlerden teklif bekleniyor…')}</p>
               ) : null}
             </li>
           ))}

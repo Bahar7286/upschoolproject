@@ -16,6 +16,7 @@ import {
   type FieldErrors,
 } from '../lib/validation';
 import { THEME_META } from '../lib/theme-meta';
+import { useI18n } from '../lib/i18n';
 import { fetchCurrentUser, registerUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
@@ -25,14 +26,14 @@ import { THEME_LABELS, useThemeStore } from '../stores/theme-store';
 const ROLES = [
   {
     id: 'tourist' as const,
-    label: 'Turist',
-    desc: 'Rota keşfet, onaylı rehber seç, teklif al',
+    labelKey: 'auth.roleTourist',
+    descKey: 'auth.roleTouristDesc',
     icon: '🗺️',
   },
   {
     id: 'guide' as const,
-    label: 'Rehber',
-    desc: 'Kokart doğrulama, rota sat, teklif yönet',
+    labelKey: 'auth.roleGuide',
+    descKey: 'auth.roleGuideDesc',
     icon: '🧭',
   },
 ] as const;
@@ -40,6 +41,7 @@ const ROLES = [
 type Role = 'tourist' | 'guide' | 'admin';
 
 export default function RegisterPage(): ReactElement {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
   const themePreference = useThemeStore((s) => s.preference);
@@ -57,7 +59,7 @@ export default function RegisterPage(): ReactElement {
     event.preventDefault();
     setError('');
     const errs: FieldErrors = {};
-    const nameErr = validateRequired(fullName, 'Ad soyad');
+    const nameErr = validateRequired(fullName, t('auth.fullName', 'Ad soyad'));
     const emailErr = validateEmail(email);
     const passErr = validatePassword(password);
     if (nameErr) errs.fullName = nameErr;
@@ -115,16 +117,16 @@ export default function RegisterPage(): ReactElement {
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary dark:text-primary">
-                Yeni hesap
+                {t('auth.registerBadge', 'Yeni hesap')}
               </p>
               <h1
                 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50"
                 id="register-heading"
               >
-                Kayıt ol
+                {t('auth.registerTitle', 'Kayıt ol')}
               </h1>
               <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-400">
-                İstanbul rotalarını keşfetmeye bir adım kaldı.
+                {t('auth.registerSubtitle', 'İstanbul rotalarını keşfetmeye bir adım kaldı.')}
               </p>
             </div>
           </div>
@@ -132,13 +134,13 @@ export default function RegisterPage(): ReactElement {
           <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="reg-name">
-                Ad soyad
+                {t('auth.fullName', 'Ad soyad')}
               </label>
               <input
                 id="reg-name"
                 className={`focus-ring tap-scale min-h-[48px] w-full rounded-xl border border-stone-900/15 bg-white px-4 text-[15px] text-stone-900 shadow-sm outline-none transition placeholder:text-stone-400 focus:border-primary dark:border-white/15 dark:bg-zinc-950 dark:text-stone-50 dark:placeholder:text-stone-500 ${fieldErrors.fullName ? inputErrorClass : ''}`}
                 autoComplete="name"
-                placeholder="Adınız Soyadınız"
+                placeholder={t('auth.fullNamePlaceholder', 'Adınız Soyadınız')}
                 value={fullName}
                 onChange={(e) => {
                   setFullName(e.target.value);
@@ -155,7 +157,7 @@ export default function RegisterPage(): ReactElement {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="reg-email">
-                E-posta
+                {t('auth.email', 'E-posta')}
               </label>
               <input
                 id="reg-email"
@@ -180,8 +182,8 @@ export default function RegisterPage(): ReactElement {
 
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="reg-password">
-                Şifre
-                <span className="ml-1.5 text-xs font-normal text-stone-500 dark:text-stone-400">(en az 6 karakter)</span>
+                {t('auth.password', 'Şifre')}
+                <span className="ml-1.5 text-xs font-normal text-stone-500 dark:text-stone-400">{t('auth.passwordHint', '(en az 6 karakter)')}</span>
               </label>
               <input
                 id="reg-password"
@@ -205,7 +207,7 @@ export default function RegisterPage(): ReactElement {
 
             <fieldset className="flex flex-col gap-2">
               <legend className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                Hesap türü
+                {t('auth.accountType', 'Hesap türü')}
               </legend>
               <div className="grid grid-cols-2 gap-3">
                 {ROLES.map((r) => (
@@ -226,8 +228,8 @@ export default function RegisterPage(): ReactElement {
                       className="sr-only"
                     />
                     <span className="text-xl" aria-hidden="true">{r.icon}</span>
-                    <span className="text-sm font-bold text-stone-900 dark:text-stone-50">{r.label}</span>
-                    <span className="text-[11px] leading-snug text-stone-500 dark:text-stone-400">{r.desc}</span>
+                    <span className="text-sm font-bold text-stone-900 dark:text-stone-50">{t(r.labelKey, r.id === 'tourist' ? 'Turist' : 'Rehber')}</span>
+                    <span className="text-[11px] leading-snug text-stone-500 dark:text-stone-400">{t(r.descKey, '')}</span>
                     {role === r.id && (
                       <span className="absolute right-2.5 top-2.5 flex h-4 w-4 items-center justify-center rounded-full bg-primary">
                         <Compass className="h-2.5 w-2.5 text-white" aria-hidden="true" strokeWidth={3} />
@@ -240,8 +242,8 @@ export default function RegisterPage(): ReactElement {
 
             <fieldset className="flex flex-col gap-3">
               <legend className="text-sm font-semibold text-stone-800 dark:text-stone-200">
-                Görünüm
-                <span className="ml-1.5 text-xs font-normal text-stone-500 dark:text-stone-400">(sonra değiştirebilirsin)</span>
+                {t('auth.appearance', 'Görünüm')}
+                <span className="ml-1.5 text-xs font-normal text-stone-500 dark:text-stone-400">{t('auth.appearanceHint', '(sonra değiştirebilirsin)')}</span>
               </legend>
               <div className="grid grid-cols-2 gap-2">
                 {THEME_META.map((t) => {
@@ -277,19 +279,19 @@ export default function RegisterPage(): ReactElement {
               </p>
             ) : null}
 
-            <LoadingButton className="w-full" type="submit" loading={loading} loadingLabel="Hesap oluşturuluyor…">
-              Hesap oluştur
+            <LoadingButton className="w-full" type="submit" loading={loading} loadingLabel={t('auth.creatingAccount', 'Hesap oluşturuluyor…')}>
+              {t('auth.createAccount', 'Hesap oluştur')}
             </LoadingButton>
           </form>
 
           <div className="mt-6 space-y-3 border-t border-stone-900/10 pt-5 text-center text-sm text-stone-600 dark:border-white/10 dark:text-stone-400">
             <p>
-              Zaten hesabın var mı?{' '}
+              {t('auth.hasAccount', 'Zaten hesabın var mı?')}{' '}
               <Link
                 className="font-bold text-heritage-ink underline-offset-4 hover:underline dark:text-amber-200"
                 to="/login"
               >
-                Giriş yap
+                {t('auth.loginTitle', 'Giriş yap')}
               </Link>
             </p>
             <Link
@@ -297,16 +299,16 @@ export default function RegisterPage(): ReactElement {
               to="/"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" strokeWidth={2} />
-              Ana sayfa
+              {t('common.home', 'Ana sayfa')}
             </Link>
           </div>
         </section>
 
         <p className="text-center text-[11px] leading-relaxed text-stone-500 dark:text-stone-500">
-          Kayıt olarak{' '}
-          <a href="/terms" className="underline underline-offset-2">Kullanım Koşulları</a>,{' '}
-          <a href="/privacy" className="underline underline-offset-2">Gizlilik</a> ve{' '}
-          <a href="/kvkk" className="underline underline-offset-2">KVKK aydınlatma</a> metnini kabul etmiş olursunuz.
+          {t('auth.registerLegal', 'Kayıt olarak')}{' '}
+          <a href="/terms" className="underline underline-offset-2">{t('auth.termsLink', 'Kullanım Koşulları')}</a>,{' '}
+          <a href="/privacy" className="underline underline-offset-2">{t('auth.privacyLink', 'Gizlilik')}</a>,{' '}
+          <a href="/kvkk" className="underline underline-offset-2">{t('auth.kvkkLink', 'KVKK aydınlatma')}</a>.
         </p>
       </div>
     </div>

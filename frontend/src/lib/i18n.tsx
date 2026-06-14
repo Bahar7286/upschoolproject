@@ -9,7 +9,13 @@ import { useOnboardingStore } from '../stores/onboarding-store';
 
 export type AppLocale = 'tr' | 'en';
 
+type TParams = Record<string, string | number>;
+
 const dictionaries: Record<AppLocale, Record<string, unknown>> = { tr, en };
+
+function isParams(value: unknown): value is TParams {
+  return value != null && typeof value === 'object' && !Array.isArray(value);
+}
 
 function getNested(obj: Record<string, unknown>, path: string): string | undefined {
   const parts = path.split('.');
@@ -21,10 +27,20 @@ function getNested(obj: Record<string, unknown>, path: string): string | undefin
   return typeof cur === 'string' ? cur : undefined;
 }
 
+function interpolate(text: string, params?: TParams): string {
+  if (!params) return text;
+  return text.replace(/\{(\w+)\}/g, (_, key: string) => String(params[key] ?? `{${key}}`));
+}
+
+export type TFunction = {
+  (key: string, fallback?: string): string;
+  (key: string, params: TParams, fallback?: string): string;
+};
+
 interface I18nContextValue {
   locale: AppLocale;
   setLocale: (locale: AppLocale) => void;
-  t: (key: string, fallback?: string) => string;
+  t: TFunction;
 }
 
 const I18nContext = createContext<I18nContextValue | null>(null);
@@ -71,10 +87,19 @@ export function I18nProvider({ children }: { children: ReactNode }): ReactElemen
     [accessToken, setUser, user],
   );
 
-  const t = useCallback(
-    (key: string, fallback?: string) => {
-      return getNested(dictionaries[locale], key) ?? fallback ?? key;
-    },
+  const t = useCallback<TFunction>(
+    ((key: string, paramsOrFallback?: TParams | string, maybeFallback?: string) => {
+      let params: TParams | undefined;
+      let fallback: string | undefined;
+      if (typeof paramsOrFallback === 'string') {
+        fallback = paramsOrFallback;
+      } else if (isParams(paramsOrFallback)) {
+        params = paramsOrFallback;
+        fallback = maybeFallback;
+      }
+      const raw = getNested(dictionaries[locale], key) ?? fallback ?? key;
+      return interpolate(raw, params);
+    }) as TFunction,
     [locale],
   );
 
@@ -90,9 +115,9 @@ export function useI18n(): I18nContextValue {
 }
 
 export function LanguageSwitcher(): ReactElement {
-  const { locale, setLocale } = useI18n();
+  const { locale, setLocale, t } = useI18n();
   return (
-    <div className="flex gap-2" role="group" aria-label="Dil seçimi">
+    <div className="flex gap-2" role="group" aria-label={t('profile.languageSelect', 'Language selection')}>
       {(['tr', 'en'] as const).map((lang) => (
         <button
           key={lang}

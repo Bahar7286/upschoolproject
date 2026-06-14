@@ -25,10 +25,12 @@ import {
   type AdminPremiumRequestItem,
 } from '../services/premium-service';
 import { useAuthStore } from '../stores/auth-store';
+import { useI18n } from '../lib/i18n';
 
 type Tab = 'guides' | 'routes' | 'reports' | 'premium' | 'tools';
 
 export default function AdminPage(): ReactElement {
+  const { t } = useI18n();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
   const [tab, setTab] = useState<Tab>('guides');
@@ -68,11 +70,11 @@ export default function AdminPage(): ReactElement {
   if (user?.role !== 'admin') {
     return (
       <section className="mx-auto max-w-lg space-y-4">
-        <h1 className="font-display text-2xl font-bold">Yönetim paneli</h1>
-        <p className="text-sm text-stone-600">Bu sayfa yalnızca platform yöneticileri içindir.</p>
-        <p className="text-xs text-stone-500">Demo: admin@example.com / demo123</p>
+        <h1 className="font-display text-2xl font-bold">{t('admin.title', 'Yönetim paneli')}</h1>
+        <p className="text-sm text-stone-600">{t('admin.forbidden', 'Bu sayfa yalnızca platform yöneticileri içindir.')}</p>
+        <p className="text-xs text-stone-500">{t('admin.demoHint', 'Demo: admin@example.com / demo123')}</p>
         <Link className="font-bold text-primary" to="/login">
-          Giriş
+          {t('common.login', 'Giriş yap')}
         </Link>
       </section>
     );
@@ -82,7 +84,7 @@ export default function AdminPage(): ReactElement {
     if (!accessToken) return;
     const reason =
       action === 'reject'
-        ? window.prompt('Red gerekçesi (isteğe bağlı):', 'Belgeler eksik veya okunamıyor') ?? ''
+        ? window.prompt(t('admin.rejectReasonPrompt', 'Red gerekçesi (isteğe bağlı):'), t('admin.rejectReasonDefault', 'Belgeler eksik veya okunamıyor')) ?? ''
         : '';
     setBusyId(guideId);
     try {
@@ -99,7 +101,7 @@ export default function AdminPage(): ReactElement {
     if (!accessToken) return;
     const feedback =
       action !== 'approve'
-        ? window.prompt('Geri bildirim (rehbere gösterilir):', '') ?? ''
+        ? window.prompt(t('admin.feedbackPrompt', 'Geri bildirim (rehbere gösterilir):'), '') ?? ''
         : '';
     setBusyId(routeId);
     try {
@@ -113,24 +115,24 @@ export default function AdminPage(): ReactElement {
   };
 
   const tabs: { id: Tab; label: string }[] = [
-    { id: 'guides', label: 'Rehberler' },
-    { id: 'routes', label: 'Rota inceleme' },
-    { id: 'reports', label: 'Bildirimler' },
-    { id: 'premium', label: `Premium (${premiumRequests.length})` },
-    { id: 'tools', label: 'Araçlar' },
+    { id: 'guides', label: t('admin.tabGuides', 'Rehberler') },
+    { id: 'routes', label: t('admin.tabRoutes', 'Rota inceleme') },
+    { id: 'reports', label: t('admin.tabReports', 'Bildirimler') },
+    { id: 'premium', label: `${t('admin.tabPremium', 'Premium')} (${premiumRequests.length})` },
+    { id: 'tools', label: t('admin.tabTools', 'Araçlar') },
   ];
 
   return (
     <section className="mx-auto max-w-3xl space-y-6">
       <BackButton />
       <header>
-        <h1 className="font-display text-3xl font-extrabold tracking-tight">Yönetim paneli</h1>
+        <h1 className="font-display text-3xl font-extrabold tracking-tight">{t('admin.title', 'Yönetim paneli')}</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Rehber doğrulama, rota moderasyonu ve içerik bildirimleri.
+          {t('admin.subtitle', 'Rehber doğrulama, rota moderasyonu ve içerik bildirimleri.')}
         </p>
       </header>
 
-      <nav className="flex flex-wrap gap-2" aria-label="Admin sekmeleri">
+      <nav className="flex flex-wrap gap-2" aria-label={t('admin.tabsAria', 'Admin sekmeleri')}>
         {tabs.map((t) => (
           <button
             key={t.id}
@@ -154,7 +156,7 @@ export default function AdminPage(): ReactElement {
       {tab === 'guides' ? (
         pending.length === 0 ? (
           <p className="rounded-[22px] border border-dashed px-4 py-10 text-center text-sm text-stone-500">
-            Bekleyen rehber başvurusu yok.
+            {t('admin.noPendingGuides', 'Bekleyen rehber başvurusu yok.')}
           </p>
         ) : (
           <ul className="space-y-4">
@@ -181,7 +183,7 @@ export default function AdminPage(): ReactElement {
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="h-4 w-4" />
-                    Belgeyi aç
+                    {t('admin.openDocument', 'Belgeyi aç')}
                   </a>
                 ) : null}
                 <div className="mt-4 flex flex-wrap gap-2">
@@ -192,7 +194,7 @@ export default function AdminPage(): ReactElement {
                     onClick={() => void handleGuideAction(g.guide_id, 'verify')}
                   >
                     <Check className="h-4 w-4" />
-                    Onayla
+                    {t('common.approve', 'Onayla')}
                   </button>
                   <button
                     type="button"
@@ -201,7 +203,7 @@ export default function AdminPage(): ReactElement {
                     onClick={() => void handleGuideAction(g.guide_id, 'reject')}
                   >
                     <X className="h-4 w-4" />
-                    Reddet
+                    {t('common.reject', 'Reddet')}
                   </button>
                 </div>
               </li>
@@ -213,7 +215,7 @@ export default function AdminPage(): ReactElement {
       {tab === 'routes' ? (
         pendingRoutes.length === 0 ? (
           <p className="rounded-[22px] border border-dashed px-4 py-10 text-center text-sm text-stone-500">
-            İncelemede rota yok.
+            {t('admin.noPendingRoutes', 'İncelemede rota yok.')}
           </p>
         ) : (
           <ul className="space-y-4">
@@ -224,7 +226,7 @@ export default function AdminPage(): ReactElement {
                   {r.city} · {r.estimated_minutes} dk · ₺{r.price.toFixed(2)} · Rehber #{r.guide_id}
                 </p>
                 <Link className="text-sm font-semibold text-primary" to={`/routes/${r.route_id}`}>
-                  Rotayı önizle →
+                  {t('admin.previewRoute', 'Rotayı önizle →')}
                 </Link>
                 <div className="mt-4 flex flex-wrap gap-2">
                   <button
@@ -233,7 +235,7 @@ export default function AdminPage(): ReactElement {
                     disabled={busyId === r.route_id}
                     onClick={() => void handleRouteAction(r.route_id, 'approve')}
                   >
-                    Onayla
+                    {t('common.approve', 'Onayla')}
                   </button>
                   <button
                     type="button"
@@ -241,7 +243,7 @@ export default function AdminPage(): ReactElement {
                     disabled={busyId === r.route_id}
                     onClick={() => void handleRouteAction(r.route_id, 'reject')}
                   >
-                    Değişiklik iste
+                    {t('admin.requestChanges', 'Değişiklik iste')}
                   </button>
                   <button
                     type="button"
@@ -249,7 +251,7 @@ export default function AdminPage(): ReactElement {
                     disabled={busyId === r.route_id}
                     onClick={() => void handleRouteAction(r.route_id, 'unpublish')}
                   >
-                    Yayından kaldır
+                    {t('admin.unpublish', 'Yayından kaldır')}
                   </button>
                 </div>
               </li>
@@ -261,7 +263,7 @@ export default function AdminPage(): ReactElement {
       {tab === 'reports' ? (
         reports.length === 0 ? (
           <p className="rounded-[22px] border border-dashed px-4 py-10 text-center text-sm text-stone-500">
-            Açık bildirim yok.
+            {t('admin.noOpenReports', 'Açık bildirim yok.')}
           </p>
         ) : (
           <ul className="space-y-3">
@@ -280,7 +282,7 @@ export default function AdminPage(): ReactElement {
                       void resolveReport(accessToken, rep.report_id, 'reviewed').then(load);
                     }}
                   >
-                    İncelendi
+                    {t('admin.reviewed', 'İncelendi')}
                   </button>
                   <button
                     type="button"
@@ -290,7 +292,7 @@ export default function AdminPage(): ReactElement {
                       void resolveReport(accessToken, rep.report_id, 'dismissed').then(load);
                     }}
                   >
-                    Reddet
+                    {t('common.reject', 'Reddet')}
                   </button>
                 </div>
               </li>
@@ -302,7 +304,7 @@ export default function AdminPage(): ReactElement {
       {tab === 'premium' ? (
         premiumRequests.length === 0 ? (
           <p className="rounded-[22px] border border-dashed px-4 py-10 text-center text-sm text-stone-500">
-            Bekleyen Premium talebi yok.
+            {t('admin.noPremiumRequests', 'Bekleyen Premium talebi yok.')}
           </p>
         ) : (
           <ul className="space-y-3">
@@ -322,18 +324,18 @@ export default function AdminPage(): ReactElement {
                       void reviewPremiumRequest(accessToken, req.request_id, 'approve').then(load);
                     }}
                   >
-                    Kabul et
+                    {t('admin.accept', 'Kabul et')}
                   </button>
                   <button
                     type="button"
                     className="text-sm font-bold text-stone-500"
                     onClick={() => {
                       if (!accessToken) return;
-                      const note = window.prompt('Red gerekçesi (isteğe bağlı):', '') ?? '';
+                      const note = window.prompt(t('admin.rejectReasonPrompt', 'Red gerekçesi (isteğe bağlı):'), '') ?? '';
                       void reviewPremiumRequest(accessToken, req.request_id, 'reject', note).then(load);
                     }}
                   >
-                    Reddet
+                    {t('common.reject', 'Reddet')}
                   </button>
                 </div>
               </li>
@@ -346,7 +348,7 @@ export default function AdminPage(): ReactElement {
         <div className="space-y-6 rounded-[22px] border border-stone-900/10 p-5 dark:border-white/10">
           {toolMsg ? <p className="text-sm font-semibold text-primary">{toolMsg}</p> : null}
           <div>
-            <h2 className="font-bold">POI senkron (OSM)</h2>
+            <h2 className="font-bold">{t('admin.poiSync', 'POI senkron (OSM)')}</h2>
             <label className="mt-2 block text-sm">
               city_id
               <input
@@ -361,15 +363,15 @@ export default function AdminPage(): ReactElement {
               onClick={() => {
                 if (!accessToken) return;
                 void syncPoi(accessToken, { city_id: Number(poiCityId) })
-                  .then((r) => setToolMsg(`POI: ${r.created} yeni, ${r.fetched} çekildi`))
+                  .then((r) => setToolMsg(t('admin.poiResult', { created: r.created, fetched: r.fetched }, 'POI: {created} yeni, {fetched} çekildi')))
                   .catch((e) => setError(formatApiError(e)));
               }}
             >
-              Senkronize et
+              {t('admin.sync', 'Senkronize et')}
             </button>
           </div>
           <div>
-            <h2 className="font-bold">Premium kullanıcı</h2>
+            <h2 className="font-bold">{t('admin.premiumUser', 'Premium kullanıcı')}</h2>
             <input
               className="theme-input mt-2 w-full rounded-xl border px-3 py-2"
               placeholder="user_id"
@@ -383,11 +385,11 @@ export default function AdminPage(): ReactElement {
                 onClick={() => {
                   if (!accessToken || !premiumUserId) return;
                   void setUserPremium(accessToken, Number(premiumUserId), true).then(() =>
-                    setToolMsg('Premium açıldı'),
+                    setToolMsg(t('admin.premiumGranted', 'Premium açıldı')),
                   );
                 }}
               >
-                Premium ver
+                {t('admin.grantPremium', 'Premium ver')}
               </button>
               <button
                 type="button"
@@ -395,11 +397,11 @@ export default function AdminPage(): ReactElement {
                 onClick={() => {
                   if (!accessToken || !premiumUserId) return;
                   void setUserPremium(accessToken, Number(premiumUserId), false).then(() =>
-                    setToolMsg('Premium kapatıldı'),
+                    setToolMsg(t('admin.premiumRevoked', 'Premium kapatıldı')),
                   );
                 }}
               >
-                Premium kaldır
+                {t('admin.revokePremium', 'Premium kaldır')}
               </button>
             </div>
           </div>

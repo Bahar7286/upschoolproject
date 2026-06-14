@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { useState } from 'react';
 
 import { ErrorAlert } from '../../components/ui/error-alert';
+import { useI18n } from '../../lib/i18n';
 import { findInsertAfterOrder, type MergedRouteStop } from '../../lib/merge-route-stops';
 import { ApiError, formatApiError } from '../../lib/api';
 import { addTripExtraStop, removeTripExtraStop } from '../../services/trip-extra-stop-service';
@@ -18,6 +19,7 @@ export function ActiveRoutePlanner({
   currentStopIndex: number;
   onSelectStop: (index: number) => void;
 }): ReactElement {
+  const { t } = useI18n();
   const accessToken = useAuthStore((s) => s.accessToken);
   const routeId = useActiveRouteStore((s) => s.routeId);
   const addExtraStopLocal = useActiveRouteStore((s) => s.addExtraStopLocal);
@@ -41,9 +43,9 @@ export function ActiveRoutePlanner({
 
   return (
     <div className="space-y-3">
-      <p className="text-xs font-bold uppercase tracking-wide text-primary">Rota planı</p>
+      <p className="text-xs font-bold uppercase tracking-wide text-primary">{t('activeRoute.planTitle', 'Rota planı')}</p>
       <p className="text-xs text-stone-600 dark:text-stone-400">
-        Eklediğiniz duraklar yalnızca size özeldir; orijinal rota değişmez.
+        {t('activeRoute.planHint', 'Eklediğiniz duraklar yalnızca size özeldir; orijinal rota değişmez.')}
       </p>
       {error ? (
         <p className="text-sm text-red-700" role="alert">
@@ -68,7 +70,7 @@ export function ActiveRoutePlanner({
               <span className="text-xs text-stone-500">{index + 1}.</span> {stop.title}
               {stop.is_extra ? (
                 <span className="ml-1 rounded bg-amber-100 px-1.5 text-[10px] font-bold text-amber-900 dark:bg-amber-950 dark:text-amber-200">
-                  Ek
+                  {t('activeRoute.extraBadge', 'Ek')}
                 </span>
               ) : null}
             </button>
@@ -77,7 +79,7 @@ export function ActiveRoutePlanner({
                 type="button"
                 className="tap-scale shrink-0 rounded-lg p-2 text-red-600"
                 disabled={busy}
-                aria-label="Ek durağı kaldır"
+                aria-label={t('activeRoute.removeExtra', 'Ek durağı kaldır')}
                 onClick={() => void handleRemove(stop)}
               >
                 <Trash2 className="h-4 w-4" />
@@ -91,6 +93,7 @@ export function ActiveRoutePlanner({
 }
 
 export function useAddPlaceToActiveRoute() {
+  const { t } = useI18n();
   const accessToken = useAuthStore((s) => s.accessToken);
   const routeId = useActiveRouteStore((s) => s.routeId);
   const mergedStops = useActiveRouteStore((s) => s.mergedStops);
@@ -107,10 +110,10 @@ export function useAddPlaceToActiveRoute() {
     insertAfterCurrent?: boolean;
   }): Promise<string | null> => {
     if (!accessToken) {
-      return 'Bu işlem için giriş yapmanız gerekir.';
+      return t('activeRoute.loginRequired', 'Bu işlem için giriş yapmanız gerekir.');
     }
     if (!routeId) {
-      return 'Önce bir rotayı başlatın (rota detay → Rotayı başlat).';
+      return t('activeRoute.startFirst', 'Önce bir rotayı başlatın (rota detay → Rotayı başlat).');
     }
     const merged = mergedStops();
     const insertAfter = params.insertAfterCurrent
@@ -130,7 +133,7 @@ export function useAddPlaceToActiveRoute() {
       return null;
     } catch (err) {
       if (err instanceof ApiError && err.status === 403) {
-        return 'Bu rotayı satın almanız veya ücretsiz rota seçmeniz gerekir.';
+        return t('activeRoute.purchaseRequired', 'Bu rotayı satın almanız veya ücretsiz rota seçmeniz gerekir.');
       }
       return formatApiError(err);
     }
@@ -157,12 +160,15 @@ export function AddToActiveRouteButton({
   className?: string;
 }): ReactElement {
   const { routeId, addPlace } = useAddPlaceToActiveRoute();
+  const { t } = useI18n();
   const [msg, setMsg] = useState('');
   const [busy, setBusy] = useState(false);
 
   if (!routeId) return <></>;
 
-  const needsLogin = msg.includes('giriş');
+  const addedMarker = t('activeRoute.added', 'Rotaya eklendi ✓');
+  const loginRequiredMsg = t('activeRoute.loginRequired', 'Bu işlem için giriş yapmanız gerekir.');
+  const needsLogin = msg === loginRequiredMsg;
 
   const runAdd = () => {
     setBusy(true);
@@ -176,7 +182,7 @@ export function AddToActiveRouteButton({
       google_place_id: googlePlaceId,
       insertAfterCurrent: true,
     }).then((err) => {
-      setMsg(err ?? 'Rotaya eklendi ✓');
+      setMsg(err ?? addedMarker);
       setBusy(false);
     });
   };
@@ -190,27 +196,27 @@ export function AddToActiveRouteButton({
         onClick={runAdd}
       >
         <ListPlus className="h-5 w-5" aria-hidden="true" />
-        {busy ? 'Ekleniyor…' : 'Aktif rotaya ekle (sonrasına)'}
+        {busy ? t('activeRoute.adding', 'Ekleniyor…') : t('activeRoute.addAfterCurrent', 'Aktif rotaya ekle (sonrasına)')}
       </button>
       {msg && needsLogin ? (
         <ErrorAlert
           error={{
             kind: 'unauthorized',
             message: msg,
-            actionLabel: 'Giriş yap',
+            actionLabel: t('auth.loginTitle', 'Giriş yap'),
             actionTo: '/login',
           }}
           onRetry={runAdd}
         />
       ) : msg ? (
         <p
-          className={`mt-2 text-xs font-medium ${msg.includes('eklendi') ? 'text-primary' : 'text-red-700'}`}
+          className={`mt-2 text-xs font-medium ${msg === addedMarker ? 'text-primary' : 'text-red-700'}`}
           role="status"
         >
           {msg}
-          {!msg.includes('eklendi') && !needsLogin ? (
+          {msg !== addedMarker && !needsLogin ? (
             <button type="button" className="ml-2 font-bold text-primary underline" onClick={runAdd}>
-              Tekrar dene
+              {t('activeRoute.retry', 'Tekrar dene')}
             </button>
           ) : null}
         </p>

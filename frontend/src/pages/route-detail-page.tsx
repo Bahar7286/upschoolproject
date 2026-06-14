@@ -28,6 +28,7 @@ import { ContentReportForm } from '../components/routes/content-report-form';
 import { JsonLd } from '../components/seo/json-ld';
 import { PageMeta } from '../components/seo/page-meta';
 import { getGuidePublicProfile, type GuideProfile } from '../services/guide-profile-service';
+import { useI18n } from '../lib/i18n';
 import { fetchPaymentConfig } from '../services/payment-checkout-service';
 import { getRouteReviewSummary } from '../services/social-service';
 import type { RouteResponse } from '../types/route';
@@ -39,6 +40,7 @@ const LeafletRegionMap = lazy(() =>
 );
 
 export default function RouteDetailPage(): ReactElement {
+  const { t } = useI18n();
   const { routeId } = useParams();
   const id = Number(routeId);
   const navigate = useNavigate();
@@ -71,7 +73,7 @@ export default function RouteDetailPage(): ReactElement {
 
   useEffect(() => {
     if (!Number.isFinite(id) || id <= 0) {
-      setError('Geçersiz rota.');
+      setError(t('routeDetail.invalidRoute', 'Geçersiz rota.'));
       setLoading(false);
       return;
     }
@@ -182,7 +184,7 @@ export default function RouteDetailPage(): ReactElement {
       city: route.city,
       savedAt: new Date().toISOString(),
     });
-    setSuccess('Offline paket cihazınıza kaydedildi. Ses sayfasından çevrimdışı kullanabilirsiniz.');
+    setSuccess(t('routeDetail.offlineSaved', 'Offline paket cihazınıza kaydedildi. Ses sayfasından çevrimdışı kullanabilirsiniz.'));
   };
 
   if (loading) {
@@ -196,12 +198,12 @@ export default function RouteDetailPage(): ReactElement {
           error={{
             kind: 'api',
             message: error,
-            actionLabel: 'Keşfe dön',
+            actionLabel: t('common.goDiscover', 'Keşfe dön'),
             actionTo: '/discover',
           }}
         />
         <Link className="tap-scale inline-flex min-h-[44px] items-center rounded-xl border-2 border-stone-300 px-4 font-semibold" to="/discover">
-          Keşfe dön
+          {t('common.goDiscover', 'Keşfe dön')}
         </Link>
       </section>
     );
@@ -225,13 +227,13 @@ export default function RouteDetailPage(): ReactElement {
 
   const metaDesc =
     route.seo_description?.trim() ||
-    `${route.city} — ${route.estimated_minutes} dakikalık yürüyüş rotası, ${stops.length} durak. Sesli anlatım ve harita ile keşfet.`;
+    t('routeDetail.metaDesc', { city: route.city, minutes: route.estimated_minutes, stops: stops.length }, '{city} — {minutes} dakikalık yürüyüş rotası, {stops} durak. Sesli anlatım ve harita ile keşfet.');
 
   return (
     <section className="space-y-6">
       <BackButton />
       <PageMeta
-        title={`${route.title} — ${route.city} Yürüyüş Rotası`}
+        title={`${route.title} — ${route.city} ${t('routeDetail.walkingRoute', 'Yürüyüş Rotası')}`}
         description={metaDesc}
         path={`/routes/${route.route_id}`}
       />
@@ -251,7 +253,7 @@ export default function RouteDetailPage(): ReactElement {
       />
       <Breadcrumbs
         items={[
-          { label: 'Keşfet', to: '/discover' },
+          { label: t('common.discover', 'Keşfet'), to: '/discover' },
           { label: route.city },
           { label: route.title },
         ]}
@@ -264,9 +266,9 @@ export default function RouteDetailPage(): ReactElement {
           <p className="route-card-muted mt-2 text-sm leading-relaxed">{route.seo_description}</p>
         ) : null}
         <p className="route-card-muted mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-          <span>{route.estimated_minutes} dakika</span>
+          <span>{route.estimated_minutes} {t('routeDetail.minutes', 'dakika')}</span>
           <span aria-hidden="true">·</span>
-          <span>{stops.length} durak</span>
+          <span>{stops.length} {t('routeDetail.stops', 'durak')}</span>
           <span aria-hidden="true">·</span>
           <span>₺{route.price.toFixed(2)}</span>
           {guide ? (
@@ -284,16 +286,16 @@ export default function RouteDetailPage(): ReactElement {
             <>
               <span aria-hidden="true">·</span>
               <Link className="font-semibold underline" to={`/rehberler/${route.guide_id}`}>
-                Rehber profili
+                {t('routeDetail.guideProfile', 'Rehber profili')}
               </Link>
             </>
           )}
         </p>
         {!stripeEnabled ? (
           <p className="mt-2 rounded-lg bg-amber-500/20 px-3 py-1.5 text-xs font-semibold text-amber-100">
-            Test ödemesi — gerçek ücret alınmaz.{' '}
+            {t('routeDetail.testPayment', 'Test ödemesi — gerçek ücret alınmaz.')}{' '}
             <Link className="underline" to="/odeme-guvenlik">
-              Detay
+              {t('routeDetail.details', 'Detay')}
             </Link>
           </p>
         ) : null}
@@ -305,7 +307,7 @@ export default function RouteDetailPage(): ReactElement {
               onClick={handleStartRoute}
             >
               <MapPin className="h-5 w-5" aria-hidden="true" />
-              Rotayı Başlat
+              {t('routeDetail.startRoute', 'Rotayı Başlat')}
             </button>
           ) : (
             <button
@@ -315,14 +317,14 @@ export default function RouteDetailPage(): ReactElement {
               onClick={handlePurchase}
             >
               <ShoppingCart className="h-5 w-5" aria-hidden="true" />
-              {busy ? 'İşleniyor…' : `Satın Al · ₺${route.price.toFixed(2)}`}
+              {busy ? t('common.processing', 'İşleniyor…') : t('routeDetail.buy', { price: route.price.toFixed(2) }, 'Satın Al · ₺{price}')}
             </button>
           )}
           <Link
             className="tap-scale responsive-btn rounded-xl border-2 border-white/40 px-5 font-semibold text-white hover:bg-white/10"
             to={`/map?route=${route.route_id}`}
           >
-            Haritada gör
+            {t('routeDetail.viewOnMap', 'Haritada gör')}
           </Link>
           {accessToken && user?.role !== 'guide' ? (
             <Link
@@ -330,7 +332,7 @@ export default function RouteDetailPage(): ReactElement {
               to={`/talepler/yeni?routeId=${route.route_id}`}
             >
               <MessageSquarePlus className="h-5 w-5" aria-hidden="true" />
-              Rehberlerden teklif al
+              {t('routeDetail.getOffers', 'Rehberlerden teklif al')}
             </Link>
           ) : null}
           {accessToken ? (
@@ -340,7 +342,7 @@ export default function RouteDetailPage(): ReactElement {
               state={{ routeId: route.route_id, title: route.title }}
             >
               <CalendarPlus className="h-5 w-5" aria-hidden="true" />
-              Plana ekle
+              {t('routeDetail.addToPlan', 'Plana ekle')}
             </Link>
           ) : null}
           {owned ? (
@@ -350,7 +352,7 @@ export default function RouteDetailPage(): ReactElement {
                 to="/map?active=1"
               >
                 <Headphones className="h-5 w-5" aria-hidden="true" />
-                Sesli rehber
+                {t('routeDetail.audioGuide', 'Sesli rehber')}
               </Link>
               <button
                 className="tap-scale responsive-btn rounded-xl border-2 border-amber-300/80 bg-amber-500/20 px-5 font-semibold text-white hover:bg-amber-500/30"
@@ -358,7 +360,7 @@ export default function RouteDetailPage(): ReactElement {
                 onClick={handleOfflineDownload}
               >
                 <Download className="h-5 w-5" aria-hidden="true" />
-                Offline indir
+                {t('routeDetail.offlineDownload', 'Offline indir')}
               </button>
             </>
           ) : null}
@@ -387,7 +389,7 @@ export default function RouteDetailPage(): ReactElement {
       {stops.length > 0 ? (
         <section aria-labelledby="map-preview-title">
           <h2 className="font-display text-xl font-bold text-heritage-ink dark:text-stone-50" id="map-preview-title">
-            Harita önizleme
+            {t('routeDetail.mapPreview', 'Harita önizleme')}
           </h2>
           <div className="mt-3">
             <LeafletRegionMap center={mapCenter} zoom={14} places={mapPlaces} />
@@ -397,7 +399,7 @@ export default function RouteDetailPage(): ReactElement {
 
       <section aria-labelledby="stops-title">
         <h2 className="font-display text-xl font-bold text-heritage-ink dark:text-stone-50" id="stops-title">
-          Duraklar ({stops.length})
+          {t('routeDetail.stopsTitle', { count: stops.length }, 'Duraklar ({count})')}
         </h2>
         <ol className="mt-4 space-y-4">
           {stops.map((stop, index) => {
@@ -414,7 +416,7 @@ export default function RouteDetailPage(): ReactElement {
                   <div className="min-w-0 flex-1 space-y-2">
                     <h3 className="font-bold text-heritage-ink dark:text-stone-50">{stop.title}</h3>
                     <p className="text-sm text-stone-600 dark:text-stone-400">
-                      {locked ? 'Satın alarak tüm durakları açın.' : stop.description || 'Anlatım metni yakında.'}
+                      {locked ? t('routeDetail.unlockStops', 'Satın alarak tüm durakları açın.') : stop.description || t('routeDetail.narrationSoon', 'Anlatım metni yakında.')}
                     </p>
                     {!locked ? (
                       <p className="text-xs text-stone-500">
@@ -434,12 +436,12 @@ export default function RouteDetailPage(): ReactElement {
                           aria-busy={audioBusy}
                         >
                           <Play className="h-4 w-4" aria-hidden="true" />
-                          {audioBusy ? 'Ses yükleniyor…' : speaking ? 'Sesi durdur' : 'Sesli rehberi başlat'}
+                          {audioBusy ? t('routeDetail.stopAudioLoading', 'Ses yükleniyor…') : speaking ? t('routeDetail.stopAudioStop', 'Sesi durdur') : t('routeDetail.stopAudioStart', 'Sesli rehberi başlat')}
                         </button>
                         {stop.description ? (
                           <details className="rounded-lg border border-stone-900/10 bg-stone-50/80 px-3 py-2 text-sm dark:border-white/10 dark:bg-zinc-900/50">
                             <summary className="cursor-pointer font-semibold text-stone-700 dark:text-stone-300">
-                              Metin alternatifi (ses dinleyemiyorsan)
+                              {t('routeDetail.textAltSummary', 'Metin alternatifi (ses dinleyemiyorsan)')}
                             </summary>
                             <p className="mt-2 leading-relaxed text-stone-600 dark:text-stone-400">{stop.description}</p>
                           </details>
@@ -452,13 +454,13 @@ export default function RouteDetailPage(): ReactElement {
             );
           })}
         </ol>
-        {stops.length === 0 ? <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">Bu rota için durak kaydı yok.</p> : null}
+        {stops.length === 0 ? <p className="mt-4 text-sm text-stone-600 dark:text-stone-400">{t('routeDetail.noStops', 'Bu rota için durak kaydı yok.')}</p> : null}
       </section>
 
       <div className="text-center text-xs text-stone-500">
-        İade:{' '}
+        {t('routeDetail.refund', 'İade:')}{' '}
         <Link className="font-semibold text-primary underline" to="/iade">
-          iade politikası
+          {t('routeDetail.refundPolicy', 'iade politikası')}
         </Link>
         <div className="mt-2 flex justify-center">
           <ContentReportForm entityType="route" entityId={route.route_id} />

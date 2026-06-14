@@ -15,10 +15,12 @@ import { listPlaces } from '../services/place-service';
 import type { PlaceCategory } from '../types/place';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
 
-const CATEGORIES: { id: PlaceCategory; label: string; emoji: string }[] = [
-  { id: 'museum', label: 'Gezilecek', emoji: '🏛️' },
-  { id: 'restaurant', label: 'Yeme-İçme', emoji: '🍽️' },
-  { id: 'accommodation', label: 'Konaklama', emoji: '🛏️' },
+const CATEGORIES: { id: PlaceCategory; labelKey: string; emoji: string }[] = [
+  { id: 'museum', labelKey: 'city.sightseeing', emoji: '🏛️' },
+  { id: 'historical', labelKey: 'city.sightseeing', emoji: '🏰' },
+  { id: 'mosque', labelKey: 'district.museum', emoji: '🕌' },
+  { id: 'restaurant', labelKey: 'city.food', emoji: '🍽️' },
+  { id: 'accommodation', labelKey: 'city.stay', emoji: '🛏️' },
 ];
 
 export default function CityDetailPage(): ReactElement {
@@ -77,15 +79,16 @@ export default function CityDetailPage(): ReactElement {
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="city-title">
           {city?.name_tr ?? 'Yükleniyor…'}
         </h1>
-        <p className="text-sm text-theme-muted">İlçe seç → mekanları gör</p>
+        <p className="text-sm text-theme-muted">{t('city.pickDistrict', 'İlçe seç → mekanları gör')}</p>
       </header>
 
+      <p className="px-1 text-xs font-bold uppercase tracking-wide text-primary">{t('city.categories', 'Mekan türleri')}</p>
       <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-        {CATEGORIES.map(({ id: catId, label, emoji }) => (
+        {CATEGORIES.map(({ id: catId, labelKey, emoji }) => (
           <CategoryIconCard
             key={catId}
             to={`/cities/${id}/places?category=${catId}`}
-            label={label}
+            label={t(labelKey, catId)}
             emoji={emoji}
           />
         ))}

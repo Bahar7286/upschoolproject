@@ -9,7 +9,7 @@ import { ListSkeleton } from '../components/loading/page-skeleton';
 import { EmptyState } from '../components/ui/empty-state';
 import { ErrorAlert } from '../components/ui/error-alert';
 import { DEMO_ROUTES } from '../data/demo-routes';
-import { EMPTY_STATES } from '../content/empty-states';
+import { useEmptyStates } from '../hooks/use-empty-states';
 import { useI18n } from '../lib/i18n';
 import { recommendWithAi, generatePersonalRoute, type AIRecommendationItem, type PersonalRouteGenerateResponse } from '../services/ai-service';
 import { listCities } from '../services/city-service';
@@ -32,6 +32,7 @@ function isScoredRoute(route: RouteResponse | ScoredRoute): route is ScoredRoute
 
 export default function DiscoverPage(): ReactElement {
   const { t } = useI18n();
+  const emptyStates = useEmptyStates();
   const [searchParams] = useSearchParams();
   const user = useAuthStore((s) => s.user);
   const { data: routes = [], isPending, isError, error, refetch } = useRoutesQuery();
@@ -415,10 +416,10 @@ export default function DiscoverPage(): ReactElement {
 
       {noCityRoutes ? (
         <EmptyState
-          icon={EMPTY_STATES.search.icon}
-          title={`${effectiveCity} için henüz rehber rotası yok`}
-          description="AI ile kişisel rota oluşturabilir veya illerden mekanları keşfedebilirsin."
-          actionLabel="Kişisel rota oluştur"
+          icon={emptyStates.search.icon}
+          title={t('discover.noCityRoutesTitle', { city: effectiveCity }, '{city} için henüz rehber rotası yok')}
+          description={t('discover.noCityRoutesDesc', 'AI ile kişisel rota oluşturabilir veya illerden mekanları keşfedebilirsin.')}
+          actionLabel={t('discover.noCityRoutesAction', 'Kişisel rota oluştur')}
           actionTo="/discover?ai=1"
         />
       ) : null}

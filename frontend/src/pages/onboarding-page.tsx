@@ -16,28 +16,28 @@ import { useOnboardingStore } from '../stores/onboarding-store';
 import { filterRoutesByCityStrict } from '../utils/city-match';
 import type { RouteResponse } from '../types/route';
 
-const INTERESTS = [
-  { id: 'history', label: 'Tarih', icon: '🏛' },
-  { id: 'art', label: 'Sanat', icon: '🎨' },
-  { id: 'architecture', label: 'Mimari', icon: '🏗' },
-  { id: 'gastronomy', label: 'Gastronomi', icon: '🍽' },
-  { id: 'hidden', label: 'Gizli Köşeler', icon: '🔍' },
-  { id: 'religious', label: 'Dini', icon: '🕌' },
-  { id: 'modern', label: 'Modern', icon: '⚡' },
-];
+const INTEREST_IDS = [
+  { id: 'history', key: 'onboarding.interestHistory', icon: '🏛' },
+  { id: 'art', key: 'onboarding.interestArt', icon: '🎨' },
+  { id: 'architecture', key: 'onboarding.interestArchitecture', icon: '🏗' },
+  { id: 'gastronomy', key: 'onboarding.interestGastronomy', icon: '🍽' },
+  { id: 'hidden', key: 'onboarding.interestHidden', icon: '🔍' },
+  { id: 'religious', key: 'onboarding.interestReligious', icon: '🕌' },
+  { id: 'modern', key: 'onboarding.interestModern', icon: '⚡' },
+] as const;
 
-const DURATIONS = [
-  { value: 60, label: '1 saat' },
-  { value: 120, label: '2 saat' },
-  { value: 240, label: 'Yarım gün' },
-  { value: 480, label: 'Tam gün' },
-];
+const DURATION_VALUES = [
+  { value: 60, key: 'onboarding.duration1h' },
+  { value: 120, key: 'onboarding.duration2h' },
+  { value: 240, key: 'onboarding.durationHalf' },
+  { value: 480, key: 'onboarding.durationFull' },
+] as const;
 
-const BUDGETS = [
-  { value: 500, label: '₺300–500' },
-  { value: 1500, label: '₺500–1500' },
-  { value: 3500, label: '₺1500+' },
-];
+const BUDGET_VALUES = [
+  { value: 500, key: 'onboarding.budgetLow' },
+  { value: 1500, key: 'onboarding.budgetMid' },
+  { value: 3500, key: 'onboarding.budgetHigh' },
+] as const;
 
 const POPULAR_CITIES = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Kapadokya', 'Trabzon', 'Gaziantep'];
 
@@ -56,7 +56,7 @@ function scoreByInterests(routes: RouteResponse[], interestIds: string[]): Route
 
 export default function OnboardingPage(): ReactElement {
   const navigate = useNavigate();
-  const { setLocale } = useI18n();
+  const { t, setLocale } = useI18n();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
   const setUser = useAuthStore((s) => s.setUser);
@@ -125,12 +125,12 @@ export default function OnboardingPage(): ReactElement {
       setRecommended(ranked.slice(0, 3));
       if (ranked.length === 0) {
         setRouteWarning(
-          `${preferredCity} için henüz rota yok. Keşfet sayfasından diğer şehirlere bakabilirsin.`,
+          t('onboarding.noRoutesWarning', { city: preferredCity }, '{city} için henüz rota yok. Keşfet sayfasından diğer şehirlere bakabilirsin.'),
         );
       }
     } catch (err) {
       setRouteWarning(
-        `${formatApiError(err)} Yine de "${preferredCity} Rotalarını Keşfet" ile devam edebilirsin.`,
+        t('onboarding.errorContinue', { error: formatApiError(err), city: preferredCity }, '{error} Yine de "{city} Rotalarını Keşfet" ile devam edebilirsin.'),
       );
       setRecommended([]);
     } finally {
@@ -183,7 +183,7 @@ export default function OnboardingPage(): ReactElement {
   const goNext = () => {
     setError('');
     if (step === 3 && interests.length < 2) {
-      setError('En az 2 ilgi alanı seçmelisin.');
+      setError(t('onboarding.minInterests', 'En az 2 ilgi alanı seçmelisin.'));
       return;
     }
     if (step === 5) {
@@ -193,7 +193,7 @@ export default function OnboardingPage(): ReactElement {
     setStep(step + 1);
   };
 
-  const cityCta = `${preferredCity} Rotalarını Keşfet`;
+  const cityCta = t('onboarding.exploreCityRoutes', { city: preferredCity }, '{city} Rotalarını Keşfet');
 
   return (
     <section className="mx-auto max-w-lg space-y-6 px-1 py-4" aria-labelledby="onb-title">
@@ -209,9 +209,9 @@ export default function OnboardingPage(): ReactElement {
             }}
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            {step > 1 ? 'Geri' : 'Çık'}
+            {step > 1 ? t('common.back', 'Geri') : t('common.exit', 'Çık')}
           </button>
-          <span>{step <= TOTAL_STEPS ? `${step}/${TOTAL_STEPS}` : 'Sonuç'}</span>
+          <span>{step <= TOTAL_STEPS ? `${step}/${TOTAL_STEPS}` : t('common.result', 'Sonuç')}</span>
         </div>
         <div className="h-2 overflow-hidden rounded-full bg-stone-200 dark:bg-zinc-800">
           <div
@@ -234,11 +234,11 @@ export default function OnboardingPage(): ReactElement {
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="onb-title">
-              Hangi şehirde gezeceksin?
+              {t('onboarding.cityTitle', 'Hangi şehirde gezeceksin?')}
             </h1>
-            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">Rotalarını bu şehre göre özelleştireceğiz</p>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{t('onboarding.cityHint', 'Rotalarını bu şehre göre özelleştireceğiz')}</p>
           </header>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Şehir seçimi">
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t('onboarding.cityAria', 'Şehir seçimi')}>
             {cityOptions.map((name) => (
               <button
                 key={name}
@@ -261,7 +261,7 @@ export default function OnboardingPage(): ReactElement {
             type="button"
             onClick={goNext}
           >
-            Süreyi seç <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            {t('onboarding.pickDuration', 'Süreyi seç')} <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -270,15 +270,15 @@ export default function OnboardingPage(): ReactElement {
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-              Ne kadar zamanın var?
+              {t('onboarding.durationTitle', 'Ne kadar zamanın var?')}
             </h1>
             <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
               <Clock className="mr-1 inline h-4 w-4" aria-hidden="true" />
-              {preferredCity} için gezi süren
+              {t('onboarding.durationHint', { city: preferredCity }, '{city} için gezi süren')}
             </p>
           </header>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Süre">
-            {DURATIONS.map((d) => (
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t('onboarding.durationAria', 'Süre')}>
+            {DURATION_VALUES.map((d) => (
               <button
                 key={d.value}
                 type="button"
@@ -290,7 +290,7 @@ export default function OnboardingPage(): ReactElement {
                 aria-pressed={durationMinutes === d.value}
                 onClick={() => setDurationMinutes(d.value)}
               >
-                {d.label}
+                {t(d.key, d.value === 60 ? '1 saat' : d.value === 120 ? '2 saat' : d.value === 240 ? 'Yarım gün' : 'Tam gün')}
               </button>
             ))}
           </div>
@@ -299,7 +299,7 @@ export default function OnboardingPage(): ReactElement {
             type="button"
             onClick={goNext}
           >
-            İlgi alanlarını seç <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            {t('onboarding.pickInterests', 'İlgi alanlarını seç')} <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -308,13 +308,22 @@ export default function OnboardingPage(): ReactElement {
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-              İlgi alanın ne?
+              {t('onboarding.interestsTitle', 'İlgi alanın ne?')}
             </h1>
-            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">En az 2 seç · AI önerilerin buna göre şekillenir</p>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{t('onboarding.interestsHint', 'En az 2 seç · AI önerilerin buna göre şekillenir')}</p>
           </header>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="İlgi alanları">
-            {INTERESTS.map((item) => {
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t('onboarding.interestsAria', 'İlgi alanları')}>
+            {INTEREST_IDS.map((item) => {
               const active = interests.includes(item.id);
+              const fallbacks: Record<string, string> = {
+                'onboarding.interestHistory': 'Tarih',
+                'onboarding.interestArt': 'Sanat',
+                'onboarding.interestArchitecture': 'Mimari',
+                'onboarding.interestGastronomy': 'Gastronomi',
+                'onboarding.interestHidden': 'Gizli Köşeler',
+                'onboarding.interestReligious': 'Dini',
+                'onboarding.interestModern': 'Modern',
+              };
               return (
                 <button
                   key={item.id}
@@ -327,19 +336,19 @@ export default function OnboardingPage(): ReactElement {
                   aria-pressed={active}
                   onClick={() => toggleInterest(item.id)}
                 >
-                  {item.icon} {item.label}
+                  {item.icon} {t(item.key, fallbacks[item.key] ?? item.id)}
                 </button>
               );
             })}
           </div>
-          <p className="text-xs text-stone-500">Seçilen: {interests.length}</p>
+          <p className="text-xs text-stone-500">{t('onboarding.selectedCount', { count: interests.length }, 'Seçilen: {count}')}</p>
           <button
             className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-primary font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-50"
             type="button"
             disabled={interests.length < 2}
             onClick={goNext}
           >
-            Bütçeni belirle <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            {t('onboarding.pickBudget', 'Bütçeni belirle')} <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -348,14 +357,14 @@ export default function OnboardingPage(): ReactElement {
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-              Bütçen nedir?
+              {t('onboarding.budgetTitle', 'Bütçen nedir?')}
             </h1>
             <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-              Günlük gezi bütçesi (ulaşım, yemek, müze girişleri dahil)
+              {t('onboarding.budgetHint', 'Günlük gezi bütçesi (ulaşım, yemek, müze girişleri dahil)')}
             </p>
           </header>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Bütçe">
-            {BUDGETS.map((b) => (
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t('onboarding.budgetAria', 'Bütçe')}>
+            {BUDGET_VALUES.map((b) => (
               <button
                 key={b.value}
                 type="button"
@@ -367,7 +376,7 @@ export default function OnboardingPage(): ReactElement {
                 aria-pressed={budget === b.value}
                 onClick={() => setBudget(b.value)}
               >
-                {b.label}
+                {t(b.key, b.value === 500 ? '₺300–500' : b.value === 1500 ? '₺500–1500' : '₺1500+')}
               </button>
             ))}
           </div>
@@ -376,7 +385,7 @@ export default function OnboardingPage(): ReactElement {
             type="button"
             onClick={goNext}
           >
-            Dil tercihini seç <ArrowRight className="h-5 w-5" aria-hidden="true" />
+            {t('onboarding.pickLanguage', 'Dil tercihini seç')} <ArrowRight className="h-5 w-5" aria-hidden="true" />
           </button>
         </div>
       )}
@@ -385,11 +394,11 @@ export default function OnboardingPage(): ReactElement {
         <div className="space-y-5 animate-fade-in-up">
           <header>
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
-              Dil tercihin nedir?
+              {t('onboarding.languageTitle', 'Dil tercihin nedir?')}
             </h1>
-            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">Sesli rehber ve arayüz dili</p>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{t('onboarding.languageHint', 'Sesli rehber ve arayüz dili')}</p>
           </header>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Dil">
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t('onboarding.languageAria', 'Dil')}>
             {(
               [
                 { id: 'tr' as const, label: 'Türkçe' },
@@ -421,7 +430,7 @@ export default function OnboardingPage(): ReactElement {
             onClick={goNext}
           >
             <Sparkles className="h-5 w-5" aria-hidden="true" />
-            Kişisel rotalarımı hazırla
+            {t('onboarding.prepareRoutes', 'Kişisel rotalarımı hazırla')}
           </button>
         </div>
       )}
@@ -434,7 +443,7 @@ export default function OnboardingPage(): ReactElement {
               <ListSkeleton count={3} />
               {slowFallback ? (
                 <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
-                  Öneriler biraz uzun sürdü. Hazır olunca burada göreceksin; istersen keşfe de geçebilirsin.
+                  {t('onboarding.slowHint', 'Öneriler biraz uzun sürdü. Hazır olunca burada göreceksin; istersen keşfe de geçebilirsin.')}
                 </p>
               ) : null}
             </div>
@@ -452,14 +461,14 @@ export default function OnboardingPage(): ReactElement {
                       className="font-bold text-primary underline"
                       onClick={() => void loadRecommendations()}
                     >
-                      Tekrar dene
+                      {t('common.retry', 'Tekrar dene')}
                     </button>
                     <button
                       type="button"
                       className="font-bold text-stone-700 underline dark:text-stone-300"
                       onClick={() => setRouteWarning('')}
                     >
-                      Kapat
+                      {t('common.close', 'Kapat')}
                     </button>
                   </div>
                   {import.meta.env.DEV ? (
@@ -470,11 +479,11 @@ export default function OnboardingPage(): ReactElement {
               <header className="text-center">
                 <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
                   {recommended.length > 0
-                    ? `Sana en uygun ${recommended.length} rota hazırlandı`
-                    : 'Tercihlerin kaydedildi'}
+                    ? t('onboarding.resultsTitle', { count: recommended.length }, 'Sana en uygun {count} rota hazırlandı')
+                    : t('onboarding.preferencesSaved', 'Tercihlerin kaydedildi')}
                 </h1>
                 <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-                  {preferredCity} · {interests.length} ilgi alanı · {durationMinutes} dk
+                  {t('onboarding.resultsSummary', { city: preferredCity, interests: interests.length, minutes: durationMinutes }, '{city} · {interests} ilgi alanı · {minutes} dk')}
                 </p>
               </header>
               <ul className="space-y-3">
@@ -486,7 +495,7 @@ export default function OnboardingPage(): ReactElement {
                     >
                       <p className="font-bold text-heritage-ink dark:text-stone-50">{route.title}</p>
                       <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-                        {route.city} · {route.estimated_minutes} dk · ₺{route.price.toFixed(0)}
+                        {route.city} · {route.estimated_minutes} {t('common.minutes', 'dk')} · ₺{route.price.toFixed(0)}
                       </p>
                     </Link>
                   </li>
@@ -494,7 +503,7 @@ export default function OnboardingPage(): ReactElement {
               </ul>
               {recommended.length === 0 && !routeWarning ? (
                 <p className="text-center text-sm text-stone-600 dark:text-stone-400">
-                  Bu şehir için henüz özel eşleşme yok; keşifte tüm rotalara bakabilirsin.
+                  {t('onboarding.noMatch', 'Bu şehir için henüz özel eşleşme yok; keşifte tüm rotalara bakabilirsin.')}
                 </p>
               ) : null}
               <button
@@ -503,7 +512,7 @@ export default function OnboardingPage(): ReactElement {
                 disabled={busy}
                 onClick={() => void completeOnboarding(true)}
               >
-                {busy ? 'Kaydediliyor…' : cityCta}
+                {busy ? t('common.saving', 'Kaydediliyor…') : cityCta}
               </button>
               <button
                 className="tap-scale w-full min-h-[44px] text-sm font-semibold text-primary underline-offset-4 hover:underline"
@@ -511,7 +520,7 @@ export default function OnboardingPage(): ReactElement {
                 disabled={busy}
                 onClick={() => setStep(1)}
               >
-                Tercihlerimi düzenle
+                {t('onboarding.editPreferences', 'Tercihlerimi düzenle')}
               </button>
             </>
           )}

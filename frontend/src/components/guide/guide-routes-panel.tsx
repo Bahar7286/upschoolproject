@@ -6,7 +6,8 @@ import { ButtonLink } from '../ui/button';
 import { EmptyState } from '../ui/empty-state';
 import { ErrorAlert } from '../ui/error-alert';
 import { ApiError, getApiBaseUrl } from '../../lib/api';
-import { EMPTY_STATES } from '../../content/empty-states';
+import { useEmptyStates } from '../../hooks/use-empty-states';
+import { useI18n } from '../../lib/i18n';
 import { mapError } from '../../lib/user-errors';
 import {
   listGuideRoutes,
@@ -16,17 +17,19 @@ import {
 import type { RouteResponse } from '../../types/route';
 import { useAuthStore } from '../../stores/auth-store';
 
-const STATUS_LABEL: Record<string, string> = {
-  draft: 'Taslak',
-  in_review: 'İncelemede',
-  changes_requested: 'Düzeltme gerekli',
-  approved: 'Onaylandı — yayınla',
-  published: 'Yayında',
-  unpublished: 'Yayından kaldırıldı',
-  archived: 'Arşiv',
+const STATUS_KEYS: Record<string, string> = {
+  draft: 'guideRoutes.statusDraft',
+  in_review: 'guideRoutes.statusInReview',
+  changes_requested: 'guideRoutes.statusChanges',
+  approved: 'guideRoutes.statusApproved',
+  published: 'guideRoutes.statusPublished',
+  unpublished: 'guideRoutes.statusUnpublished',
+  archived: 'guideRoutes.statusArchived',
 };
 
 export function GuideRoutesPanel(): ReactElement {
+  const { t } = useI18n();
+  const emptyStates = useEmptyStates();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
   const location = useLocation();
@@ -44,9 +47,9 @@ export function GuideRoutesPanel(): ReactElement {
       setError('');
     } catch (err) {
       if (err instanceof ApiError && err.status === 404) {
-        setError('Rehber profili bulunamadı. Çıkış yapıp rehber olarak tekrar giriş yapmayı dene.');
+        setError(t('guideRoutes.profileNotFound', 'Rehber profili bulunamadı.'));
       } else if (err instanceof TypeError || (err instanceof ApiError && err.status === 0)) {
-        setError(`Sunucuya ulaşılamıyor (${getApiBaseUrl()}). API çalışıyor mu kontrol et.`);
+        setError(t('guideRoutes.serverUnreachable', 'Sunucuya ulaşılamıyor ({url}).').replace('{url}', getApiBaseUrl()));
       } else {
         setError(mapError(err).message);
       }
@@ -60,11 +63,11 @@ export function GuideRoutesPanel(): ReactElement {
   useEffect(() => {
     const state = location.state as { routeCreated?: number; routeUpdated?: number } | null;
     if (state?.routeCreated) {
-      setCreatedBanner('Rota taslak olarak kaydedildi. İncelemeye gönderebilirsin.');
+      setCreatedBanner(t('guideRoutes.createdBanner', 'Rota taslak olarak kaydedildi.'));
       window.history.replaceState({}, document.title);
     }
     if (state?.routeUpdated) {
-      setUpdatedBanner('Rota güncellendi.');
+      setUpdatedBanner(t('guideRoutes.updatedBanner', 'Rota güncellendi.'));
       window.history.replaceState({}, document.title);
     }
   }, [location.state]);
@@ -99,13 +102,13 @@ export function GuideRoutesPanel(): ReactElement {
     <section className="rounded-[22px] border border-stone-900/10 bg-white/90 p-5 dark:border-white/10 dark:bg-zinc-900/95">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="font-display text-lg font-bold">Rotalarım</h2>
+          <h2 className="font-display text-lg font-bold">{t('guideRoutes.title', 'Rotalarım')}</h2>
           <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-            Taslak → incelemeye gönder → admin onayı → yayınla
+            {t('guideRoutes.workflowHint', 'Taslak → incelemeye gönder → admin onayı → yayınla')}
           </p>
         </div>
         <ButtonLink className="shrink-0" to="/guide/rotalar/yeni">
-          + Yeni rota
+          {t('guideRoutes.newRoute', '+ Yeni rota')}
         </ButtonLink>
       </div>
       {createdBanner ? (
@@ -125,7 +128,7 @@ export function GuideRoutesPanel(): ReactElement {
       ) : null}
       {routes.length === 0 ? (
         <div className="mt-4">
-          <EmptyState {...EMPTY_STATES.guideRoutes} />
+          <EmptyState {...emptyStates.guideRoutes} />
         </div>
       ) : (
         <ul className="mt-4 space-y-3">
@@ -137,10 +140,10 @@ export function GuideRoutesPanel(): ReactElement {
                     {r.title}
                   </Link>
                   <p className="text-xs text-stone-500">
-                    {STATUS_LABEL[r.status ?? 'draft'] ?? r.status} · ₺{r.price.toFixed(2)}
+                    {t(STATUS_KEYS[r.status ?? 'draft'] ?? 'guideRoutes.statusDraft', r.status ?? 'draft')} · ₺{r.price.toFixed(2)}
                   </p>
                   {r.moderation_note ? (
-                    <p className="mt-1 text-xs text-amber-700">Admin: {r.moderation_note}</p>
+                    <p className="mt-1 text-xs text-amber-700">{t('guideRoutes.adminNote', 'Admin:')} {r.moderation_note}</p>
                   ) : null}
                 </div>
                 <div className="flex flex-wrap gap-2">
@@ -149,7 +152,7 @@ export function GuideRoutesPanel(): ReactElement {
                       className="rounded-lg border border-stone-300 px-3 py-1.5 text-xs font-bold dark:border-zinc-600"
                       to={`/guide/rotalar/${r.route_id}/duzenle`}
                     >
-                      Düzenle
+                      {t('guideRoutes.edit', 'Düzenle')}
                     </Link>
                   ) : null}
                   {(r.status === 'draft' || r.status === 'changes_requested') && accessToken ? (
@@ -159,7 +162,7 @@ export function GuideRoutesPanel(): ReactElement {
                       disabled={busy === r.route_id}
                       onClick={() => void handleSubmit(r.route_id)}
                     >
-                      İncelemeye gönder
+                      {t('guideRoutes.submitReview', 'İncelemeye gönder')}
                     </button>
                   ) : null}
                   {r.status === 'approved' && accessToken ? (
@@ -169,7 +172,7 @@ export function GuideRoutesPanel(): ReactElement {
                       disabled={busy === r.route_id}
                       onClick={() => void handlePublish(r.route_id)}
                     >
-                      Yayınla
+                      {t('guideRoutes.publish', 'Yayınla')}
                     </button>
                   ) : null}
                 </div>

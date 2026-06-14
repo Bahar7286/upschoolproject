@@ -20,7 +20,7 @@ import { listPurchasesByUser } from '../services/purchase-service';
 import { fetchGamification, fetchLeaderboard, redeemReward, updatePreferences } from '../services/profile-service';
 import type { LeaderboardResponse } from '../types/user';
 import type { RewardItem } from '../types/user';
-import { listMyNotes } from '../services/social-service';
+import { listMyNotes, saveMyRouteNote } from '../services/social-service';
 import { useRoutesQuery } from '../hooks/use-routes-query';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
@@ -78,6 +78,10 @@ export default function ProfilePage(): ReactElement {
   const [leaderboard, setLeaderboard] = useState<LeaderboardResponse | null>(null);
   const [plans, setPlans] = useState<PlanResponse[]>([]);
   const [notes, setNotes] = useState<NoteResponse[]>([]);
+  const [noteRouteId, setNoteRouteId] = useState<number>(0);
+  const [noteDraft, setNoteDraft] = useState('');
+  const [noteBusy, setNoteBusy] = useState(false);
+  const [noteMsg, setNoteMsg] = useState('');
   const [error, setError] = useState('');
   const [saved, setSaved] = useState('');
   const [redeemMsg, setRedeemMsg] = useState('');
@@ -142,7 +146,7 @@ export default function ProfilePage(): ReactElement {
         onboarding_completed: user?.onboarding_completed ?? true,
       });
       setUser(updated);
-      setSaved('Görünüm kaydedildi.');
+      setSaved(t('profile.lookSaved', 'Görünüm kaydedildi.'));
     } catch (err) {
       setError(formatApiError(err));
     }
@@ -177,13 +181,13 @@ export default function ProfilePage(): ReactElement {
     <section className="mx-auto w-full min-w-0 max-w-3xl space-y-5" aria-labelledby="prof-title">
       <header>
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-theme sm:text-3xl" id="prof-title">
-          Profil
+          {t('profile.title', 'Profil')}
         </h1>
-        <p className="mt-1 text-sm text-theme-muted">Sekmelere tıklayarak bölümlere geçin</p>
+        <p className="mt-1 text-sm text-theme-muted">{t('profile.tabsHint', 'Sekmelere tıklayarak bölümlere geçin')}</p>
       </header>
 
       {error ? (
-        <ErrorAlert error={{ kind: 'api', message: error, actionLabel: 'Keşfe dön', actionTo: '/discover' }} />
+        <ErrorAlert error={{ kind: 'api', message: error, actionLabel: t('common.goDiscover', 'Keşfe dön'), actionTo: '/discover' }} />
       ) : null}
       {saved ? (
         <p className="alert-success rounded-xl px-3 py-2 text-sm font-semibold" role="status">
@@ -191,7 +195,7 @@ export default function ProfilePage(): ReactElement {
         </p>
       ) : null}
 
-      <nav className="flex gap-2 overflow-x-auto pb-1" aria-label="Profil sekmeleri">
+      <nav className="flex gap-2 overflow-x-auto pb-1" aria-label={t('profile.tabsAria', 'Profil sekmeleri')}>
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
@@ -226,7 +230,7 @@ export default function ProfilePage(): ReactElement {
                 </span>
               ) : (
                 <Link className="ml-2 mt-1 inline-flex text-xs font-bold text-primary underline" to="/premium">
-                  Premium’a geç
+                  {t('profile.goPremium', "Premium'a geç")}
                 </Link>
               )}
             </div>
@@ -259,7 +263,7 @@ export default function ProfilePage(): ReactElement {
           <div className="grid grid-cols-3 gap-3">
             <StatCard icon={Zap} value={String(xp)} label="XP" />
             <StatCard icon={Flame} value={String(streak)} label="Streak" />
-            <StatCard icon={Award} value={`#${rank}`} label="Haftalık" />
+            <StatCard icon={Award} value={`#${rank}`} label={t('profile.weekly', 'Haftalık')} />
           </div>
           <div className="theme-card p-5">
             <div className="flex justify-between text-sm font-semibold text-theme">
@@ -280,12 +284,12 @@ export default function ProfilePage(): ReactElement {
 
       {tab === 'history' ? (
         <div className="space-y-4">
-          <SectionTitle title="Tamamlanan rotalar" />
+          <SectionTitle title={t('profile.completedRoutes', 'Tamamlanan rotalar')} />
           {completedPlans.length === 0 ? (
             <EmptyHint
-              text="Henüz tamamlanan gezi yok."
+              text={t('profile.noCompletedTrips', 'Henüz tamamlanan gezi yok.')}
               link="/discover"
-              linkLabel="Kişisel rotanı oluştur"
+              linkLabel={t('profile.createPersonalRoute', 'Kişisel rotanı oluştur')}
             />
           ) : (
             <ul className="space-y-2">
@@ -300,9 +304,9 @@ export default function ProfilePage(): ReactElement {
               ))}
             </ul>
           )}
-          <SectionTitle title="Planlanan geziler" />
+          <SectionTitle title={t('profile.plannedTrips', 'Planlanan geziler')} />
           {upcomingPlans.length === 0 ? (
-            <EmptyHint text="Takvimde plan yok." link="/planner" linkLabel="Plan oluştur" />
+            <EmptyHint text={t('profile.noPlans', 'Takvimde plan yok.')} link="/planner" linkLabel={t('common.createPlan', 'Plan oluştur')} />
           ) : (
             <ul className="space-y-2">
               {upcomingPlans.map((plan) => (
@@ -321,9 +325,61 @@ export default function ProfilePage(): ReactElement {
 
       {tab === 'notes' ? (
         <div className="space-y-3">
-          <SectionTitle title="Kişisel rota notları" />
+          <SectionTitle title={t('profile.notesTitle', 'Kişisel rota notları')} />
+          <div className="theme-card space-y-3 p-4">
+            <p className="text-sm font-semibold text-theme">{t('profile.notesAdd', 'Not ekle')}</p>
+            <select
+              className="w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950"
+              value={noteRouteId}
+              onChange={(e) => setNoteRouteId(Number(e.target.value))}
+            >
+              <option value={0}>{t('profile.notesPickRoute', 'Rota seç')}</option>
+              {routes.map((r) => (
+                <option key={r.route_id} value={r.route_id}>
+                  {r.title}
+                </option>
+              ))}
+            </select>
+            <textarea
+              className="w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2 text-sm dark:border-white/15 dark:bg-zinc-950"
+              rows={4}
+              placeholder={t('profile.notesPlaceholder', 'Gezi notunuz…')}
+              value={noteDraft}
+              onChange={(e) => setNoteDraft(e.target.value)}
+            />
+            {noteMsg ? (
+              <p className="text-sm font-semibold text-primary" role="status">
+                {noteMsg}
+              </p>
+            ) : null}
+            <button
+              type="button"
+              className="tap-scale rounded-xl bg-primary px-4 py-2 text-sm font-bold text-white disabled:opacity-50"
+              disabled={!accessToken || noteBusy || !noteRouteId || !noteDraft.trim()}
+              onClick={async () => {
+                if (!accessToken || !noteRouteId) return;
+                setNoteBusy(true);
+                setNoteMsg('');
+                try {
+                  const saved = await saveMyRouteNote(noteRouteId, noteDraft.trim(), accessToken);
+                  setNotes((prev) => {
+                    const rest = prev.filter((n) => n.route_id !== saved.route_id);
+                    return [saved, ...rest];
+                  });
+                  setNoteDraft('');
+                  setNoteMsg(t('profile.notesSaved', 'Not kaydedildi'));
+                } catch (err) {
+                  setError(formatApiError(err));
+                } finally {
+                  setNoteBusy(false);
+                }
+              }}
+            >
+              {noteBusy ? '…' : t('profile.notesSave', 'Kaydet')}
+            </button>
+          </div>
           {notes.length === 0 ? (
-            <EmptyHint text="Henüz not yok. Rota detayında kendi notunu kaydedebilirsin." link="/discover" linkLabel="Rota seç" />
+            <EmptyHint text={t('profile.notesEmpty', 'Henüz not yok. Aşağıdan yeni not ekleyebilir veya rota detayından kaydedebilirsin.')} link="/discover" linkLabel={t('profile.notesPickRoute', 'Rota seç')} />
           ) : (
             notes.map((note) => (
               <div key={note.note_id} className="theme-card p-4">
@@ -332,7 +388,8 @@ export default function ProfilePage(): ReactElement {
                 </Link>
                 <p className="mt-2 text-sm leading-relaxed text-theme">{note.content}</p>
                 <p className="mt-2 text-xs text-theme-muted">
-                  Güncellendi: {new Date(note.updated_at).toLocaleString('tr-TR')}
+                  {t('profile.notesUpdated', 'Güncellendi')}:{' '}
+                  {new Date(note.updated_at).toLocaleString(locale === 'en' ? 'en-GB' : 'tr-TR')}
                 </p>
               </div>
             ))
@@ -343,12 +400,12 @@ export default function ProfilePage(): ReactElement {
       {tab === 'play' ? (
         <div className="space-y-5">
           <div className="theme-card rounded-[22px] border p-5">
-            <h2 className="font-display text-lg font-bold text-theme">Kültür puanı (XP) nasıl kazanılır?</h2>
+            <h2 className="font-display text-lg font-bold text-theme">{t('profile.xpHowTitle', 'Kültür puanı (XP) nasıl kazanılır?')}</h2>
             <p className="mt-1 text-sm text-theme-muted">
-              XP hem seviye hem mağaza parasıdır. Aşağıdaki aksiyonlar otomatik işlenir.
+              {t('profile.xpHowDesc', 'XP hem seviye hem mağaza parasıdır. Aşağıdaki aksiyonlar otomatik işlenir.')}
             </p>
             <ul className="mt-4 space-y-2">
-              {(xpRules.length ? xpRules : [{ id: 'welcome', title: 'Hoş geldin', description: 'Kayıt', xp: 100 }]).map(
+              {(xpRules.length ? xpRules : [{ id: 'welcome', title: t('profile.welcomeXp', 'Hoş geldin'), description: t('profile.registrationXp', 'Kayıt'), xp: 100 }]).map(
                 (rule) => (
                   <li
                     key={rule.id}
@@ -365,9 +422,9 @@ export default function ProfilePage(): ReactElement {
             </ul>
           </div>
 
-          <SectionTitle title="Ödül mağazası (XP harca)" />
+          <SectionTitle title={t('profile.rewardShop', 'Ödül mağazası (XP harca)')} />
           <p className="text-sm text-theme-muted">
-            Kupon ve indirimler ödeme ekranında kod ile uygulanır. Sahip olduğunuz ödüller profilde listelenir.
+            {t('profile.rewardShopDesc', 'Kupon ve indirimler ödeme ekranında kod ile uygulanır. Sahip olduğunuz ödüller profilde listelenir.')}
           </p>
           {redeemMsg ? (
             <p className="alert-success rounded-xl px-3 py-2 text-sm font-semibold" role="status">
@@ -389,7 +446,7 @@ export default function ProfilePage(): ReactElement {
                 <p className="mt-1 text-xs text-theme-muted">{reward.description}</p>
                 <p className="mt-2 text-sm font-bold text-primary">{reward.cost_xp} XP</p>
                 {reward.owned ? (
-                  <p className="mt-2 text-xs font-semibold text-theme-muted">Aktif · ödeme kodunuz profilde</p>
+                  <p className="mt-2 text-xs font-semibold text-theme-muted">{t('profile.rewardActive', 'Aktif · ödeme kodunuz profilde')}</p>
                 ) : (
                   <button
                     className="tap-scale mt-3 w-full rounded-xl bg-primary py-2 text-sm font-bold disabled:opacity-50"
@@ -411,7 +468,7 @@ export default function ProfilePage(): ReactElement {
                       }
                     }}
                   >
-                    {redeemBusy === reward.id ? '…' : 'Kullan'}
+                    {redeemBusy === reward.id ? '…' : t('profile.redeem', 'Kullan')}
                   </button>
                 )}
               </div>
@@ -419,11 +476,11 @@ export default function ProfilePage(): ReactElement {
           </div>
           {redeemedRewards.length > 0 ? (
             <p className="text-xs text-theme-muted">
-              Aktif kodlar: {redeemedRewards.map((id) => `HG-${id.toUpperCase()}`).join(', ')}
+              {t('profile.activeCodes', 'Aktif kodlar:')} {redeemedRewards.map((id) => `HG-${id.toUpperCase()}`).join(', ')}
             </p>
           ) : null}
 
-          <SectionTitle title="Rozetler" />
+          <SectionTitle title={t('profile.badges', 'Rozetler')} />
           <div className="flex flex-wrap gap-3">
             {ALL_BADGES.map((id) => {
               const earned = badges.includes(id);
@@ -440,20 +497,20 @@ export default function ProfilePage(): ReactElement {
               );
             })}
           </div>
-          <SectionTitle title="Haftalık yarışma" />
+          <SectionTitle title={t('profile.weeklyCompetition', 'Haftalık yarışma')} />
           <p className="text-sm text-theme-muted">
             {rank != null ? (
               <>
-                Bu hafta <strong className="text-theme">#{rank}</strong> sıradasın.
+                {t('profile.weeklyRank', { rank }, 'Bu hafta #{rank} sıradasın.')}
               </>
             ) : (
-              'Liderlik tablosu yükleniyor…'
+              t('profile.leaderboardLoading', 'Liderlik tablosu yükleniyor…')
             )}{' '}
-            En çok XP kazanan gezginler ödül rozeti alır.
+            {t('profile.leaderboardHint', 'En çok XP kazanan gezginler ödül rozeti alır.')}
           </p>
           <ol className="theme-card space-y-2 p-4">
             {boardEntries.length === 0 ? (
-              <li className="list-row rounded-xl px-3 py-2 text-sm text-theme-muted">Henüz sıralama verisi yok.</li>
+              <li className="list-row rounded-xl px-3 py-2 text-sm text-theme-muted">{t('profile.noLeaderboard', 'Henüz sıralama verisi yok.')}</li>
             ) : (
               boardEntries.map((entry) => {
                 const isYou = user?.user_id === entry.user_id;
@@ -466,7 +523,7 @@ export default function ProfilePage(): ReactElement {
                   >
                     <span className="text-theme">
                       #{entry.rank} {entry.full_name}
-                      {isYou ? ' (Sen)' : ''}
+                      {isYou ? ` (${t('common.you', 'Sen')})` : ''}
                     </span>
                     <span className="font-bold text-primary">{entry.xp} XP</span>
                   </li>
@@ -475,7 +532,7 @@ export default function ProfilePage(): ReactElement {
             )}
             {user && rank != null && !viewerOnBoard ? (
               <li className="list-row flex items-center justify-between rounded-xl border-2 border-[var(--hg-primary)] px-3 py-2 text-sm font-bold">
-                <span className="text-theme">#{rank} Sen</span>
+                <span className="text-theme">#{rank} {t('common.you', 'Sen')}</span>
                 <span className="text-primary">{xp} XP</span>
               </li>
             ) : null}
@@ -487,14 +544,13 @@ export default function ProfilePage(): ReactElement {
         <div className="theme-card space-y-6 p-5">
           <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold text-theme">
             <Settings className="h-5 w-5" aria-hidden="true" />
-            Görünüm özelleştirme
+            {t('profile.lookCustomize', 'Görünüm özelleştirme')}
           </h2>
           <p className="text-sm text-theme-muted">
-            Her tema farklı bir İstanbul hikâyesi anlatır: arka plan, menü, kartlar, buton ve font birlikte değişir. Seçim anında
-            uygulanır.
+            {t('profile.lookCustomizeDesc', 'Her tema farklı bir İstanbul hikâyesi anlatır: arka plan, menü, kartlar, buton ve font birlikte değişir. Seçim anında uygulanır.')}
           </p>
           <div>
-            <p className="mb-3 text-sm font-bold text-theme">Tema seçin</p>
+            <p className="mb-3 text-sm font-bold text-theme">{t('profile.pickTheme', 'Tema seçin')}</p>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {THEME_META.map((meta) => (
                 <ThemePreviewCard
@@ -508,7 +564,7 @@ export default function ProfilePage(): ReactElement {
             </div>
           </div>
           <div>
-            <p className="mb-2 text-sm font-bold text-theme">Yazı tipi</p>
+            <p className="mb-2 text-sm font-bold text-theme">{t('profile.pickFont', 'Yazı tipi')}</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
               {(Object.keys(FONT_LABELS) as FontPreference[]).map((f) => (
                 <button
@@ -537,7 +593,7 @@ export default function ProfilePage(): ReactElement {
             }}
           >
             <LogOut className="h-4 w-4" aria-hidden="true" />
-            Çıkış yap
+            {t('profile.logoutBtn', 'Çıkış yap')}
           </button>
         </div>
       ) : null}
@@ -604,6 +660,7 @@ function HistoryRow({
   routeId: number | null;
   routeTitle?: string;
 }): ReactElement {
+  const { t } = useI18n();
   return (
     <li className="theme-card flex items-center justify-between gap-3 px-4 py-3">
       <div>
@@ -613,7 +670,7 @@ function HistoryRow({
       </div>
       {routeId != null ? (
         <Link className="shrink-0 text-sm font-bold text-primary hover:underline" to={`/routes/${routeId}`}>
-          Aç
+          {t('common.open', 'Aç')}
         </Link>
       ) : null}
     </li>

@@ -6,25 +6,27 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '../components/ui/button';
 import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { createPlan, deletePlan, listPlans, updatePlan } from '../services/plan-service';
 import { listRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import type { PlanResponse } from '../types/plan';
 import type { RouteResponse } from '../types/route';
 
-const WEEKDAYS = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const WEEKDAYS_TR = ['Pzt', 'Sal', 'Çar', 'Per', 'Cum', 'Cmt', 'Paz'];
+const WEEKDAYS_EN = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
-function monthKey(date: Date): string {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
-}
-
-function formatDateLabel(iso: string): string {
+function formatDateLabel(iso: string, locale: 'tr' | 'en'): string {
   const [y, m, d] = iso.split('-').map(Number);
-  return new Date(y, m - 1, d).toLocaleDateString('tr-TR', {
+  return new Date(y, m - 1, d).toLocaleDateString(locale === 'en' ? 'en-GB' : 'tr-TR', {
     weekday: 'long',
     day: 'numeric',
     month: 'long',
   });
+}
+
+function monthKey(date: Date): string {
+  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
 }
 
 function buildCalendarDays(viewDate: Date): (string | null)[] {
@@ -42,6 +44,8 @@ function buildCalendarDays(viewDate: Date): (string | null)[] {
 }
 
 export default function PlannerPage(): ReactElement {
+  const { t, locale } = useI18n();
+  const weekdays = locale === 'en' ? WEEKDAYS_EN : WEEKDAYS_TR;
   const navigate = useNavigate();
   const location = useLocation();
   const routeState = location.state as { routeId?: number; title?: string } | null;
@@ -118,7 +122,7 @@ export default function PlannerPage(): ReactElement {
       setTitle('');
       setRouteId('');
       setMemo('');
-      setSuccess('Plan takvime eklendi.');
+      setSuccess(t('planner.planAdded', 'Plan takvime eklendi.'));
       await load();
     } catch (err) {
       setError(formatApiError(err));
@@ -153,7 +157,7 @@ export default function PlannerPage(): ReactElement {
     }
   };
 
-  const monthLabel = viewDate.toLocaleDateString('tr-TR', { month: 'long', year: 'numeric' });
+  const monthLabel = viewDate.toLocaleDateString(locale === 'en' ? 'en-GB' : 'tr-TR', { month: 'long', year: 'numeric' });
 
   return (
     <section className="mx-auto max-w-5xl space-y-6" aria-labelledby="planner-title">
@@ -164,10 +168,10 @@ export default function PlannerPage(): ReactElement {
           id="planner-title"
         >
           <CalendarDays className="h-8 w-8 text-primary" aria-hidden="true" />
-          Rota Planlayıcı
+          {t('planner.title', 'Rota Planlayıcı')}
         </h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Gezilerinizi takvime ekleyin, tarih ve saat belirleyin.
+          {t('planner.subtitle', 'Gezilerinizi takvime ekleyin, tarih ve saat belirleyin.')}
         </p>
       </header>
 
@@ -188,7 +192,7 @@ export default function PlannerPage(): ReactElement {
             <button
               className="tap-scale focus-ring inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-stone-900/10 dark:border-white/10"
               type="button"
-              aria-label="Önceki ay"
+              aria-label={t('planner.prevMonth', 'Önceki ay')}
               onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() - 1, 1))}
             >
               <ChevronLeft className="h-5 w-5" aria-hidden="true" />
@@ -197,7 +201,7 @@ export default function PlannerPage(): ReactElement {
             <button
               className="tap-scale focus-ring inline-flex min-h-[44px] min-w-[44px] items-center justify-center rounded-xl border border-stone-900/10 dark:border-white/10"
               type="button"
-              aria-label="Sonraki ay"
+              aria-label={t('planner.nextMonth', 'Sonraki ay')}
               onClick={() => setViewDate(new Date(viewDate.getFullYear(), viewDate.getMonth() + 1, 1))}
             >
               <ChevronRight className="h-5 w-5" aria-hidden="true" />
@@ -205,7 +209,7 @@ export default function PlannerPage(): ReactElement {
           </div>
 
           <div className="grid grid-cols-7 gap-1 text-center text-xs font-bold text-stone-500">
-            {WEEKDAYS.map((d) => (
+            {weekdays.map((d) => (
               <div className="py-2" key={d}>
                 {d}
               </div>
@@ -233,7 +237,7 @@ export default function PlannerPage(): ReactElement {
                   <span className="text-sm font-bold">{dayNum}</span>
                   {dayPlans.length ? (
                     <span className="mt-1 block truncate rounded-md bg-amber-500/25 px-1 text-[10px] font-semibold text-amber-900 dark:text-amber-200">
-                      {dayPlans.length} plan
+                      {t('planner.planCount', { count: dayPlans.length }, '{count} plan')}
                     </span>
                   ) : null}
                 </button>
@@ -249,37 +253,37 @@ export default function PlannerPage(): ReactElement {
           >
             <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold">
               <Plus className="h-5 w-5 text-primary" aria-hidden="true" />
-              Yeni plan · {formatDateLabel(selectedDate)}
+              {t('planner.newPlan', { date: formatDateLabel(selectedDate, locale) }, 'Yeni plan · {date}')}
             </h2>
             <div className="mt-4 space-y-3">
               <label className="block text-sm font-semibold">
-                Başlık
+                {t('planner.titleLabel', 'Başlık')}
                 <input
                   className="mt-1 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950"
                   required
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  placeholder="Örn. Sultanahmet sabah turu"
+                  placeholder={t('planner.titlePlaceholder', 'Örn. Sultanahmet sabah turu')}
                 />
               </label>
               <label className="block text-sm font-semibold">
-                Rota (opsiyonel)
+                {t('planner.routeOptional', 'Rota (opsiyonel)')}
                 <select
                   className="mt-1 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950"
                   value={routeId}
                   onChange={(e) => setRouteId(e.target.value)}
                 >
-                  <option value="">Özel plan</option>
+                  <option value="">{t('planner.customPlan', 'Özel plan')}</option>
                   {routes.map((r) => (
                     <option key={r.route_id} value={r.route_id}>
-                      {r.title} · {r.estimated_minutes} dk
+                      {r.title} · {r.estimated_minutes} {t('common.minutes', 'dk')}
                     </option>
                   ))}
                 </select>
               </label>
               <div className="grid grid-cols-2 gap-3">
                 <label className="block text-sm font-semibold">
-                  Saat
+                  {t('planner.timeLabel', 'Saat')}
                   <input
                     className="mt-1 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950"
                     type="time"
@@ -288,7 +292,7 @@ export default function PlannerPage(): ReactElement {
                   />
                 </label>
                 <label className="block text-sm font-semibold">
-                  Süre (dk)
+                  {t('planner.durationLabel', 'Süre (dk)')}
                   <input
                     className="mt-1 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950"
                     type="number"
@@ -300,25 +304,25 @@ export default function PlannerPage(): ReactElement {
                 </label>
               </div>
               <label className="block text-sm font-semibold">
-                Plan notu
+                {t('planner.memoLabel', 'Plan notu')}
                 <textarea
                   className="mt-1 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950"
                   rows={2}
                   value={memo}
                   onChange={(e) => setMemo(e.target.value)}
-                  placeholder="Buluşma noktası, hatırlatmalar…"
+                  placeholder={t('planner.memoPlaceholder', 'Buluşma noktası, hatırlatmalar…')}
                 />
               </label>
             </div>
             <Button className="mt-4 w-full" disabled={busy} type="submit">
-              {busy ? 'Kaydediliyor…' : 'Takvime ekle'}
+              {busy ? t('common.saving', 'Kaydediliyor…') : t('planner.addToCalendar', 'Takvime ekle')}
             </Button>
           </form>
 
           <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-5 dark:border-white/10 dark:bg-zinc-900/95">
-            <h2 className="font-display text-lg font-bold">Seçili gün ({selectedPlans.length})</h2>
+            <h2 className="font-display text-lg font-bold">{t('planner.selectedDay', { count: selectedPlans.length }, 'Seçili gün ({count})')}</h2>
             {selectedPlans.length === 0 ? (
-              <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">Bu gün için plan yok.</p>
+              <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{t('planner.noPlansDay', 'Bu gün için plan yok.')}</p>
             ) : (
               <ul className="mt-3 space-y-3">
                 {selectedPlans.map((plan) => (
@@ -331,7 +335,7 @@ export default function PlannerPage(): ReactElement {
                         <p className="font-bold">{plan.title}</p>
                         <p className="mt-1 inline-flex items-center gap-1 text-xs text-stone-500">
                           <Clock className="h-3.5 w-3.5" aria-hidden="true" />
-                          {plan.planned_time} · {plan.duration_minutes} dk
+                          {plan.planned_time} · {plan.duration_minutes} {t('common.minutes', 'dk')}
                         </p>
                         {plan.memo ? <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{plan.memo}</p> : null}
                         {plan.route_id ? (
@@ -340,14 +344,14 @@ export default function PlannerPage(): ReactElement {
                             to={`/routes/${plan.route_id}`}
                           >
                             <MapPin className="h-4 w-4" aria-hidden="true" />
-                            Rotayı gör
+                            {t('planner.viewRoute', 'Rotayı gör')}
                           </Link>
                         ) : null}
                       </div>
                       <button
                         className="tap-scale text-red-600"
                         type="button"
-                        aria-label="Planı sil"
+                        aria-label={t('planner.deletePlan', 'Planı sil')}
                         disabled={busy}
                         onClick={() => handleDelete(plan.plan_id)}
                       >
@@ -366,7 +370,7 @@ export default function PlannerPage(): ReactElement {
                           disabled={busy}
                           onClick={() => handleStatus(plan, s)}
                         >
-                          {s === 'planned' ? 'Planlandı' : s === 'completed' ? 'Tamamlandı' : 'İptal'}
+                          {s === 'planned' ? t('planner.statusPlanned', 'Planlandı') : s === 'completed' ? t('planner.statusCompleted', 'Tamamlandı') : t('planner.statusCancelled', 'İptal')}
                         </button>
                       ))}
                     </div>

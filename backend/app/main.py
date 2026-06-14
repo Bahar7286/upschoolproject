@@ -22,6 +22,7 @@ from app.api.routers import (
     geo_routes,
     google_routes,
     guide_routes,
+    note_routes,
     payment_routes,
     place_routes,
     plan_routes,
@@ -159,6 +160,7 @@ app.include_router(auth_routes.router, prefix='/auth', tags=['auth'])
 app.include_router(user_routes.router, prefix='/users', tags=['users'])
 app.include_router(route_routes.router, prefix='/routes', tags=['routes'])
 app.include_router(social_routes.router, prefix='/routes', tags=['social'])
+app.include_router(note_routes.router, prefix='/notes', tags=['notes'])
 app.include_router(stop_routes.router)
 app.include_router(trip_extra_stop_routes.router)
 app.include_router(ai_routes.router, prefix='/ai', tags=['ai'])

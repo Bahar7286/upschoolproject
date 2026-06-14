@@ -1,4 +1,4 @@
-import { LocateFixed, Navigation } from 'lucide-react';
+import { LocateFixed, Navigation, Play } from 'lucide-react';
 
 import type { ReactElement } from 'react';
 
@@ -23,11 +23,13 @@ import { useRoutesQuery } from '../hooks/use-routes-query';
 import { formatApiError } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 
-import { useGeofenceWatch } from '../hooks/use-geofence-watch';
+import { useGeofenceWatch, type GeofenceMessages } from '../hooks/use-geofence-watch';
 import { langToSpeechCode, playAudioBase64, useSpeechSynthesis } from '../hooks/use-speech';
 import { fetchNarrationAudio } from '../services/ai-service';
 import { completeRoute } from '../services/profile-service';
 import { fetchCurrentUser } from '../services/auth-service';
+import { getRoute } from '../services/route-service';
+import { listStops } from '../services/stop-service';
 import { useOnboardingStore } from '../stores/onboarding-store';
 import { useAuthStore } from '../stores/auth-store';
 
@@ -37,15 +39,8 @@ import { useActiveRouteStore } from '../stores/active-route-store';
 
 import { filterGoogleByCity, filterGoogleByDistrict } from '../utils/district-filter';
 
-import {
-
-  PLACE_CATEGORY_COLORS,
-
-  PLACE_CATEGORY_LABELS,
-
-  type PlaceCategory,
-
-} from '../types/place';
+import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
+import { PLACE_CATEGORY_COLORS, type PlaceCategory } from '../types/place';
 
 
 
@@ -73,6 +68,7 @@ const ALL_CATEGORIES: PlaceCategory[] = [
 
 export default function MapPage(): ReactElement {
   const { t } = useI18n();
+  const categoryLabels = usePlaceCategoryLabels();
   const user = useAuthStore((s) => s.user);
   const preferredCity = useOnboardingStore((s) => s.preferredCity);
 
@@ -214,12 +210,12 @@ export default function MapPage(): ReactElement {
     }
     if (!googleLoading && googleNearby && googleNearby.places.length === 0) {
       setGooglePlacesError(
-        `${effectiveCityName} için canlı Google pini bulunamadı. Veritabanındaki mekanlar haritada gösteriliyor.`,
+        t('map.noLivePins', { city: effectiveCityName }, '{city} için canlı Google pini bulunamadı. Veritabanındaki mekanlar haritada gösteriliyor.'),
       );
       return;
     }
     setGooglePlacesError('');
-  }, [googleIsError, googleQueryError, googleNearby, googleLoading, effectiveCityName]);
+  }, [googleIsError, googleQueryError, googleNearby, googleLoading, effectiveCityName, t]);
 
   useEffect(() => {
     if (!googleNearby || districtIdParam > 0) return;
@@ -267,8 +263,8 @@ export default function MapPage(): ReactElement {
 
 
   const activeRouteId = useActiveRouteStore((s) => s.routeId);
-
   const routeTitle = useActiveRouteStore((s) => s.routeTitle);
+  const setActiveRoute = useActiveRouteStore((s) => s.setActiveRoute);
 
   const mergedStopsFn = useActiveRouteStore((s) => s.mergedStops);
   const clearActiveRoute = useActiveRouteStore((s) => s.clearActiveRoute);
@@ -294,6 +290,28 @@ export default function MapPage(): ReactElement {
   const mergedStops = focusRouteId === activeRouteId ? mergedStopsFn() : [];
 
   const currentStop = mergedStops[currentStopIndex] ?? null;
+  const nextStop = mergedStops[currentStopIndex + 1] ?? null;
+  const routeNavActive = activeParam && mergedStops.length > 0;
+
+  useEffect(() => {
+    if (!activeParam || !Number.isFinite(routeParam) || routeParam <= 0) return;
+    if (activeRouteId === routeParam && mergedStopsFn().length > 0) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const [route, stops] = await Promise.all([
+          getRoute(routeParam),
+          listStops(routeParam, accessToken ?? undefined),
+        ]);
+        if (!cancelled) setActiveRoute(routeParam, route.title, stops);
+      } catch {
+        /* rota yüklenemedi */
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [activeParam, routeParam, activeRouteId, accessToken, setActiveRoute, mergedStopsFn]);
 
   useEffect(() => {
     if (!accessToken || !activeRouteId) return;
@@ -357,10 +375,21 @@ export default function MapPage(): ReactElement {
     [mergedStops, preferredLanguage, setCurrentStopIndex, speak],
   );
 
+  const geofenceMessages = useMemo<GeofenceMessages>(
+    () => ({
+      triggered: (title) => t('geofence.triggered', { title }, 'Sesli rehber tetiklendi: {title}'),
+      nearest: (title, distanceM) =>
+        t('geofence.nearest', { title, distance: Math.round(distanceM) }, 'En yakın: {title} (~{distance} m)'),
+    }),
+    [t],
+  );
+
   const { geofenceMessage, watching } = useGeofenceWatch(
     focusRouteId ?? undefined,
     mergedStops,
     handleGeofenceTriggered,
+    undefined,
+    geofenceMessages,
   );
 
   useEffect(() => {
@@ -392,7 +421,7 @@ export default function MapPage(): ReactElement {
 
     if (!navigator.geolocation) {
 
-      setGeoError('Tarayıcınız konum servisini desteklemiyor.');
+      setGeoError(t('map.geoUnsupported', 'Tarayıcınız konum servisini desteklemiyor.'));
 
       return;
 
@@ -406,13 +435,25 @@ export default function MapPage(): ReactElement {
 
       },
 
-      () => setGeoError('Konum izni verilmedi veya alınamadı.'),
+      () => setGeoError(t('map.geoDenied', 'Konum izni verilmedi veya alınamadı.')),
 
       { enableHighAccuracy: true, timeout: 10000 },
 
     );
 
   }, []);
+
+
+
+  const handleStartRoute = useCallback(() => {
+    showMyLocation();
+    if (focusRouteId != null && focusRouteId > 0) {
+      const params = new URLSearchParams(searchParams);
+      params.set('route', String(focusRouteId));
+      params.set('active', '1');
+      setSearchParams(params, { replace: true });
+    }
+  }, [focusRouteId, searchParams, setSearchParams, showMyLocation]);
 
 
 
@@ -459,22 +500,27 @@ export default function MapPage(): ReactElement {
 
     <section className="space-y-6" aria-labelledby="map-title">
 
-      <BackButton label="Geri" className="mb-1" />
+      <BackButton label={t('common.back', 'Geri')} className="mb-1" />
 
       <header className="space-y-2">
 
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink md:text-4xl dark:text-stone-50" id="map-title">
 
-          Canlı harita
+          {t('map.title', 'Canlı harita')}
 
         </h1>
 
         <p className="max-w-prose text-sm leading-relaxed text-stone-600 md:text-base dark:text-stone-400">
 
           {geoCenter?.city_name
-            ? `${geoCenter.district_name ? `${geoCenter.district_name}, ` : ''}${geoCenter.city_name} — `
-            : ''}
-          Google Places ile canlı pinler. Kategori seçin; sonuç yoksa arama yarıçapı otomatik genişler.
+            ? t(
+                'map.subtitleCity',
+                {
+                  city: `${geoCenter.district_name ? `${geoCenter.district_name}, ` : ''}${geoCenter.city_name}`,
+                },
+                '{city} — canlı pinler ve rota navigasyonu',
+              )
+            : t('map.subtitle', 'Google Places ile canlı pinler. Kategori seçin; sonuç yoksa arama yarıçapı genişler.')}
 
         </p>
 
@@ -494,7 +540,7 @@ export default function MapPage(): ReactElement {
 
         >
 
-          Tümü
+          {t('map.allCategories', 'Tümü')}
 
         </button>
 
@@ -529,7 +575,7 @@ export default function MapPage(): ReactElement {
 
             />
 
-            {PLACE_CATEGORY_LABELS[cat]}
+            {categoryLabels[cat]}
 
           </button>
 
@@ -539,7 +585,7 @@ export default function MapPage(): ReactElement {
 
           <input checked={showPlaces} type="checkbox" onChange={(e) => setShowPlaces(e.target.checked)} />
 
-          POI pinleri
+          {t('map.poiPins', 'POI pinleri')}
 
         </label>
 
@@ -561,7 +607,7 @@ export default function MapPage(): ReactElement {
 
       {googleLoading ? (
         <p className="text-sm text-stone-500" role="status">
-          Canlı mekanlar yükleniyor…
+          {t('map.loadingPlaces', 'Canlı mekanlar yükleniyor…')}
         </p>
       ) : null}
 
@@ -611,7 +657,7 @@ export default function MapPage(): ReactElement {
 
       {isPending ? (
         <p className="text-xs text-stone-500" role="status">
-          Rota listesi yükleniyor…
+          {t('map.loadingRoutes', 'Rota listesi yükleniyor…')}
         </p>
       ) : null}
 
@@ -648,7 +694,7 @@ export default function MapPage(): ReactElement {
 
           <LocateFixed className="h-5 w-5" aria-hidden="true" />
 
-          Konumumu göster
+          {t('map.myLocation', 'Konumumu göster')}
 
         </button>
 
@@ -656,6 +702,17 @@ export default function MapPage(): ReactElement {
 
           <>
 
+            {!routeNavActive ? (
+              <button
+                className="tap-scale responsive-btn rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark"
+                type="button"
+                onClick={handleStartRoute}
+              >
+                <Play className="h-5 w-5" aria-hidden="true" />
+                {t('map.startRoute', 'Rotaya başla')}
+              </button>
+            ) : (
+              <>
             <button
 
               className="tap-scale responsive-btn rounded-xl bg-primary px-5 text-sm font-semibold text-white shadow-sm hover:bg-primary-dark disabled:opacity-60"
@@ -670,9 +727,14 @@ export default function MapPage(): ReactElement {
 
               <Navigation className="h-5 w-5" aria-hidden="true" />
 
-              Sonraki durak
+              {t('map.nextStop', 'Sonraki durak')}
 
             </button>
+              </>
+            )}
+
+            {routeNavActive ? (
+              <>
 
             <button
 
@@ -704,9 +766,11 @@ export default function MapPage(): ReactElement {
 
             >
 
-              {busy ? 'Kaydediliyor…' : 'Rotayı tamamla'}
+              {busy ? t('map.saving', 'Kaydediliyor…') : t('map.completeRoute', 'Rotayı tamamla')}
 
             </button>
+              </>
+            ) : null}
 
           </>
 
@@ -720,7 +784,7 @@ export default function MapPage(): ReactElement {
 
           >
 
-            Rota seç
+            {t('map.pickRoute', 'Rota seç')}
 
           </Link>
 
@@ -734,18 +798,49 @@ export default function MapPage(): ReactElement {
 
         <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-5 dark:border-white/10 dark:bg-zinc-900/95">
 
-          <p className="text-xs font-bold uppercase tracking-wider text-primary">Aktif rota</p>
+          <p className="text-xs font-bold uppercase tracking-wider text-primary">{t('map.activeRoute', 'Aktif rota')}</p>
 
           <h2 className="mt-1 font-display text-lg font-bold">{routeTitle}</h2>
 
+          <div className="mt-3 grid gap-2 rounded-xl bg-stone-50 p-3 text-sm dark:bg-zinc-800/80">
+            <p className="font-semibold text-stone-700 dark:text-stone-200">
+              {t('map.navStatus', 'Navigasyon')}
+            </p>
+            <p className="text-stone-600 dark:text-stone-400">
+              {userLocation
+                ? t('map.youAreHere', 'Konumunuz alındı')
+                : t('map.locationPending', 'Konum bekleniyor…')}
+              {userLocation
+                ? ` · ${userLocation.lat.toFixed(4)}, ${userLocation.lng.toFixed(4)}`
+                : ''}
+            </p>
+            {currentStop ? (
+              <p className="text-stone-600 dark:text-stone-400">
+                {t('map.currentStop', 'Şu anki durak')}: <strong>{currentStop.title}</strong>
+                {' · '}
+                {t('map.stopOf', 'Durak {current}/{total}')
+                  .replace('{current}', String(currentStopIndex + 1))
+                  .replace('{total}', String(mergedStops.length))}
+              </p>
+            ) : null}
+            {nextStop ? (
+              <p className="text-stone-600 dark:text-stone-400">
+                {t('map.headingTo', 'Gidilecek')}: <strong>{nextStop.title}</strong>
+              </p>
+            ) : null}
+          </div>
+
           {currentStop ? (
             <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">
-              Durak {currentStopIndex + 1}/{mergedStops.length}: <strong>{currentStop.title}</strong>
+              {t('map.stopOf', 'Durak {current}/{total}')
+                .replace('{current}', String(currentStopIndex + 1))
+                .replace('{total}', String(mergedStops.length))}
+              : <strong>{currentStop.title}</strong>
             </p>
           ) : null}
-          {focusRouteId && mergedStops.length > 0 ? (
+          {focusRouteId && mergedStops.length > 0 && routeNavActive ? (
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
-              Geofence aktif (~20 m) — durağa yaklaşınca sesli anlatım tetiklenir.
+              {t('map.geofenceHint', 'Geofence aktif (~20 m) — durağa yaklaşınca sesli anlatım tetiklenir.')}
             </p>
           ) : null}
 
@@ -763,11 +858,11 @@ export default function MapPage(): ReactElement {
                   setMapPickActive((v) => !v);
                 }}
               >
-                {mapPickActive ? 'İptal — harita seçimi' : 'Ara durak ekle (haritaya dokun)'}
+                {mapPickActive ? t('map.cancelMapPick', 'İptal — harita seçimi') : t('map.addWaypoint', 'Ara durak ekle (haritaya dokun)')}
               </button>
               {mapPickActive ? (
                 <p className="mb-3 text-xs font-semibold text-amber-800 dark:text-amber-200" role="status">
-                  Haritada eklemek istediğiniz noktaya dokunun.
+                  {t('map.mapPickHint', 'Haritada eklemek istediğiniz noktaya dokunun.')}
                 </p>
               ) : null}
               {mapPickMsg ? (
@@ -800,7 +895,7 @@ export default function MapPage(): ReactElement {
 
           <Link className="tap-scale mt-4 inline-flex text-sm font-bold text-primary underline-offset-4 hover:underline" to={`/routes/${focusRouteId}`}>
 
-            Rota detayına git
+            {t('map.routeDetail', 'Rota detayına git')}
 
           </Link>
 

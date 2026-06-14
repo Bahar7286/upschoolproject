@@ -76,6 +76,42 @@ def filter_quality_places(places: list, city: str = '') -> list:
     return [p for p in places if not is_generic_place(p, city)]
 
 
+_CATEGORY_ORDER = (
+    'historical',
+    'museum',
+    'mosque',
+    'palace',
+    'bazaar',
+    'street',
+    'restaurant',
+    'accommodation',
+)
+
+
+def diversify_places(places: list, limit: int = 12) -> list:
+    """Kategori çeşitliliği — arka arkaya aynı tür gelmesin."""
+    by_cat: dict[str, list] = {}
+    for place in places:
+        cat = str(getattr(place, 'category', '') or 'historical').lower()
+        if cat not in _CATEGORY_ORDER:
+            cat = 'historical'
+        by_cat.setdefault(cat, []).append(place)
+
+    out: list = []
+    while len(out) < min(limit, len(places)):
+        added = False
+        for cat in _CATEGORY_ORDER:
+            bucket = by_cat.get(cat)
+            if bucket:
+                out.append(bucket.pop(0))
+                added = True
+                if len(out) >= limit:
+                    break
+        if not added:
+            break
+    return out
+
+
 def dedupe_places(places: list) -> list:
     seen: set[str] = set()
     out: list = []

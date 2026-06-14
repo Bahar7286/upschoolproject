@@ -82,25 +82,25 @@ export function AppLayout(): ReactElement {
         <div className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
           <BrandLogo size="sm" className="min-w-0 shrink" />
 
-          <nav className="hidden flex-1 flex-wrap items-center justify-center gap-1 md:flex" aria-label="Ana menü">
+          <nav className="hidden flex-1 flex-wrap items-center justify-center gap-1 md:flex" aria-label={t('nav.mainMenu', 'Ana menü')}>
             {isAdmin ? (
               <NavLink className={({ isActive }) => navClass(isActive)} to="/admin">
                 <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                Admin
+                {t('nav.admin', 'Admin')}
               </NavLink>
             ) : isGuide ? (
               <>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/guide">
                   <LayoutDashboard className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Panel
+                  {t('nav.panel', 'Panel')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/guide/dogrulama">
                   <UserRound className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Doğrulama
+                  {t('nav.verification', 'Doğrulama')}
                 </NavLink>
                 <NavLink className={({ isActive }) => navClass(isActive)} to="/talepler">
                   <ShoppingBag className="h-4 w-4 shrink-0" aria-hidden="true" strokeWidth={2} />
-                  Talepler
+                  {t('nav.requests', 'Talepler')}
                 </NavLink>
               </>
             ) : (

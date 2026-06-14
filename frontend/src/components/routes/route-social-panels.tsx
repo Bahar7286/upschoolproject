@@ -6,7 +6,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { EmptyState } from '../ui/empty-state';
 import { ErrorAlert } from '../ui/error-alert';
 import { Button } from '../ui/button';
-import { EMPTY_STATES } from '../../content/empty-states';
+import { useEmptyStates } from '../../hooks/use-empty-states';
 import { mapError } from '../../lib/user-errors';
 import {
   createRouteReview,
@@ -165,6 +165,7 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
 }
 
 export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElement {
+  const emptyStates = useEmptyStates();
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
@@ -281,7 +282,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
         {reviews.length === 0 ? (
           <li>
             <EmptyState
-              {...EMPTY_STATES.reviews}
+              {...emptyStates.reviews}
               actionTo={`/routes/${routeId}`}
             />
           </li>

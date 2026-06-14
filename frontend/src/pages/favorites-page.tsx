@@ -7,7 +7,8 @@ import { ListSkeleton } from '../components/loading/page-skeleton';
 import { BackButton } from '../components/ui/back-button';
 import { EmptyState } from '../components/ui/empty-state';
 import { ErrorAlert } from '../components/ui/error-alert';
-import { EMPTY_STATES } from '../content/empty-states';
+import { useEmptyStates } from '../hooks/use-empty-states';
+import { useI18n } from '../lib/i18n';
 import { mapError } from '../lib/user-errors';
 import { resolvePlaceImage } from '../lib/region-images';
 import { listFavorites, removeFavorite } from '../services/favorite-service';
@@ -15,6 +16,8 @@ import { useAuthStore } from '../stores/auth-store';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
 
 export default function FavoritesPage(): ReactElement {
+  const { t } = useI18n();
+  const emptyStates = useEmptyStates();
   const accessToken = useAuthStore((s) => s.accessToken);
   const qc = useQueryClient();
 
@@ -39,9 +42,9 @@ export default function FavoritesPage(): ReactElement {
   if (!accessToken) {
     return (
       <section className="mx-auto max-w-2xl space-y-4 text-center">
-        <p className="text-sm text-theme">Favorileri görmek için giriş yapmalısın.</p>
+        <p className="text-sm text-theme">{t('favorites.loginRequired', 'Favorileri görmek için giriş yapmalısın.')}</p>
         <Link className="font-bold text-primary" to="/login">
-          Giriş yap
+          {t('auth.loginTitle', 'Giriş yap')}
         </Link>
       </section>
     );
@@ -52,10 +55,10 @@ export default function FavoritesPage(): ReactElement {
       <BackButton />
       <header className="space-y-2">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="fav-title">
-          Favoriler
+          {t('favorites.title', 'Favoriler')}
         </h1>
         <p className="text-sm text-stone-600 dark:text-stone-300">
-          Kaydettiğin mekanlar · {placeItems.length} kayıt
+          {t('favorites.subtitle', { count: placeItems.length }, 'Kaydettiğin mekanlar · {count} kayıt')}
         </p>
       </header>
 
@@ -63,7 +66,7 @@ export default function FavoritesPage(): ReactElement {
       {isError ? <ErrorAlert error={mapError(error)} /> : null}
 
       {placeItems.length === 0 && !isPending && !isError ? (
-        <EmptyState {...EMPTY_STATES.favorites} />
+        <EmptyState {...emptyStates.favorites} />
       ) : null}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -106,7 +109,7 @@ export default function FavoritesPage(): ReactElement {
                   disabled={removeMut.isPending}
                 >
                   <HeartOff className="h-4 w-4" aria-hidden="true" />
-                  Favoriden çıkar
+                  {t('favorites.remove', 'Favoriden çıkar')}
                 </button>
               </div>
             </article>

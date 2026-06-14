@@ -57,7 +57,7 @@ from app.repositories.place_repository import PlaceRepository
 from app.services.route_service import RouteService
 from app.services.stop_service import StopService
 from app.utils.district_filter import filter_by_city, filter_by_district
-from app.utils.places_quality import dedupe_places, filter_quality_places
+from app.utils.places_quality import dedupe_places, diversify_places, filter_quality_places
 from app.data.city_landmarks import city_landmark_places
 from app.utils.city_coords import haversine_km, resolve_city_coords
 from app.utils.geolocation import calculate_distance_meters, is_user_near_location
@@ -718,12 +718,11 @@ class AIService:
         places_formatted_reply = ''
         if needs_travel_plan(last_user) and settings.google_places_enabled:
             days, budget = extract_trip_params(last_user)
-            cat = detect_query_category(last_user, payload.interests)
             picks = await self._assistant_collect_places(
                 city=resolved_city,
                 lat=float(lat),
                 lng=float(lng),
-                category=cat,
+                balanced=True,
             )
             if picks:
                 places_hint = format_places_detail(picks)
@@ -853,7 +852,8 @@ class AIService:
         city: str,
         lat: float,
         lng: float,
-        category: str,
+        category: str = 'historical',
+        balanced: bool = False,
     ) -> list:
         merged: dict[str, object] = {}
 
@@ -862,26 +862,42 @@ class AIService:
                 pid = str(getattr(place, 'place_id', '') or getattr(place, 'name', ''))
                 merged[pid] = place
 
-        try:
-            nearby, _ = await google_places_service.search_nearby(
-                lat=lat,
-                lng=lng,
-                radius_m=12000,
-                category=category,
-                client_key='assistant',
-            )
-            city_nearby = filter_by_city(nearby, city) or nearby
-            absorb(city_nearby)
-        except Exception as exc:
-            logger.debug('Assistant nearby: %s', exc)
+        if balanced:
+            for cat in ('historical', 'museum', 'mosque', 'restaurant', 'accommodation'):
+                try:
+                    nearby, _ = await google_places_service.search_nearby(
+                        lat=lat,
+                        lng=lng,
+                        radius_m=12000,
+                        category=cat,
+                        client_key='assistant',
+                    )
+                    city_nearby = filter_by_city(nearby, city) or nearby
+                    absorb(city_nearby[:4])
+                except Exception as exc:
+                    logger.debug('Assistant nearby %s: %s', cat, exc)
+        else:
+            try:
+                nearby, _ = await google_places_service.search_nearby(
+                    lat=lat,
+                    lng=lng,
+                    radius_m=12000,
+                    category=category,
+                    client_key='assistant',
+                )
+                city_nearby = filter_by_city(nearby, city) or nearby
+                absorb(city_nearby)
+            except Exception as exc:
+                logger.debug('Assistant nearby: %s', exc)
 
         for query in (
             f'müze {city}',
             f'tarihi yerler {city}',
             f'turistik mekanlar {city}',
             f'cami {city}',
+            f'otel {city}',
         ):
-            if len(merged) >= 12:
+            if len(merged) >= 16:
                 break
             try:
                 found, _ = await google_places_service.search_text(
@@ -892,7 +908,7 @@ class AIService:
                     client_key='assistant',
                 )
                 city_found = filter_by_city(found, city) or found
-                absorb(city_found)
+                absorb(city_found[:4])
             except Exception as exc:
                 logger.debug('Assistant text search %s: %s', query, exc)
 
@@ -927,6 +943,8 @@ class AIService:
             ),
             reverse=True,
         )
+        if balanced:
+            return diversify_places(ranked, limit=12)
         return ranked[:12]
 
     @staticmethod

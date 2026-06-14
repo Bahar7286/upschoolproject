@@ -178,7 +178,13 @@ async def test_ai_u08_assistant_bursa_not_istanbul_fallback() -> None:
         mock_settings.llm_enabled = True
         mock_settings.google_places_enabled = True
         with patch('app.services.ai_service.google_places_service') as mock_gp:
-            mock_gp.search_nearby = AsyncMock(return_value=([bursa_place, generic_bursa], False))
+            async def nearby_side_effect(**kwargs):
+                cat = kwargs.get('category', 'historical')
+                if cat == 'restaurant':
+                    return ([], False)
+                return ([bursa_place], False)
+
+            mock_gp.search_nearby = AsyncMock(side_effect=nearby_side_effect)
             mock_gp.search_text = AsyncMock(return_value=([istanbul_place], False))
             result = await service.chat_assistant(
                 AssistantChatRequest(

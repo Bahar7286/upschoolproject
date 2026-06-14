@@ -10,6 +10,7 @@ import { ThemeToggle } from '../components/theme/theme-toggle';
 import { LoadingButton } from '../components/ui/loading-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { inputErrorClass, validateEmail, validatePassword, type FieldErrors } from '../lib/validation';
 import { fetchCurrentUser, loginUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
@@ -17,6 +18,7 @@ import { useOnboardingStore } from '../stores/onboarding-store';
 import { DEMO_ACCOUNTS } from '../config/contact';
 
 export default function LoginPage(): ReactElement {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const setSession = useAuthStore((s) => s.setSession);
@@ -84,7 +86,7 @@ export default function LoginPage(): ReactElement {
 
   return (
     <AuthPageShell className="px-4 py-8">
-      <PageMeta title="Giriş" description="Historial GO hesabınıza giriş yapın." path="/login" noindex />
+      <PageMeta title={t('auth.loginTitle', 'Giriş')} description="Historial GO" path="/login" noindex />
       <div className="relative mx-auto flex w-full max-w-md flex-col gap-8">
         <header className="flex items-start justify-between gap-4">
           <BrandLogo to="/" size="md" />
@@ -101,13 +103,13 @@ export default function LoginPage(): ReactElement {
             </div>
             <div className="min-w-0 flex-1 space-y-1">
               <p className="text-xs font-bold uppercase tracking-[0.14em] text-primary dark:text-primary">
-                Güvenli oturum
+                {t('auth.loginSecure', 'Güvenli oturum')}
               </p>
               <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="login-heading">
-                Giriş yap
+                {t('auth.loginTitle', 'Giriş yap')}
               </h1>
               <p className="text-sm leading-relaxed text-stone-600 dark:text-stone-400">
-                AI rotaları, harita ve sesli rehber için hesabınla devam et.
+                {t('auth.loginSubtitle', 'Hesabına giriş yap veya demo hesapla dene')}
               </p>
             </div>
           </div>
@@ -117,12 +119,12 @@ export default function LoginPage(): ReactElement {
               className="mb-4 rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-sm font-medium text-amber-950 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-100"
               role="status"
             >
-              Devam etmek için önce giriş yapın. Girişten sonra istenen sayfaya yönlendirilirsiniz.
+              {t('auth.loginRedirectHint', 'Devam etmek için önce giriş yapın. Girişten sonra istenen sayfaya yönlendirilirsiniz.')}
             </div>
           ) : null}
 
           <div className="mb-5 grid gap-2">
-            <p className="text-xs font-bold uppercase tracking-wide text-theme-muted">Demo hesaplar</p>
+            <p className="text-xs font-bold uppercase tracking-wide text-theme-muted">{t('auth.demoAccounts', 'Demo hesaplar')}</p>
             {DEMO_ACCOUNTS.map((acc) => (
               <button
                 key={acc.email}
@@ -133,7 +135,7 @@ export default function LoginPage(): ReactElement {
               >
                 <strong className="text-theme">{acc.role}</strong>
                 <span className="mx-1 text-theme-muted">·</span>
-                <span className="text-theme-muted">Tek tıkla giriş</span>
+                <span className="text-theme-muted">{t('auth.demoOneClick', 'Tek tıkla giriş')}</span>
                 <span className="mt-0.5 block font-mono text-[10px] text-theme-muted">
                   {acc.email} / {acc.password}
                 </span>
@@ -144,7 +146,7 @@ export default function LoginPage(): ReactElement {
           <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>
             <div className="flex flex-col gap-2">
               <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="login-email">
-                E-posta
+                {t('auth.email', 'E-posta')}
               </label>
               <input
                 id="login-email"
@@ -170,13 +172,13 @@ export default function LoginPage(): ReactElement {
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-2">
                 <label className="text-sm font-semibold text-stone-800 dark:text-stone-200" htmlFor="login-password">
-                  Şifre
+                  {t('auth.password', 'Şifre')}
                 </label>
                 <Link
                   className="text-xs font-bold text-primary hover:underline"
                   to="/sifremi-unuttum"
                 >
-                  Şifremi unuttum
+                  {t('auth.forgotPassword', 'Şifremi unuttum')}
                 </Link>
               </div>
               <input
@@ -209,16 +211,16 @@ export default function LoginPage(): ReactElement {
               </p>
             ) : null}
 
-            <LoadingButton className="w-full" type="submit" loading={loading} loadingLabel="Giriş yapılıyor…">
-              Devam et
+            <LoadingButton className="w-full" type="submit" loading={loading} loadingLabel={t('auth.loggingIn', 'Giriş yapılıyor…')}>
+              {t('auth.continueBtn', 'Devam et')}
             </LoadingButton>
           </form>
 
           <div className="mt-6 space-y-3 border-t border-stone-900/10 pt-5 text-center text-sm text-stone-600 dark:border-white/10 dark:text-stone-400">
             <p>
-              Hesabın yok mu?{' '}
+              {t('auth.noAccount', 'Hesabın yok mu?')}{' '}
               <Link className="font-bold text-heritage-ink underline-offset-4 hover:underline dark:text-amber-200" to="/register">
-                Kayıt ol
+                {t('auth.signUpLink', 'Kayıt ol')}
               </Link>
             </p>
             <Link
@@ -226,13 +228,13 @@ export default function LoginPage(): ReactElement {
               to="/"
             >
               <ArrowLeft className="h-4 w-4" aria-hidden="true" strokeWidth={2} />
-              Ana sayfa
+              {t('common.home', 'Ana sayfa')}
             </Link>
           </div>
         </section>
 
         <p className="text-center text-[11px] leading-relaxed text-stone-500 dark:text-stone-500">
-          Oturum açınca JWT saklanır; çıkış yapana kadar cihazınızda tutulur. Üretimde HTTPS ve güçlü şifre politikası kullanın.
+          {t('auth.sessionNote', 'Oturum açınca JWT saklanır; çıkış yapana kadar cihazınızda tutulur. Üretimde HTTPS ve güçlü şifre politikası kullanın.')}
         </p>
       </div>
     </AuthPageShell>

@@ -5,6 +5,16 @@ import type { StopResponse } from '../types/stop';
 const CHECK_INTERVAL_MS = 4000;
 const DEFAULT_RADIUS_M = 20;
 
+export interface GeofenceMessages {
+  triggered: (stopTitle: string) => string;
+  nearest: (stopTitle: string, distanceM: number) => string;
+}
+
+const DEFAULT_MESSAGES: GeofenceMessages = {
+  triggered: (title) => `Sesli rehber tetiklendi: ${title}`,
+  nearest: (title, distanceM) => `En yakın: ${title} (~${Math.round(distanceM)} m)`,
+};
+
 function distanceMeters(
   lat1: number,
   lng1: number,
@@ -26,13 +36,16 @@ export function useGeofenceWatch(
   stops: StopResponse[],
   onTriggered?: (stopIndex: number, message: string) => void,
   radiusM = DEFAULT_RADIUS_M,
+  messages: GeofenceMessages = DEFAULT_MESSAGES,
 ): { geofenceMessage: string; watching: boolean } {
   const [geofenceMessage, setGeofenceMessage] = useState('');
   const [watching, setWatching] = useState(false);
   const lastCheckRef = useRef(0);
   const lastTriggeredIdRef = useRef<number | null>(null);
   const onTriggeredRef = useRef(onTriggered);
+  const messagesRef = useRef(messages);
   onTriggeredRef.current = onTriggered;
+  messagesRef.current = messages;
 
   useEffect(() => {
     lastTriggeredIdRef.current = null;
@@ -71,14 +84,14 @@ export function useGeofenceWatch(
           const stopKey = nearest.stop_id;
           if (lastTriggeredIdRef.current !== stopKey) {
             lastTriggeredIdRef.current = stopKey;
-            const message = `Sesli rehber tetiklendi: ${nearest.title}`;
+            const message = messagesRef.current.triggered(nearest.title);
             setGeofenceMessage(message);
             onTriggeredRef.current?.(bestIdx, message);
           }
           return;
         }
 
-        setGeofenceMessage(`En yakın: ${nearest.title} (~${Math.round(bestDist)} m)`);
+        setGeofenceMessage(messagesRef.current.nearest(nearest.title, bestDist));
       },
       () => setWatching(false),
       { enableHighAccuracy: true, maximumAge: 5000, timeout: 15000 },
