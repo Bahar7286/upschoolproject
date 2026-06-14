@@ -157,7 +157,58 @@ def format_places_reply(
             lines.append(f'   📍 {addr}')
 
     lines.append(footer)
-    return '\n\n'.join(lines)
+    return '\n'.join(lines)
+
+
+def format_itinerary_reply(
+    places: list[Any],
+    city: str,
+    *,
+    days: int | None = None,
+    budget: float | None = None,
+    locale: str = 'tr',
+) -> str:
+    """Gün gün gezi planı — gerçek mekan isimleriyle."""
+    if not places:
+        return format_places_reply([], city, days=days, budget=budget, locale=locale)
+
+    day_count = max(1, min(days or 1, 7))
+    picks = places[: min(len(places), day_count * 4)]
+    per_day = max(2, (len(picks) + day_count - 1) // day_count)
+
+    if locale == 'en':
+        header = [f'**{city}** — {day_count}-day itinerary']
+        if budget:
+            header.append(f'budget ~{budget:.0f} TRY')
+        lines = [' — '.join(header) + '\n']
+        day_label = 'Day'
+        footer = '\nSee **Map** for live pins and routes.'
+    else:
+        header = [f'**{city}** için {day_count} günlük gezi planı']
+        if budget:
+            header.append(f'bütçe ~{budget:.0f} TL')
+        lines = [' — '.join(header) + '\n']
+        day_label = 'Gün'
+        footer = '\nDetay ve harita pinleri için **Harita** sekmesine bakabilirsin.'
+
+    idx = 0
+    for day in range(1, day_count + 1):
+        chunk = picks[idx : idx + per_day]
+        if not chunk:
+            break
+        idx += per_day
+        lines.append(f'\n**{day}. {day_label}**')
+        for i, p in enumerate(chunk, 1):
+            name = getattr(p, 'name', '')
+            addr = getattr(p, 'address', '') or getattr(p, 'formatted_address', '') or ''
+            rating = getattr(p, 'rating', None)
+            stars = f' ⭐ {rating}' if rating else ''
+            lines.append(f'{i}. **{name}**{stars}')
+            if addr:
+                lines.append(f'   📍 {addr}')
+
+    lines.append(footer)
+    return '\n'.join(lines)
 
 
 def format_venue_reply(places: list[Any], where: str, *, locale: str = 'tr') -> str:

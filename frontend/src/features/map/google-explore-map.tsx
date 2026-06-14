@@ -7,6 +7,7 @@ import type { GooglePlaceSummary } from '../../types/google';
 import type { RouteResponse } from '../../types/route';
 import type { StopResponse } from '../../types/stop';
 import { decodePolyline } from '../../utils/polyline';
+import { googlePlacePinColor } from '../../utils/google-place-category';
 import { routeMapPosition } from './route-map-position';
 
 const containerStyle: { width: string; height: string } = {
@@ -65,9 +66,9 @@ export function GoogleExploreMap({
 
   useEffect(() => {
     if (loadError) {
-      onLoadFailed?.();
+      console.warn('Google Maps load error', loadError);
     }
-  }, [loadError, onLoadFailed]);
+  }, [loadError]);
 
   const polyPath = useMemo(() => {
     if (routePolyline && routePolyline.length > 1) return routePolyline;
@@ -100,8 +101,19 @@ export function GoogleExploreMap({
 
   if (loadError) {
     return (
-      <div className={`flex ${shellHeight} items-center justify-center rounded-2xl border border-amber-200 bg-amber-50 px-4 text-center text-sm text-amber-950`}>
-        Google harita açılamadı; OSM haritasına geçiliyor…
+      <div
+        className={`flex ${shellHeight} flex-col items-center justify-center gap-3 rounded-2xl border border-amber-200 bg-amber-50 px-4 text-center text-sm text-amber-950`}
+      >
+        <p>Google Haritalar yüklenemedi. Lütfen sayfayı yenileyin veya OSM sekmesine geçin.</p>
+        {onLoadFailed ? (
+          <button
+            type="button"
+            className="rounded-lg bg-heritage-ink px-4 py-2 text-xs font-semibold text-white"
+            onClick={() => onLoadFailed()}
+          >
+            OSM haritasına geç
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -174,14 +186,25 @@ export function GoogleExploreMap({
           const { lat, lng } = routeMapPosition(route.route_id);
           return <Marker key={route.route_id} position={{ lat, lng }} title={route.title} />;
         })}
-        {googlePlaces.map((place) => (
+        {googlePlaces.map((place) => {
+          const pinColor = googlePlacePinColor(place);
+          return (
           <Marker
             key={place.place_id}
             position={{ lat: place.lat, lng: place.lng }}
             title={place.name}
+            icon={{
+              path: google.maps.SymbolPath.CIRCLE,
+              scale: 9,
+              fillColor: pinColor,
+              fillOpacity: 1,
+              strokeColor: '#ffffff',
+              strokeWeight: 2,
+            }}
             onClick={() => handleMarkerClick(place)}
           />
-        ))}
+          );
+        })}
         {polyPath.length > 1 ? (
           <Polyline
             path={polyPath}

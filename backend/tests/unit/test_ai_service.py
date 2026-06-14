@@ -153,6 +153,15 @@ async def test_ai_u08_assistant_bursa_not_istanbul_fallback() -> None:
         types=['mosque'],
         google_maps_uri='https://maps.google.com',
     )
+    generic_bursa = GooglePlaceSummary(
+        place_id='bursa-city',
+        name='Bursa',
+        lat=40.1885,
+        lng=29.0610,
+        address='Bursa, Türkiye',
+        types=['locality', 'political'],
+        google_maps_uri='https://maps.google.com',
+    )
     istanbul_place = GooglePlaceSummary(
         place_id='ist1',
         name='Ayasofya',
@@ -168,21 +177,20 @@ async def test_ai_u08_assistant_bursa_not_istanbul_fallback() -> None:
     with patch('app.services.ai_service.settings') as mock_settings:
         mock_settings.llm_enabled = True
         mock_settings.google_places_enabled = True
-        with patch('app.services.ai_service.llm_service') as mock_llm:
-            mock_llm.complete_text = AsyncMock(side_effect=LLMServiceError('timeout'))
-            with patch('app.services.ai_service.google_places_service') as mock_gp:
-                mock_gp.search_text = AsyncMock(return_value=([bursa_place, istanbul_place], False))
-                mock_gp.search_nearby = AsyncMock(return_value=([], False))
-                result = await service.chat_assistant(
-                    AssistantChatRequest(
-                        city='İstanbul',
-                        district='',
-                        interests=['history'],
-                        messages=[AssistantMessage(role='user', content='bursa 3 gün 1000 tl')],
-                    )
+        with patch('app.services.ai_service.google_places_service') as mock_gp:
+            mock_gp.search_nearby = AsyncMock(return_value=([bursa_place, generic_bursa], False))
+            mock_gp.search_text = AsyncMock(return_value=([istanbul_place], False))
+            result = await service.chat_assistant(
+                AssistantChatRequest(
+                    city='İstanbul',
+                    district='',
+                    interests=['history'],
+                    messages=[AssistantMessage(role='user', content='bursa 3 gün 1000 tl')],
                 )
-    assert result.source == 'rules'
+            )
+    assert result.source == 'places'
     assert 'Bursa' in result.reply
+    assert '3 günlük' in result.reply
     assert 'İstanbul için' not in result.reply
-    assert '1. **Ulucami**' in result.reply
-    assert 'puan=' not in result.reply
+    assert 'Ulucami' in result.reply or 'Ulu Camii' in result.reply
+    assert '1. **Bursa**' not in result.reply

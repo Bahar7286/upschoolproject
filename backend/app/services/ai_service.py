@@ -44,6 +44,7 @@ from app.services.ai_prompts import (
     build_narration_user,
     build_personal_route_user,
     build_route_recommend_user,
+    format_itinerary_reply,
     format_places_detail,
     format_places_reply,
     format_venue_reply,
@@ -56,6 +57,8 @@ from app.repositories.place_repository import PlaceRepository
 from app.services.route_service import RouteService
 from app.services.stop_service import StopService
 from app.utils.district_filter import filter_by_city, filter_by_district
+from app.utils.places_quality import dedupe_places, filter_quality_places
+from app.data.city_landmarks import city_landmark_places
 from app.utils.city_coords import haversine_km, resolve_city_coords
 from app.utils.geolocation import calculate_distance_meters, is_user_near_location
 
@@ -716,37 +719,35 @@ class AIService:
         if needs_travel_plan(last_user) and settings.google_places_enabled:
             days, budget = extract_trip_params(last_user)
             cat = detect_query_category(last_user, payload.interests)
-            nearby: list = []
-            try:
-                nearby, _ = await google_places_service.search_text(
-                    query=f'turistik yerler {resolved_city}',
-                    lat=float(lat),
-                    lng=float(lng),
-                    radius_m=15000,
-                    client_key='assistant',
-                )
-            except Exception as exc:
-                logger.debug('Assistant text search: %s', exc)
-            if not nearby:
-                try:
-                    nearby, _ = await google_places_service.search_nearby(
-                        lat=float(lat),
-                        lng=float(lng),
-                        radius_m=8000,
-                        category=cat,
-                    )
-                except Exception as exc:
-                    logger.debug('Assistant places lookup: %s', exc)
-            if nearby:
-                filtered = filter_by_city(nearby, resolved_city)
-                picks = (filtered or nearby)[:10]
+            picks = await self._assistant_collect_places(
+                city=resolved_city,
+                lat=float(lat),
+                lng=float(lng),
+                category=cat,
+            )
+            if picks:
                 places_hint = format_places_detail(picks)
-                places_formatted_reply = format_places_reply(
-                    picks[:8],
-                    resolved_city,
-                    days=days,
-                    budget=budget,
-                    locale=payload.preferred_language,
+                if days and days >= 2:
+                    places_formatted_reply = format_itinerary_reply(
+                        picks,
+                        resolved_city,
+                        days=days,
+                        budget=budget,
+                        locale=payload.preferred_language,
+                    )
+                else:
+                    places_formatted_reply = format_places_reply(
+                        picks[:8],
+                        resolved_city,
+                        days=days,
+                        budget=budget,
+                        locale=payload.preferred_language,
+                    )
+
+            if intent == 'route_plan' and places_formatted_reply.strip():
+                return AssistantChatResponse(
+                    reply=places_formatted_reply.strip(),
+                    source='places',
                 )
 
         prompt_intent = 'rota' if intent == 'route_plan' else intent
@@ -845,6 +846,88 @@ class AIService:
                 source='places',
             )
         return None
+
+    async def _assistant_collect_places(
+        self,
+        *,
+        city: str,
+        lat: float,
+        lng: float,
+        category: str,
+    ) -> list:
+        merged: dict[str, object] = {}
+
+        def absorb(items: list) -> None:
+            for place in filter_quality_places(items, city):
+                pid = str(getattr(place, 'place_id', '') or getattr(place, 'name', ''))
+                merged[pid] = place
+
+        try:
+            nearby, _ = await google_places_service.search_nearby(
+                lat=lat,
+                lng=lng,
+                radius_m=12000,
+                category=category,
+                client_key='assistant',
+            )
+            city_nearby = filter_by_city(nearby, city) or nearby
+            absorb(city_nearby)
+        except Exception as exc:
+            logger.debug('Assistant nearby: %s', exc)
+
+        for query in (
+            f'müze {city}',
+            f'tarihi yerler {city}',
+            f'turistik mekanlar {city}',
+            f'cami {city}',
+        ):
+            if len(merged) >= 12:
+                break
+            try:
+                found, _ = await google_places_service.search_text(
+                    query=query,
+                    lat=lat,
+                    lng=lng,
+                    radius_m=20000,
+                    client_key='assistant',
+                )
+                city_found = filter_by_city(found, city) or found
+                absorb(city_found)
+            except Exception as exc:
+                logger.debug('Assistant text search %s: %s', query, exc)
+
+        if len(merged) < 3 and self.place_repository:
+            try:
+                db_places = await self.place_repository.list_places(city=city, limit=20)
+                for p in db_places:
+                    from app.schemas.google_schema import GooglePlaceSummary
+
+                    absorb([
+                        GooglePlaceSummary(
+                            place_id=f'db-{p.place_id}',
+                            name=p.name,
+                            lat=p.latitude,
+                            lng=p.longitude,
+                            address=f'{p.district}, {p.city}',
+                            category=p.category,
+                            types=['tourist_attraction'],
+                        )
+                    ])
+            except Exception as exc:
+                logger.debug('Assistant DB places: %s', exc)
+
+        if len(merged) < 2:
+            absorb(city_landmark_places(city))
+
+        ranked = dedupe_places(list(merged.values()))
+        ranked.sort(
+            key=lambda p: (
+                getattr(p, 'user_rating_count', None) or 0,
+                getattr(p, 'rating', None) or 0.0,
+            ),
+            reverse=True,
+        )
+        return ranked[:12]
 
     @staticmethod
     def _resolve_assistant_coords(

@@ -93,6 +93,8 @@ export default function MapPage(): ReactElement {
   const polylineParam = searchParams.get('polyline');
   const destLat = parseOptionalCoord(searchParams.get('destLat'));
   const destLng = parseOptionalCoord(searchParams.get('destLng'));
+  const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+  const hasGoogleKey = Boolean(googleKey?.trim());
   const [placesRadius, setPlacesRadius] = useState(() => (districtIdParam > 0 ? 4000 : 10000));
   const [googlePlacesError, setGooglePlacesError] = useState('');
 
@@ -625,7 +627,7 @@ export default function MapPage(): ReactElement {
         mapZoom={mapZoom}
         googlePlaces={sortedGooglePlaces}
         routePolyline={routePolyline}
-        preferGoogle={false}
+        preferGoogle={hasGoogleKey}
         mapPickActive={mapPickActive}
         onMapPick={(lat, lng) => void handleMapPick(lat, lng)}
       />

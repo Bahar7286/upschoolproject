@@ -47,21 +47,30 @@ export function ExploreMap({
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const defaultCenter = mapCenter ?? { lat: 41.015137, lng: 28.97953 };
   const hasGoogleKey = Boolean(googleKey?.trim());
-  const [engine, setEngine] = useState<Engine>('leaflet');
-  const [googleFailed, setGoogleFailed] = useState(false);
+  const [engine, setEngine] = useState<Engine>(() => {
+    if (typeof window === 'undefined') return 'leaflet';
+    const saved = sessionStorage.getItem('map-engine');
+    if (saved === 'google' && hasGoogleKey) return 'google';
+    if (preferGoogle && hasGoogleKey) return 'google';
+    return 'leaflet';
+  });
 
-  const fallbackToLeaflet = useCallback(() => {
-    setGoogleFailed(true);
-    setEngine('leaflet');
+  const selectEngine = useCallback((next: Engine) => {
+    setEngine(next);
+    try {
+      sessionStorage.setItem('map-engine', next);
+    } catch {
+      /* ignore */
+    }
   }, []);
 
   useEffect(() => {
     if (mapPickActive) {
-      setEngine('leaflet');
+      selectEngine('leaflet');
     }
-  }, [mapPickActive]);
+  }, [mapPickActive, selectEngine]);
 
-  const activeEngine = googleFailed ? 'leaflet' : engine;
+  const activeEngine = engine;
 
   return (
     <div className="space-y-4">
@@ -75,11 +84,6 @@ export function ExploreMap({
             <>
               <strong>OpenStreetMap</strong>
               {googlePlaces.length > 0 ? ' — canlı mekan pinleri.' : ' — yerel katalog pinleri.'}
-              {googleFailed ? (
-                <span className="mt-1 block text-xs text-amber-700 dark:text-amber-300">
-                  Google harita yüklenemedi; OSM haritası gösteriliyor.
-                </span>
-              ) : null}
             </>
           )}
         </p>
@@ -91,10 +95,7 @@ export function ExploreMap({
                 ? 'bg-heritage-ink text-white shadow dark:bg-stone-100 dark:text-heritage-ink'
                 : 'text-stone-600 dark:text-stone-400'
             }`}
-            onClick={() => {
-              setGoogleFailed(false);
-              setEngine('leaflet');
-            }}
+            onClick={() => selectEngine('leaflet')}
           >
             OSM / Leaflet
           </button>
@@ -111,8 +112,7 @@ export function ExploreMap({
             }`}
             onClick={() => {
               if (!hasGoogleKey) return;
-              setGoogleFailed(false);
-              setEngine('google');
+              selectEngine('google');
             }}
           >
             Google
@@ -146,7 +146,6 @@ export function ExploreMap({
           routePolyline={routePolyline}
           activeStops={activeStops}
           currentStopIndex={currentStopIndex}
-          onLoadFailed={fallbackToLeaflet}
         />
       ) : null}
     </div>

@@ -13,7 +13,8 @@ import L from 'leaflet';
 import type { GooglePlaceSummary } from '../../types/google';
 import type { PlaceResponse } from '../../types/place';
 
-import { PLACE_CATEGORY_LABELS } from '../../types/place';
+import { PLACE_CATEGORY_LABELS, PLACE_CATEGORY_COLORS } from '../../types/place';
+import { resolveGooglePlaceCategory } from '../../utils/google-place-category';
 
 import type { StopResponse } from '../../types/stop';
 
@@ -313,9 +314,9 @@ export function LeafletExploreMap({
 
 
         {showPlaces && googlePlaces.length > 0
-          ? googlePlaces.map((gp, idx) => {
-              const popular = idx < 10;
-              const radius = popular ? 10 : 7;
+          ? googlePlaces.map((gp) => {
+              const category = resolveGooglePlaceCategory(gp);
+              const pinColor = PLACE_CATEGORY_COLORS[category];
               const ratingLabel =
                 gp.rating != null
                   ? `⭐ ${gp.rating}${gp.user_rating_count ? ` (${gp.user_rating_count})` : ''}`
@@ -324,16 +325,19 @@ export function LeafletExploreMap({
               <CircleMarker
                 key={`gplace-${gp.place_id}`}
                 center={[gp.lat, gp.lng]}
-                radius={radius}
+                radius={9}
                 pathOptions={{
-                  color: popular ? '#92400e' : '#b45309',
-                  fillColor: popular ? '#f59e0b' : '#d97706',
-                  fillOpacity: popular ? 0.95 : 0.88,
-                  weight: popular ? 2.5 : 2,
+                  color: pinColor,
+                  fillColor: pinColor,
+                  fillOpacity: 0.92,
+                  weight: 2,
                 }}
               >
                 <Popup>
                   <div className="min-w-[160px] space-y-1 p-1 font-sans text-sm">
+                    <div className="text-xs font-bold uppercase text-stone-500">
+                      {PLACE_CATEGORY_LABELS[category]}
+                    </div>
                     <div className="font-bold">{gp.name}</div>
                     {ratingLabel ? (
                       <div className="text-xs font-semibold text-amber-700">{ratingLabel}</div>
@@ -348,7 +352,7 @@ export function LeafletExploreMap({
                   </div>
                 </Popup>
               </CircleMarker>
-            );
+              );
             })
           : null}
 
