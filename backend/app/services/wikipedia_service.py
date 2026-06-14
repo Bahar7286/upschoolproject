@@ -50,44 +50,72 @@ async def fetch_wikipedia_summary(query: str, lang: str = 'tr') -> tuple[str, li
     return text[:2500], sources
 
 
+def _place_wikipedia_queries(name: str, city: str, district: str) -> list[str]:
+    return list(
+        dict.fromkeys(
+            q
+            for q in (
+                name,
+                f'{name}, {city}' if city else '',
+                f'{name} ({city})' if city else '',
+                f'{name}, {district}' if district and district != city else '',
+                f'{name}, Turkey',
+            )
+            if q
+        )
+    )
+
+
+async def fetch_place_wikipedia_bilingual(
+    place_name: str,
+    *,
+    city: str = '',
+    district: str = '',
+) -> tuple[str, str, list[dict[str, str]]]:
+    """Mekan için ayrı TR ve EN Wikipedia özetleri."""
+    name = place_name.strip()
+    if not name:
+        return '', '', []
+
+    city = city.strip()
+    district = district.strip()
+    queries = _place_wikipedia_queries(name, city, district)
+    sources: list[dict[str, str]] = []
+    seen_urls: set[str] = set()
+    tr_text = ''
+    en_text = ''
+
+    for q in queries:
+        if not tr_text:
+            text, title, page_url = await _fetch_one(q, 'tr')
+            if text:
+                tr_text = text
+                if page_url and page_url not in seen_urls:
+                    seen_urls.add(page_url)
+                    sources.append({'title': f'Wikipedia (tr): {title}', 'url': page_url})
+        if not en_text:
+            text, title, page_url = await _fetch_one(q, 'en')
+            if text:
+                en_text = text
+                if page_url and page_url not in seen_urls:
+                    seen_urls.add(page_url)
+                    sources.append({'title': f'Wikipedia (en): {title}', 'url': page_url})
+        if tr_text and en_text:
+            break
+
+    return tr_text[:2500], en_text[:2500], sources
+
+
 async def fetch_place_wikipedia_content(
     place_name: str,
     *,
     city: str = '',
     district: str = '',
 ) -> tuple[str, list[dict[str, str]]]:
-    """Mekan adı + şehir ile TR/EN Wikipedia özetlerini birleştir."""
-    name = place_name.strip()
-    if not name:
-        return '', []
-
-    city = city.strip()
-    district = district.strip()
-    queries = [
-        name,
-        f'{name}, {city}' if city else '',
-        f'{name} ({city})' if city else '',
-        f'{name}, {district}' if district and district != city else '',
-        f'{name}, Turkey',
-    ]
-    seen_text: set[str] = set()
-    sources: list[dict[str, str]] = []
-    chunks: list[str] = []
-
-    for q in dict.fromkeys(q for q in queries if q):
-        for lang in ('tr', 'en'):
-            text, title, page_url = await _fetch_one(q, lang)
-            if not text or text in seen_text:
-                continue
-            seen_text.add(text)
-            prefix = 'TR' if lang == 'tr' else 'EN'
-            chunks.append(f'[{prefix}] {text}')
-            if page_url:
-                sources.append({'title': f'Wikipedia ({lang}): {title}', 'url': page_url})
-            if len(chunks) >= 2:
-                break
-        if len(chunks) >= 2:
-            break
-
-    combined = '\n\n'.join(chunks)[:3500]
-    return combined, sources
+    """DB zenginleştirme için öncelikle Türkçe Wikipedia özeti."""
+    tr_text, en_text, sources = await fetch_place_wikipedia_bilingual(
+        place_name, city=city, district=district
+    )
+    if tr_text:
+        return tr_text, sources
+    return en_text, sources

@@ -41,8 +41,18 @@ const RICH_BY_NAME: Record<string, RichPlaceContent> = {
     tips: ['Namaz vakitlerinde ziyaret kısıtlı olabilir.', 'Sessiz ve saygılı ziyaret önemlidir.'],
   },
   Anıtkabir: {
-    story: 'Türkiye Cumhuriyeti’nin kurucusu Mustafa Kemal Atatürk’ün anıt mezarı; mozole, müze ve tören meydanı.',
-    tips: ['Aslanlı Yol yürüyüşünü kaçırmayın.', 'Müze bölümü için zaman ayırın.'],
+    story:
+      'Anıtkabir, Türkiye Cumhuriyeti’nin kurucusu Mustafa Kemal Atatürk’ün anıt mezarıdır. ' +
+      '1944–1953 yılları arasında inşa edilen kompleks; Aslanlı Yol, tören meydanı, mozole ve ' +
+      'Anıtkabir Atatürk ve Kurtuluş Savaşı Müzesi’nden oluşur. Mozolede Atatürk’ün naşı bulunur; ' +
+      'müze bölümünde Cumhuriyet’in kuruluş süreci, savaş dönemi ve Atatürk’ün kişisel eşyaları sergilenir. ' +
+      'Ankara’nın Çankaya ilçesindeki Anıttepe’de, şehre hakim bir tepe üzerinde yer alır.',
+    tips: [
+      'Aslanlı Yol yürüyüşünü kaçırmayın; tören meydanında durup mozoleyi izleyin.',
+      'Müze bölümü için en az bir saat ayırın.',
+      'Resmî tören günlerinde yoğunluk artabilir; sabah erken saatler daha sakindir.',
+    ],
+    hours: 'Her gün ziyarete açıktır; müze saatleri mevsime göre değişebilir.',
   },
   'Efes Antik Kenti': {
     story: 'Celsus Kütüphanesi ve Büyük Tiyatro’suyla UNESCO listesindeki en etkileyici arkeolojik alanlardan biri.',

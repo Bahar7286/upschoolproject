@@ -8,6 +8,7 @@ import { RegionThumb } from '../components/ui/region-thumb';
 import { LoadingButton } from '../components/ui/loading-button';
 import { AlsoVisitedPanel } from '../components/explore/also-visited-panel';
 import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
+import { buildNarrationContext, getRichPlaceContent } from '../data/place-rich-content';
 import { useRecordPlaceVisit } from '../hooks/use-record-place-visit';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { AddToActiveRouteButton } from '../features/active-route/active-route-planner';
@@ -146,8 +147,18 @@ export default function GooglePlaceDetailPage(): ReactElement {
     navigate(`/map?${q.toString()}`);
   };
 
+  const placeCity = place?.formatted_address?.split(',').slice(-2, -1)[0]?.trim() ?? '';
+  const richContent = place
+    ? getRichPlaceContent(place.name, 'historical', place.editorial_summary ?? '', placeCity)
+    : null;
   const narrationDescription = place
-    ? [place.editorial_summary, place.formatted_address].filter(Boolean).join('\n')
+    ? buildNarrationContext({
+        name: place.name,
+        city: placeCity,
+        category: 'historical',
+        story: richContent?.story,
+        description: place.formatted_address,
+      })
     : '';
 
   if (error) {
@@ -199,7 +210,8 @@ export default function GooglePlaceDetailPage(): ReactElement {
       <PlaceNarrationPanel
         stopTitle={place.name}
         description={narrationDescription}
-        city={place.formatted_address?.split(',').slice(-2, -1)[0]?.trim()}
+        city={placeCity}
+        category="historical"
       />
 
       <AlsoVisitedPanel

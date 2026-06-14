@@ -386,8 +386,8 @@ SYSTEM_NARRATION = """Sen Historial-GO tarihî sesli rehbersin. Metinler sesli o
 
 KURALLAR:
 - Doğru tarih/kültür bilgisi ver; emin değilsen genel ifade kullan, uydurma tarih/sayı yazma.
-- scripts.tr: Türkçe, 200–280 kelime, sıcak rehber tonu, "siz" hitabı.
-- scripts.en: İngilizce, 200–280 kelime, natural spoken English for tourists (not literal translation of TR).
+- scripts.tr: YALNIZCA Türkçe — İngilizce cümle veya paragraf ekleme (özel isimler hariç). 200–280 kelime, sıcak rehber tonu, "siz" hitabı. tr_baglam alanını kullan.
+- scripts.en: YALNIZCA İngilizce — Türkçe kelime/cümle ekleme. 200–280 kelime, natural spoken English. en_baglam alanını kullan.
 - scripts.de: Almanca, 180–240 kelime (istenirse).
 - Yapı: karşılama + mekanın önemi → tarih/mimari/kültür (2–3 paragraf) → pratik ipucu (ziyaret süresi, sessizlik, fotoğraf) → kapanış daveti.
 - Mekan adını girişte ve bir kez daha ortada mutlaka söyle.
@@ -406,12 +406,16 @@ def build_narration_user(
     city: str | None = None,
     district: str | None = None,
     category: str | None = None,
+    tr_context: str = '',
+    en_context: str = '',
 ) -> str:
-    ctx = (description or 'Genel tarihî bilgi')[:2800]
     loc = ', '.join(p for p in (district, city) if p) or 'Türkiye'
     cat = category or 'historical'
+    tr_ctx = (tr_context or description or 'Genel tarihî bilgi')[:2800]
+    en_ctx = (en_context or description or 'General historical context')[:2800]
     return (
-        f'mekan={stop_title}; konum={loc}; kategori={cat}; baglam={ctx}; diller={languages}'
+        f'mekan={stop_title}; konum={loc}; kategori={cat}; '
+        f'tr_baglam={tr_ctx}; en_baglam={en_ctx}; diller={languages}'
     )
 
 

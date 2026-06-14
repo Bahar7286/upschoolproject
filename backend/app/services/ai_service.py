@@ -56,7 +56,8 @@ from app.services.ai_prompts import (
 )
 from app.services.llm_service import LLMServiceError, llm_service
 from app.services.tts_service import synthesize_mp3_base64
-from app.services.wikipedia_service import fetch_place_wikipedia_content
+from app.services.narration_context import build_bilingual_contexts
+from app.services.wikipedia_service import fetch_place_wikipedia_bilingual
 from app.schemas.ai_schema import NarrationSource
 from app.repositories.place_repository import PlaceRepository
 from app.services.route_service import RouteService
@@ -648,32 +649,37 @@ class AIService:
         if cached and time.time() - cached[0] < _NARRATION_TTL_SEC:
             return cached[1]
 
-        wiki_text, wiki_sources = await fetch_place_wikipedia_content(
+        wiki_tr, wiki_en, wiki_sources = await fetch_place_wikipedia_bilingual(
             payload.stop_title,
             city=payload.city or '',
             district=payload.district or '',
         )
-        enriched = payload
-        if wiki_text:
-            desc = f'{payload.description}\n\n{wiki_text}'.strip() if payload.description else wiki_text
-            enriched = StopNarrationRequest(
-                stop_title=payload.stop_title,
-                description=desc[:4000],
-                city=payload.city,
-                district=payload.district,
-                category=payload.category,
-                languages=list(langs),
-            )
+        tr_context, en_context = build_bilingual_contexts(
+            description=payload.description or '',
+            wiki_tr=wiki_tr,
+            wiki_en=wiki_en,
+            title=payload.stop_title,
+            city=payload.city or '',
+            district=payload.district or '',
+        )
+        enriched = StopNarrationRequest(
+            stop_title=payload.stop_title,
+            description=tr_context,
+            city=payload.city,
+            district=payload.district,
+            category=payload.category,
+            languages=list(langs),
+        )
         sources = [NarrationSource(title=s['title'], url=s.get('url', '')) for s in wiki_sources]
         if settings.llm_enabled:
             try:
-                result = await self._llm_narration(enriched)
+                result = await self._llm_narration(enriched, tr_context=tr_context, en_context=en_context)
                 result.sources = sources
                 _NARRATION_CACHE[cache_key] = (time.time(), result)
                 return result
             except LLMServiceError as exc:
                 logger.warning('LLM narration failed: %s', exc)
-        result = self._rule_narration(enriched)
+        result = self._rule_narration(enriched, tr_context=tr_context, en_context=en_context)
         result.sources = sources
         _NARRATION_CACHE[cache_key] = (time.time(), result)
         return result
@@ -1143,7 +1149,13 @@ class AIService:
             return float(payload.location_lat), float(payload.location_lng)
         return 39.9208, 32.8541  # Ankara — nötr merkez, İstanbul varsayımı yok
 
-    async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
+    async def _llm_narration(
+        self,
+        payload: StopNarrationRequest,
+        *,
+        tr_context: str = '',
+        en_context: str = '',
+    ) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']
         user = build_narration_user(
             stop_title=payload.stop_title,
@@ -1152,6 +1164,8 @@ class AIService:
             city=payload.city,
             district=payload.district,
             category=payload.category,
+            tr_context=tr_context,
+            en_context=en_context,
         )
         data = await llm_service.complete_json(
             system=SYSTEM_NARRATION,
@@ -1175,18 +1189,20 @@ class AIService:
         )
 
     @staticmethod
-    def _rule_narration(payload: StopNarrationRequest) -> StopNarrationResponse:
+    def _rule_narration(
+        payload: StopNarrationRequest,
+        *,
+        tr_context: str = '',
+        en_context: str = '',
+    ) -> StopNarrationResponse:
         title = payload.stop_title.strip()
-        base = (payload.description or '').strip()
         city = (payload.city or '').strip()
         district = (payload.district or '').strip()
         category = (payload.category or 'historical').strip()
         location = ', '.join(p for p in (district, city) if p) or 'Türkiye'
 
-        if not base:
-            base = (
-                f'{title}, {location} bölgesinde Türkiye\'nin önemli kültür ve gezi noktalarından biridir.'
-            )
+        tr_body = (tr_context or payload.description or '').strip()
+        en_body = (en_context or '').strip()
 
         category_en = {
             'museum': 'museum',
@@ -1199,26 +1215,33 @@ class AIService:
             'street': 'scenic area',
         }.get(category, 'cultural site')
 
+        if not tr_body:
+            tr_body = (
+                f'{title}, {location} bölgesinde Türkiye\'nin önemli kültür ve gezi noktalarından biridir.'
+            )
+        if not en_body:
+            en_body = f'{title} is a notable cultural site in {location}, Turkey.'
+
         scripts: dict[str, str] = {}
         for lang in payload.languages:
             code = lang.lower()[:2]
             if code == 'en':
                 scripts['en'] = (
                     f'Welcome to {title}. You are exploring a remarkable {category_en} in {location}, Turkey. '
-                    f'{base[:1200]} '
+                    f'{en_body[:1800]} '
                     'Take your time to absorb the atmosphere. Allow at least forty-five minutes for a meaningful visit. '
                     'Check opening hours and any dress codes before you enter. '
                     'When you are ready, continue your route and discover what lies around the next corner.'
                 )
             elif code == 'de':
                 scripts['de'] = (
-                    f'Willkommen bei {title} in {location}. {base[:1000]} '
+                    f'Willkommen bei {title} in {location}. {en_body[:1000]} '
                     'Planen Sie genügend Zeit ein und prüfen Sie die Öffnungszeiten.'
                 )
             else:
                 scripts['tr'] = (
                     f'Hoş geldiniz. Şu an {location} bölgesindeki {title} noktasını keşfediyorsunuz. '
-                    f'{base[:1200]} '
+                    f'{tr_body[:1800]} '
                     'Mekânın ruhunu hissetmek için en az kırk-beş dakika ayırmanızı öneririm. '
                     'Ziyaret saatlerini ve varsa kıyafet kurallarını önceden kontrol edin. '
                     'Hazır olduğunuzda rotanıza devam ederek bir sonraki durağı keşfedebilirsiniz.'
