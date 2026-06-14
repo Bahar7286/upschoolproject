@@ -78,7 +78,7 @@ export default function GuideCreateRoutePage(): ReactElement {
       errs.estimatedMinutes = t('guideForm.durationRange', 'Süre 15–720 dakika arasında olmalı.');
     }
     if (price < 0) errs.price = t('guideForm.priceMin', 'Fiyat 0 veya üzeri olmalı.');
-    const stopErrs = validateDraftStops(stops);
+    const stopErrs = validateDraftStops(stops, t);
     setFieldErrors(errs);
     setStopErrors(stopErrs);
     if (Object.keys(errs).length > 0 || Object.keys(stopErrs).length > 0) return;

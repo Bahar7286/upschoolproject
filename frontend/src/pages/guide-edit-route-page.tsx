@@ -14,6 +14,7 @@ import { PageSkeleton } from '../components/loading/page-skeleton';
 import { LoadingButton } from '../components/ui/loading-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import {
   inputErrorClass,
   validateRequired,
@@ -61,6 +62,7 @@ async function syncRouteStops(
 }
 
 export default function GuideEditRoutePage(): ReactElement {
+  const { t } = useI18n();
   const { routeId: routeIdParam } = useParams();
   const routeId = Number(routeIdParam);
   const navigate = useNavigate();
@@ -133,9 +135,9 @@ export default function GuideEditRoutePage(): ReactElement {
   if (user?.role !== 'guide') {
     return (
       <section className="mx-auto max-w-lg space-y-4">
-        <p className="text-sm text-stone-600 dark:text-stone-400">Bu sayfa yalnızca rehber hesapları içindir.</p>
+        <p className="text-sm text-stone-600 dark:text-stone-400">{t('guideForm.guideOnly')}</p>
         <Link className="font-bold text-primary" to="/register">
-          Rehber kaydı
+          {t('guideForm.guideSignup')}
         </Link>
       </section>
     );
@@ -144,9 +146,9 @@ export default function GuideEditRoutePage(): ReactElement {
   if (!Number.isFinite(routeId) || routeId <= 0) {
     return (
       <section className="mx-auto max-w-lg space-y-4">
-        <p className="text-sm text-red-700">Geçersiz rota.</p>
+        <p className="text-sm text-red-700">{t('guideForm.invalidRoute')}</p>
         <Link className="font-bold text-primary" to="/guide">
-          Rehber paneli
+          {t('guideForm.backPanel')}
         </Link>
       </section>
     );
@@ -161,27 +163,27 @@ export default function GuideEditRoutePage(): ReactElement {
     if (!canEdit) return;
     setError('');
     const errs: FieldErrors = {};
-    const titleErr = validateRequired(title, 'Rota başlığı');
-    const cityErr = validateRequired(city, 'Şehir');
+    const titleErr = validateRequired(title, t('guideForm.titleLabel'));
+    const cityErr = validateRequired(city, t('guideForm.cityLabel'));
     if (titleErr) errs.title = titleErr;
     if (cityErr) errs.city = cityErr;
     if (estimatedMinutes < 15 || estimatedMinutes > 720) {
-      errs.estimatedMinutes = 'Süre 15–720 dakika arasında olmalı.';
+      errs.estimatedMinutes = t('guideForm.durationRange');
     }
-    if (price < 0) errs.price = 'Fiyat 0 veya üzeri olmalı.';
-    const stopErrs = validateDraftStops(stops);
+    if (price < 0) errs.price = t('guideForm.priceMin');
+    const stopErrs = validateDraftStops(stops, t);
     setFieldErrors(errs);
     setStopErrors(stopErrs);
     if (Object.keys(errs).length > 0 || Object.keys(stopErrs).length > 0) return;
 
     if (!accessToken) {
-      setError('Oturum süresi dolmuş olabilir. Çıkış yapıp tekrar giriş yap.');
+      setError(t('guideForm.sessionError'));
       return;
     }
 
     const tags = tagsText
       .split(/[,;]/)
-      .map((t) => t.trim())
+      .map((tag) => tag.trim())
       .filter(Boolean);
 
     await run(async () => {
@@ -191,7 +193,7 @@ export default function GuideEditRoutePage(): ReactElement {
           city: city.trim(),
           estimated_minutes: estimatedMinutes,
           price,
-          tags: tags.length ? tags : ['kültür'],
+          tags: tags.length ? tags : [t('guideForm.defaultTags').split(',')[0]?.trim() || 'kültür'],
         });
         await syncRouteStops(routeId, accessToken, originalStopIds, stops);
         navigate('/guide', { replace: true, state: { routeUpdated: routeId } });
@@ -205,12 +207,10 @@ export default function GuideEditRoutePage(): ReactElement {
     <section className="mx-auto max-w-2xl space-y-6">
       <header>
         <Link className="text-sm font-semibold text-primary hover:underline" to="/guide">
-          ← Rehber paneli
+          {t('guideForm.backPanel')}
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Rotayı düzenle</h1>
-        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Durakları güncelle, sırayı değiştir veya yeni mekan ekle.
-        </p>
+        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{t('guideForm.editTitle')}</h1>
+        <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">{t('guideForm.editSubtitle')}</p>
       </header>
 
       {!canEdit ? (
@@ -218,7 +218,7 @@ export default function GuideEditRoutePage(): ReactElement {
           className="rounded-xl border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/30 dark:text-amber-100"
           role="alert"
         >
-          Bu rota şu an düzenlenemez (yayında veya incelemede). Taslak veya düzeltme istenen rotalar düzenlenebilir.
+          {t('guideForm.notEditable')}
         </p>
       ) : null}
 
@@ -237,7 +237,7 @@ export default function GuideEditRoutePage(): ReactElement {
       >
         <fieldset className="space-y-4" disabled={!canEdit}>
           <label className="block text-sm font-semibold">
-            Rota başlığı
+            {t('guideForm.titleLabel')}
             <input
               className={fieldClass(!!fieldErrors.title)}
               maxLength={180}
@@ -250,7 +250,7 @@ export default function GuideEditRoutePage(): ReactElement {
           </label>
 
           <label className="block text-sm font-semibold">
-            Şehir
+            {t('guideForm.cityLabel')}
             <input
               className={fieldClass(!!fieldErrors.city)}
               list="guide-edit-route-cities"
@@ -269,7 +269,7 @@ export default function GuideEditRoutePage(): ReactElement {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-semibold">
-              Tahmini süre (dk)
+              {t('guideForm.durationHint')}
               <input
                 className={fieldClass(!!fieldErrors.estimatedMinutes)}
                 max={720}
@@ -285,7 +285,7 @@ export default function GuideEditRoutePage(): ReactElement {
             </label>
 
             <label className="block text-sm font-semibold">
-              Fiyat (₺)
+              {t('guideForm.priceLabel')}
               <input
                 className={fieldClass(!!fieldErrors.price)}
                 min={0}
@@ -300,7 +300,7 @@ export default function GuideEditRoutePage(): ReactElement {
           </div>
 
           <label className="block text-sm font-semibold">
-            Etiketler (virgülle ayır)
+            {t('guideForm.tagsLabel')}
             <input
               className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2.5 dark:border-zinc-600"
               value={tagsText}
@@ -322,14 +322,14 @@ export default function GuideEditRoutePage(): ReactElement {
         <div className="flex flex-wrap gap-3 pt-2">
           {canEdit ? (
             <LoadingButton className="min-h-[48px] flex-1 sm:flex-none" loading={loading} type="submit">
-              Değişiklikleri kaydet
+              {t('guideForm.saveChanges')}
             </LoadingButton>
           ) : null}
           <Link
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-stone-300 px-5 font-semibold dark:border-zinc-600"
             to="/guide"
           >
-            {canEdit ? 'İptal' : 'Panele dön'}
+            {canEdit ? t('guideForm.cancel') : t('guideForm.backToPanel')}
           </Link>
         </div>
       </form>

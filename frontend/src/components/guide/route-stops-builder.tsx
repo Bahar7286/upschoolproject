@@ -3,12 +3,13 @@ import type { ReactElement } from 'react';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
+import { usePlaceCategoryLabels } from '../../hooks/use-place-category-labels';
+import { useI18n, type TFunction } from '../../lib/i18n';
 import { fetchGeoCenter, fetchGooglePlacesNearby, fetchGooglePlacesSearch } from '../../services/google-service';
 import { listPlaces } from '../../services/place-service';
 import type { CityResponse } from '../../types/city';
 import type { GooglePlaceSummary } from '../../types/google';
 import type { PlaceResponse } from '../../types/place';
-import { PLACE_CATEGORY_LABELS } from '../../types/place';
 
 const StopPickerMap = lazy(() =>
   import('../../features/map/stop-picker-map').then((m) => ({ default: m.StopPickerMap })),
@@ -118,23 +119,30 @@ export function draftStopFromResponse(stop: {
   });
 }
 
-export function validateDraftStops(stops: DraftStop[]): Record<string, string> {
+export function validateDraftStops(stops: DraftStop[], t?: TFunction): Record<string, string> {
   const errors: Record<string, string> = {};
   if (stops.length === 0) {
-    errors.stops = 'En az bir durak eklemelisin.';
+    errors.stops = t?.('guideForm.stopsMinOne', 'En az bir durak eklemelisin.') ?? 'En az bir durak eklemelisin.';
     return errors;
   }
   stops.forEach((stop, index) => {
+    const n = index + 1;
     if (!stop.title.trim()) {
-      errors[`stop-${stop.localId}-title`] = `Durak ${index + 1}: başlık gerekli.`;
+      errors[`stop-${stop.localId}-title`] =
+        t?.('guideForm.stopTitleRequired', { n }, `Durak ${n}: başlık gerekli.`) ??
+        `Durak ${n}: başlık gerekli.`;
     }
     const lat = Number(stop.latitude);
     const lng = Number(stop.longitude);
     if (!Number.isFinite(lat) || lat < -90 || lat > 90) {
-      errors[`stop-${stop.localId}-lat`] = `Durak ${index + 1}: geçerli enlem gir.`;
+      errors[`stop-${stop.localId}-lat`] =
+        t?.('guideForm.stopLatInvalid', { n }, `Durak ${n}: geçerli enlem gir.`) ??
+        `Durak ${n}: geçerli enlem gir.`;
     }
     if (!Number.isFinite(lng) || lng < -180 || lng > 180) {
-      errors[`stop-${stop.localId}-lng`] = `Durak ${index + 1}: geçerli boylam gir.`;
+      errors[`stop-${stop.localId}-lng`] =
+        t?.('guideForm.stopLngInvalid', { n }, `Durak ${n}: geçerli boylam gir.`) ??
+        `Durak ${n}: geçerli boylam gir.`;
     }
   });
   return errors;
@@ -156,6 +164,8 @@ export function RouteStopsBuilder({
   onChange: (stops: DraftStop[]) => void;
   errors?: Record<string, string>;
 }): ReactElement {
+  const { t } = useI18n();
+  const categoryLabels = usePlaceCategoryLabels();
   const [placeQuery, setPlaceQuery] = useState('');
   const [activeLocalId, setActiveLocalId] = useState<string | null>(stops[0]?.localId ?? null);
 
@@ -230,6 +240,7 @@ export function RouteStopsBuilder({
   const catalogPlaces = useMemo((): CatalogPlace[] => {
     const q = searchText.toLocaleLowerCase('tr-TR');
     const merged = new Map<string, CatalogPlace>();
+    const googleLabel = t('guideForm.googlePlaces', 'Google Places');
 
     for (const place of dbPlaces) {
       if (q && !place.name.toLocaleLowerCase('tr-TR').includes(q)) continue;
@@ -237,7 +248,7 @@ export function RouteStopsBuilder({
         kind: 'db',
         key: `db-${place.place_id}`,
         name: place.name,
-        subtitle: `${PLACE_CATEGORY_LABELS[place.category]} · ${place.district}`,
+        subtitle: `${categoryLabels[place.category]} · ${place.district}`,
         place,
       });
     }
@@ -252,13 +263,13 @@ export function RouteStopsBuilder({
         kind: 'google',
         key: `google-${place.place_id}`,
         name: place.name,
-        subtitle: place.address || 'Google Places',
+        subtitle: place.address || googleLabel,
         place,
       });
     }
 
     return [...merged.values()].slice(0, 10);
-  }, [dbPlaces, googleNearby, googleSearch, searchText]);
+  }, [dbPlaces, googleNearby, googleSearch, searchText, categoryLabels, t]);
 
   const placesLoading = dbLoading || googleNearbyLoading || googleSearchLoading;
 
@@ -305,12 +316,14 @@ export function RouteStopsBuilder({
       longitude: Number(s.longitude),
     }));
 
+  const cityDisplay = cityLabel || t('guideForm.cityFallback', 'şehir seç');
+
   return (
     <div className="space-y-4 rounded-[18px] border border-stone-900/10 bg-stone-50/80 p-4 dark:border-white/10 dark:bg-zinc-950/50">
       <div>
-        <h2 className="font-display text-lg font-bold">Duraklar</h2>
+        <h2 className="font-display text-lg font-bold">{t('guideForm.stopsTitle', 'Duraklar')}</h2>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Katalogdan mekan seç veya elle ekle. Sırayı yukarı/aşağı ile düzenle; haritaya tıklayarak konum belirle.
+          {t('guideForm.stopsHint', 'Katalogdan mekan seç veya elle ekle.')}
         </p>
         {errors.stops ? (
           <p className="mt-2 text-xs font-semibold text-red-600" role="alert">
@@ -321,12 +334,12 @@ export function RouteStopsBuilder({
 
       <div className="space-y-2">
         <label className="block text-sm font-semibold">
-          Mekan ara ({cityLabel || 'şehir seç'})
+          {t('guideForm.searchPlaces', { city: cityDisplay }, `Mekan ara (${cityDisplay})`)}
           <div className="relative mt-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
             <input
               className={`${fieldClass} pl-9`}
-              placeholder="Örn. Nemrut, Ayasofya, Topkapı"
+              placeholder={t('guideForm.placeSearchPlaceholder', 'Örn. Nemrut, Ayasofya, Topkapı')}
               value={placeQuery}
               onChange={(e) => setPlaceQuery(e.target.value)}
             />
@@ -334,11 +347,11 @@ export function RouteStopsBuilder({
         </label>
         {!matchedCity && city.trim().length >= 2 ? (
           <p className="text-xs text-amber-700 dark:text-amber-300">
-            Şehir listeden seçilirse harita ve mekan araması daha doğru çalışır.
+            {t('guideForm.pickCityHint', 'Şehir listeden seçilirse harita ve mekan araması daha doğru çalışır.')}
           </p>
         ) : null}
         {placesLoading ? (
-          <p className="text-xs text-stone-500">Mekanlar aranıyor…</p>
+          <p className="text-xs text-stone-500">{t('guideForm.searchingPlaces', 'Mekanlar aranıyor…')}</p>
         ) : catalogPlaces.length > 0 ? (
           <ul className="max-h-44 space-y-1 overflow-y-auto rounded-xl border border-stone-900/10 bg-white p-2 dark:border-white/10 dark:bg-zinc-900">
             {catalogPlaces.map((item) => (
@@ -364,7 +377,9 @@ export function RouteStopsBuilder({
             ))}
           </ul>
         ) : cityLabel.length >= 2 ? (
-          <p className="text-xs text-stone-500">Bu şehirde eşleşen mekan bulunamadı; elle durak ekleyebilirsin.</p>
+          <p className="text-xs text-stone-500">
+            {t('guideForm.noPlacesFound', 'Bu şehirde eşleşen mekan bulunamadı; elle durak ekleyebilirsin.')}
+          </p>
         ) : null}
       </div>
 
@@ -383,8 +398,8 @@ export function RouteStopsBuilder({
       </Suspense>
       <p className="text-xs text-stone-500">
         {activeLocalId
-          ? 'Seçili durağın konumunu haritada güncellemek için haritaya tıkla.'
-          : 'Haritaya tıklayarak yeni durak ekle.'}
+          ? t('guideForm.mapUpdateHint', 'Seçili durağın konumunu haritada güncellemek için haritaya tıkla.')
+          : t('guideForm.mapAddHint', 'Haritaya tıklayarak yeni durak ekle.')}
       </p>
 
       <div className="space-y-3">
@@ -403,14 +418,14 @@ export function RouteStopsBuilder({
                 className="text-sm font-bold text-primary"
                 onClick={() => setActiveLocalId(stop.localId)}
               >
-                {index + 1}. durak
+                {t('guideForm.stopNumber', { n: index + 1 }, `${index + 1}. durak`)}
               </button>
               <div className="flex items-center gap-1">
                 <button
                   type="button"
                   className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 disabled:opacity-40 dark:hover:bg-zinc-800"
                   disabled={index === 0}
-                  title="Yukarı taşı"
+                  title={t('guideForm.moveUp', 'Yukarı taşı')}
                   onClick={() => moveStop(index, -1)}
                 >
                   <ChevronUp className="h-4 w-4" />
@@ -419,7 +434,7 @@ export function RouteStopsBuilder({
                   type="button"
                   className="rounded-lg p-1.5 text-stone-500 hover:bg-stone-100 disabled:opacity-40 dark:hover:bg-zinc-800"
                   disabled={index === stops.length - 1}
-                  title="Aşağı taşı"
+                  title={t('guideForm.moveDown', 'Aşağı taşı')}
                   onClick={() => moveStop(index, 1)}
                 >
                   <ChevronDown className="h-4 w-4" />
@@ -427,7 +442,7 @@ export function RouteStopsBuilder({
                 <button
                   type="button"
                   className="rounded-lg p-1.5 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/40"
-                  title="Durak sil"
+                  title={t('guideForm.deleteStop', 'Durak sil')}
                   onClick={() => removeStop(stop.localId)}
                 >
                   <Trash2 className="h-4 w-4" />
@@ -436,11 +451,11 @@ export function RouteStopsBuilder({
             </div>
 
             <label className="block text-sm font-semibold">
-              Mekan adı
+              {t('guideForm.placeName', 'Mekan adı')}
               <input
                 className={fieldClass}
                 maxLength={180}
-                placeholder="Örn. Ayasofya Camii"
+                placeholder={t('guideForm.placeNamePlaceholder', 'Örn. Ayasofya Camii')}
                 value={stop.title}
                 onChange={(e) => updateStop(stop.localId, { title: e.target.value })}
                 onFocus={() => setActiveLocalId(stop.localId)}
@@ -451,11 +466,11 @@ export function RouteStopsBuilder({
             </label>
 
             <label className="mt-3 block text-sm font-semibold">
-              Açıklama / rehber notu
+              {t('guideForm.descriptionLabel', 'Açıklama / rehber notu')}
               <textarea
                 className={`${fieldClass} min-h-[72px] resize-y`}
                 maxLength={8000}
-                placeholder="Ziyaret süresi, giriş bilgisi, dikkat edilecekler…"
+                placeholder={t('guideForm.descriptionPlaceholder', 'Ziyaret süresi, giriş bilgisi…')}
                 value={stop.description}
                 onChange={(e) => updateStop(stop.localId, { description: e.target.value })}
                 onFocus={() => setActiveLocalId(stop.localId)}
@@ -464,7 +479,7 @@ export function RouteStopsBuilder({
 
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <label className="block text-sm font-semibold">
-                Enlem
+                {t('guideForm.latitude', 'Enlem')}
                 <input
                   className={fieldClass}
                   inputMode="decimal"
@@ -478,7 +493,7 @@ export function RouteStopsBuilder({
                 ) : null}
               </label>
               <label className="block text-sm font-semibold">
-                Boylam
+                {t('guideForm.longitude', 'Boylam')}
                 <input
                   className={fieldClass}
                   inputMode="decimal"
@@ -502,7 +517,7 @@ export function RouteStopsBuilder({
         onClick={() => addStop()}
       >
         <Plus className="h-4 w-4" />
-        Boş durak ekle
+        {t('guideForm.addEmptyStop', 'Boş durak ekle')}
       </button>
     </div>
   );
