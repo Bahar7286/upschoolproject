@@ -56,6 +56,23 @@ export function GoogleExploreMap({
     version: 'weekly',
   });
   const [map, setMap] = useState<google.maps.Map | null>(null);
+  const [gestureHandling, setGestureHandling] = useState<'greedy' | 'cooperative'>(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 1023px)').matches
+      ? 'cooperative'
+      : 'greedy',
+  );
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const sync = () => setGestureHandling(mq.matches ? 'cooperative' : 'greedy');
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  useEffect(() => {
+    map?.setOptions({ gestureHandling });
+  }, [map, gestureHandling]);
 
   useEffect(() => {
     if (map && center) {
@@ -142,6 +159,7 @@ export function GoogleExploreMap({
           mapTypeId: 'roadmap',
           streetViewControl: true,
           zoomControl: true,
+          gestureHandling,
         }}
       >
         {activeStops.map((stop, idx) => (

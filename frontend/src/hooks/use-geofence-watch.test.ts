@@ -70,4 +70,24 @@ describe('useGeofenceWatch', () => {
     unmount();
     expect(clearWatch).toHaveBeenCalledWith(1);
   });
+
+  it('starts watching for personal routes (routeId 0)', () => {
+    const stops = [
+      {
+        stop_id: -1,
+        route_id: 0,
+        title: 'Kişisel durak',
+        description: '',
+        latitude: 41.0,
+        longitude: 28.9,
+        order_index: 0,
+        audio_url: null,
+      },
+    ];
+
+    const { result, unmount } = renderHook(() => useGeofenceWatch(0, stops));
+
+    expect(result.current.watching).toBe(true);
+    unmount();
+  });
 });

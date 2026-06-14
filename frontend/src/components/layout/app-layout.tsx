@@ -79,7 +79,7 @@ export function AppLayout(): ReactElement {
   const isTourist = !isGuide && !isAdmin;
 
   return (
-    <div className="app-shell flex h-dvh max-h-dvh flex-col overflow-hidden">
+    <div className="app-shell flex min-h-dvh flex-col">
       <header className="app-header sticky top-0 z-40 border-b pt-safe backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl min-w-0 items-center gap-2 px-3 py-2.5 sm:gap-3 sm:px-4 sm:py-3 md:px-8">
           <BrandLogo size="sm" className="min-w-0 shrink" />
@@ -179,7 +179,7 @@ export function AppLayout(): ReactElement {
         </div>
       </header>
 
-      <main className="app-main mx-auto w-full min-w-0 max-w-7xl flex-1 min-h-0 overflow-y-auto overflow-x-hidden overscroll-y-contain px-3 py-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
+      <main className="app-main mx-auto w-full min-w-0 max-w-7xl flex-1 px-3 py-5 pb-[calc(5.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
         <OnboardingGate>
           <div className="animate-fade-in-up min-w-0 w-full">
             <Outlet />

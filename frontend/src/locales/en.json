@@ -497,6 +497,8 @@
     "loadingRoutes": "Loading routes…",
     "nextStop": "Next stop",
     "startRoute": "Start route",
+    "routeStarted": "Route navigation started. Audio narration triggers as you approach stops; follow progress in the panel below.",
+    "noStops": "No stops to start. Pick a route or add places first.",
     "pickRoute": "Pick a route",
     "completeRoute": "Complete route",
     "saving": "Saving…",

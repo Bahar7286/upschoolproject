@@ -122,6 +122,26 @@ function MapPickHandler({
   return null;
 }
 
+/** Mobilde tek parmakla sayfa kaydırması — harita sürüklemeyi devre dışı bırakır (pinch-zoom açık). */
+function MobilePageScrollHelper({ mapPickActive }: { mapPickActive: boolean }) {
+  const map = useMap();
+  useEffect(() => {
+    if (mapPickActive) {
+      map.dragging.enable();
+      return;
+    }
+    const mq = window.matchMedia('(max-width: 1023px)');
+    const sync = () => {
+      if (mq.matches) map.dragging.disable();
+      else map.dragging.enable();
+    };
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, [map, mapPickActive]);
+  return null;
+}
+
 
 
 export function LeafletExploreMap({
@@ -200,6 +220,7 @@ export function LeafletExploreMap({
 
         <TileLayer attribution={OSM_ATTRIBUTION} url={OSM_TILE_URL} />
         <MapPickHandler active={mapPickActive} onPick={onMapPick} />
+        <MobilePageScrollHelper mapPickActive={mapPickActive} />
 
         {center ? <FlyToCenter lat={center.lat} lng={center.lng} zoom={zoom} /> : null}
 

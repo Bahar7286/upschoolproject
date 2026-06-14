@@ -60,7 +60,7 @@ export function MapActiveRouteSection({
   const { t } = useI18n();
 
   return (
-    <>
+    <div id="map-route-nav" className="space-y-4">
       {geoError ? (
         <div
           className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-4 py-3 text-sm font-medium text-amber-950 dark:text-amber-100"
@@ -158,7 +158,7 @@ export function MapActiveRouteSection({
         )}
       </div>
 
-      {focusRouteId && routeTitle ? (
+      {focusRouteId != null && routeTitle ? (
         <div className="rounded-[22px] border border-stone-900/10 bg-white/90 p-4 dark:border-white/10 dark:bg-zinc-900/95 sm:p-5">
           <p className="text-xs font-bold uppercase tracking-wider text-primary">
             {t('map.activeRoute', 'Aktif rota')}
@@ -198,13 +198,13 @@ export function MapActiveRouteSection({
             </p>
           ) : null}
 
-          {focusRouteId && mergedStops.length > 0 && routeNavActive ? (
+          {focusRouteId != null && mergedStops.length > 0 && routeNavActive ? (
             <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">
               {t('map.geofenceHint', 'Geofence aktif (~20 m) — durağa yaklaşınca sesli anlatım tetiklenir.')}
             </p>
           ) : null}
 
-          {focusRouteId && mergedStops.length > 0 ? (
+          {focusRouteId != null && mergedStops.length > 0 ? (
             <div className="mt-4 border-t border-stone-900/10 pt-4 dark:border-white/10">
               <button
                 type="button"
@@ -252,12 +252,14 @@ export function MapActiveRouteSection({
 
           <Link
             className="tap-scale mt-4 inline-flex text-sm font-bold text-primary underline-offset-4 hover:underline"
-            to={`/routes/${focusRouteId}`}
+            to={focusRouteId === 0 ? '/discover' : `/routes/${focusRouteId}`}
           >
-            {t('map.routeDetail', 'Rota detayına git')}
+            {focusRouteId === 0
+              ? t('map.personalRouteHint', 'Kişisel rota — keşfetten yeni rota oluştur')
+              : t('map.routeDetail', 'Rota detayına git')}
           </Link>
         </div>
       ) : null}
-    </>
+    </div>
   );
 }

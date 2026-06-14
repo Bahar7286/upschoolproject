@@ -46,14 +46,21 @@ export function useActiveRouteMap({ routeParam, activeParam, searchParams, setSe
   const [mapPickMsg, setMapPickMsg] = useState('');
   const { addPlace } = useAddPlaceToActiveRoute();
 
-  const focusRouteId = activeParam && Number.isFinite(routeParam) ? routeParam : activeRouteId ?? undefined;
+  const focusRouteId =
+    activeParam && Number.isFinite(routeParam)
+      ? routeParam
+      : activeRouteId != null
+        ? activeRouteId
+        : Number.isFinite(routeParam) && routeParam > 0
+          ? routeParam
+          : undefined;
   const mergedStops = focusRouteId === activeRouteId ? mergedStopsFn() : [];
   const currentStop = mergedStops[currentStopIndex] ?? null;
   const nextStop = mergedStops[currentStopIndex + 1] ?? null;
   const routeNavActive = activeParam && mergedStops.length > 0;
 
   useEffect(() => {
-    if (!activeParam || !Number.isFinite(routeParam) || routeParam <= 0) return;
+    if (!Number.isFinite(routeParam) || routeParam <= 0) return;
     if (activeRouteId === routeParam && mergedStopsFn().length > 0) return;
     let cancelled = false;
     void (async () => {
@@ -70,7 +77,7 @@ export function useActiveRouteMap({ routeParam, activeParam, searchParams, setSe
     return () => {
       cancelled = true;
     };
-  }, [activeParam, routeParam, activeRouteId, accessToken, setActiveRoute, mergedStopsFn]);
+  }, [routeParam, activeRouteId, accessToken, setActiveRoute, mergedStopsFn]);
 
   useEffect(() => {
     if (!accessToken || !activeRouteId) return;
@@ -134,7 +141,7 @@ export function useActiveRouteMap({ routeParam, activeParam, searchParams, setSe
   }, [focusRouteId]);
 
   useEffect(() => {
-    if (!focusRouteId || mergedStops.length === 0) return;
+    if (focusRouteId == null || mergedStops.length === 0) return;
     if (!navigator.geolocation) return;
 
     const watchId = navigator.geolocation.watchPosition(
@@ -166,14 +173,37 @@ export function useActiveRouteMap({ routeParam, activeParam, searchParams, setSe
   }, [t]);
 
   const handleStartRoute = useCallback(() => {
-    showMyLocation();
-    if (focusRouteId != null && focusRouteId > 0) {
-      const params = new URLSearchParams(searchParams);
-      params.set('route', String(focusRouteId));
-      params.set('active', '1');
-      setSearchParams(params, { replace: true });
+    if (mergedStops.length === 0) {
+      setGeoError(t('map.noStops', 'Başlatılacak durak yok. Önce bir rota seçin veya mekan ekleyin.'));
+      return;
     }
-  }, [focusRouteId, searchParams, setSearchParams, showMyLocation]);
+    setGeoError('');
+    setCompleteMsg(
+      t(
+        'map.routeStarted',
+        'Rota navigasyonu başladı. Durağa yaklaştıkça sesli anlatım tetiklenir; aşağıdaki panelden durakları takip edebilirsiniz.',
+      ),
+    );
+    setCurrentStopIndex(0);
+    showMyLocation();
+    const params = new URLSearchParams(searchParams);
+    params.set('active', '1');
+    if (focusRouteId != null) {
+      params.set('route', String(focusRouteId));
+    }
+    setSearchParams(params, { replace: true });
+    requestAnimationFrame(() => {
+      document.getElementById('map-route-nav')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
+  }, [
+    focusRouteId,
+    mergedStops.length,
+    searchParams,
+    setSearchParams,
+    setCurrentStopIndex,
+    showMyLocation,
+    t,
+  ]);
 
   const handleCompleteRoute = useCallback(async () => {
     if (!accessToken || !focusRouteId) return;

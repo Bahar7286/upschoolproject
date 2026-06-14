@@ -497,6 +497,8 @@
     "loadingRoutes": "Rota listesi yükleniyor…",
     "nextStop": "Sonraki durak",
     "startRoute": "Rotaya başla",
+    "routeStarted": "Rota navigasyonu başladı. Durağa yaklaştıkça sesli anlatım tetiklenir; aşağıdaki panelden durakları takip edebilirsiniz.",
+    "noStops": "Başlatılacak durak yok. Önce bir rota seçin veya mekan ekleyin.",
     "pickRoute": "Rota seç",
     "completeRoute": "Rotayı tamamla",
     "saving": "Kaydediliyor…",

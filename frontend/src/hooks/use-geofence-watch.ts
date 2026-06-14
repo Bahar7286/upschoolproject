@@ -52,7 +52,7 @@ export function useGeofenceWatch(
   }, [routeId, stops.length]);
 
   useEffect(() => {
-    if (!routeId || routeId <= 0 || stops.length === 0) {
+    if (routeId == null || stops.length === 0) {
       setWatching(false);
       return;
     }
