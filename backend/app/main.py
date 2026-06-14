@@ -1,3 +1,5 @@
+import asyncio
+import contextlib
 import logging
 import time
 from collections.abc import AsyncIterator
@@ -44,9 +46,18 @@ from app import models  # noqa: F401
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
-    import logging
-
     log = logging.getLogger(__name__)
+    enrich_limit = 40 if settings.is_production else 250
+
+    async def _deferred_wikipedia_bootstrap() -> None:
+        """Wikipedia sync blocks Render health checks if run before yield."""
+        try:
+            async with SessionLocal() as session:
+                await ensure_images_seeded(session)
+                await ensure_place_descriptions_enriched(session, limit=enrich_limit)
+        except Exception as exc:
+            log.exception('Deferred Wikipedia bootstrap failed: %s', exc)
+
     try:
         if not settings.is_production:
             async with engine.begin() as connection:
@@ -54,12 +65,16 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
 
         async with SessionLocal() as session:
             await seed_initial_data(session)
-            await ensure_images_seeded(session)
-            await ensure_place_descriptions_enriched(session)
     except Exception as exc:
         log.exception('Startup DB seed failed (API still listening): %s', exc)
 
+    deferred_task = asyncio.create_task(_deferred_wikipedia_bootstrap())
+
     yield
+
+    deferred_task.cancel()
+    with contextlib.suppress(asyncio.CancelledError):
+        await deferred_task
 
 
 OPENAPI_TAGS = [

@@ -349,7 +349,7 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
             await session.commit()
 
 
-async def ensure_place_descriptions_enriched(session: AsyncSession) -> None:
+async def ensure_place_descriptions_enriched(session: AsyncSession, *, limit: int = 250) -> None:
     """Kısa mekan açıklamalarını Wikipedia ile zenginleştir (sesli anlatım kalitesi)."""
     if os.getenv('TESTING') == '1':
         return
@@ -359,7 +359,7 @@ async def ensure_place_descriptions_enriched(session: AsyncSession) -> None:
 
     log = logging.getLogger(__name__)
     try:
-        updated = await enrich_places_batch(session, limit=250)
+        updated = await enrich_places_batch(session, limit=limit)
         if updated:
             log.info('Wikipedia place descriptions: %s updated', updated)
     except Exception as exc:
