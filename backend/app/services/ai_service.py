@@ -30,6 +30,7 @@ from app.services.assistant_intent import (
     extract_city_from_messages,
     extract_trip_params,
     is_food_query,
+    is_accommodation_query,
     needs_travel_plan,
     quick_assistant_reply,
     resolve_intent,
@@ -47,6 +48,7 @@ from app.services.ai_prompts import (
     format_itinerary_reply,
     format_places_detail,
     format_places_reply,
+    format_accommodation_reply,
     format_venue_reply,
 )
 from app.services.llm_service import LLMServiceError, llm_service
@@ -701,6 +703,18 @@ class AIService:
         intent = resolve_intent(last_user, recent_user)
         lat, lng = self._resolve_assistant_coords(payload, area, resolved_city)
 
+        if intent == 'accommodation' and settings.google_places_enabled:
+            acc_reply = await self._assistant_accommodation_reply(
+                lat=lat,
+                lng=lng,
+                where=where,
+                last_user=last_user,
+                locale=payload.preferred_language,
+                city=resolved_city,
+            )
+            if acc_reply:
+                return acc_reply
+
         if intent in ('specific_venue', 'food') and settings.google_places_enabled:
             venue_reply = await self._assistant_food_reply(
                 lat=lat,
@@ -718,11 +732,14 @@ class AIService:
         places_formatted_reply = ''
         if needs_travel_plan(last_user) and settings.google_places_enabled:
             days, budget = extract_trip_params(last_user)
+            query_category = detect_query_category(last_user, payload.interests)
+            use_balanced = not is_accommodation_query(last_user) and not is_food_query(last_user)
             picks = await self._assistant_collect_places(
                 city=resolved_city,
                 lat=float(lat),
                 lng=float(lng),
-                balanced=True,
+                category=query_category,
+                balanced=use_balanced,
             )
             if picks:
                 places_hint = format_places_detail(picks)
@@ -846,6 +863,53 @@ class AIService:
             )
         return None
 
+    async def _assistant_accommodation_reply(
+        self,
+        *,
+        lat: float,
+        lng: float,
+        where: str,
+        last_user: str,
+        locale: str = 'tr',
+        city: str = '',
+    ) -> AssistantChatResponse | None:
+        query = f'otel konaklama {where}'
+        lower = last_user.lower()
+        if 'pansiyon' in lower or 'hostel' in lower:
+            query = f'pansiyon hostel {where}'
+        elif 'butik' in lower:
+            query = f'butik otel {where}'
+
+        places: list = []
+        try:
+            places, _ = await google_places_service.search_text(
+                query=query, lat=lat, lng=lng, radius_m=8000, client_key='assistant'
+            )
+        except Exception as exc:
+            logger.debug('Assistant accommodation text search: %s', exc)
+
+        if not places:
+            try:
+                places, _ = await google_places_service.search_nearby(
+                    lat=lat, lng=lng, radius_m=6000, category='accommodation', client_key='assistant'
+                )
+            except Exception as exc:
+                logger.debug('Assistant nearby accommodation: %s', exc)
+
+        area_district = where.split(',')[0].strip() if ',' in where else ''
+        if area_district:
+            places = filter_by_district(places, area_district)
+        elif city.strip():
+            places = filter_by_city(places, city)
+
+        if not places:
+            return None
+
+        return AssistantChatResponse(
+            reply=format_accommodation_reply(places, where, locale=locale),
+            source='places',
+        )
+
     async def _assistant_collect_places(
         self,
         *,
@@ -873,7 +937,8 @@ class AIService:
                         client_key='assistant',
                     )
                     city_nearby = filter_by_city(nearby, city) or nearby
-                    absorb(city_nearby[:4])
+                    per_cat = 4 if cat != category else 8
+                    absorb(city_nearby[:per_cat])
                 except Exception as exc:
                     logger.debug('Assistant nearby %s: %s', cat, exc)
         else:
@@ -890,13 +955,20 @@ class AIService:
             except Exception as exc:
                 logger.debug('Assistant nearby: %s', exc)
 
-        for query in (
+        text_queries = [
             f'müze {city}',
             f'tarihi yerler {city}',
             f'turistik mekanlar {city}',
             f'cami {city}',
-            f'otel {city}',
-        ):
+        ]
+        if category == 'accommodation':
+            text_queries.append(f'otel konaklama {city}')
+        elif category == 'restaurant':
+            text_queries.append(f'restoran {city}')
+        else:
+            text_queries.append(f'otel {city}')
+
+        for query in text_queries:
             if len(merged) >= 16:
                 break
             try:

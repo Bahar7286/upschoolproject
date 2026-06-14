@@ -724,7 +724,22 @@
     "prefillMessage": "Bu rotayı ({city}) rehber eşliğinde gezmek istiyorum.",
     "prefillGuide": "{name} rehberinden de teklif almak istiyorum.",
     "prefillGuideTitle": "{name} ile gezi talebi",
-    "itineraryPrefix": "\n\nGüzergah: {stops}"
+    "itineraryPrefix": "\n\nGüzergah: {stops}",
+    "inactiveTitle": "Yakında — rehberli gezi talepleri",
+    "inactiveBody": "Bu form önizlemedir. Rehber doğrulama ve güvenli ödeme altyapısı geliştiriliyor. Rotaları ve haritayı keşfedebilirsiniz; talep yayınlama yakında açılacak.",
+    "inactiveSubmit": "Henüz aktif değil (yakında)"
+  },
+  "routeBuilder": {
+    "title": "Rotanızı oluşturun",
+    "hint": "En az 2 durak seçin. Rehberler bu güzergaha göre teklif verir.",
+    "city": "İl",
+    "district": "İlçe",
+    "allDistricts": "Tüm ilçeler",
+    "noStops": "Henüz durak yok",
+    "addStop": "Durak ekle",
+    "noPlaces": "Bu filtrede mekan bulunamadı.",
+    "moveUp": "Yukarı taşı",
+    "remove": "Kaldır"
   },
   "premium": {
     "title": "Premium'a Geç",
@@ -869,7 +884,16 @@
     "cityRequired": "Şehir zorunlu.",
     "durationRange": "Süre 15–720 dakika arasında olmalı.",
     "priceMin": "Fiyat 0 veya üzeri olmalı.",
-    "defaultTags": "tarih, kültür"
+    "defaultTags": "tarih, kültür",
+    "createSubtitle": "Taslak olarak kaydedilir; durakları sırayla ekle, ardından incelemeye gönderebilirsin.",
+    "titlePlaceholder": "Örn. Sultanahmet kültür yürüyüşü",
+    "cityPlaceholder": "İstanbul",
+    "tagsPlaceholder": "tarih, sanat, yemek",
+    "durationHint": "Tahmini süre (dk)",
+    "cancel": "İptal",
+    "saveRoute": "Rotayı kaydet",
+    "backPanel": "← Rehber paneli",
+    "sessionError": "Oturum süresi dolmuş olabilir. Çıkış yapıp tekrar giriş yap."
   },
   "guideVerify": {
     "guideOnly": "Bu sayfa yalnızca rehber hesapları içindir.",
@@ -882,5 +906,15 @@
     "submitting": "Gönderiliyor…",
     "submit": "İncelemeye gönder",
     "uploadDoc": "Belge yükle"
+  },
+  "faq": {
+    "q1": "Historial GO nedir?",
+    "a1": "Kişiselleştirilmiş tarihî rotalar, harita durakları ve çok dilli sesli anlatım sunan kültür gezi platformudur.",
+    "q2": "Rotalar nasıl onaylanır?",
+    "a2": "Rehber rotayı incelemeye gönderir; platform yöneticisi onayladıktan sonra yayınlanır.",
+    "q3": "Ödeme güvenli mi?",
+    "a3": "Üretimde Stripe Checkout kullanılır. Demo ortamda gerçek tahsilat yapılmaz.",
+    "q4": "İade alabilir miyim?",
+    "a4": "Dijital içerik koşulları için iade politikası sayfamıza bakın."
   }
 }

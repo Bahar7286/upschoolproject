@@ -1,22 +1,19 @@
 import type { FormEvent, ReactElement } from 'react';
 import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ListOrdered, Route } from 'lucide-react';
 
 import { RouteBuilder } from '../components/trip/route-builder';
 import { useRoutesQuery } from '../hooks/use-routes-query';
-import { formatApiError } from '../lib/api';
 import { useI18n } from '../lib/i18n';
-import { createTripRequest, type PlannedStop } from '../services/trip-request-service';
 import { getRoute } from '../services/route-service';
+import type { PlannedStop } from '../services/trip-request-service';
 import { useAuthStore } from '../stores/auth-store';
-import { useOnboardingStore } from '../stores/onboarding-store';
 
 type RouteMode = 'existing' | 'custom';
 
 export default function TripRequestNewPage(): ReactElement {
   const { t } = useI18n();
-  const navigate = useNavigate();
   const [params] = useSearchParams();
   const location = useLocation();
   const routeIdParam = params.get('routeId');
@@ -25,8 +22,6 @@ export default function TripRequestNewPage(): ReactElement {
 
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
-  const interests = useOnboardingStore((s) => s.interests);
-  const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
   const { data: catalogRoutes = [] } = useRoutesQuery();
 
   const [routeMode, setRouteMode] = useState<RouteMode>(initialRouteId ? 'existing' : 'custom');
@@ -38,14 +33,15 @@ export default function TripRequestNewPage(): ReactElement {
   const [groupSize, setGroupSize] = useState(4);
   const [preferredDate, setPreferredDate] = useState('');
   const [budget, setBudget] = useState(600);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [routeCity, setRouteCity] = useState('İstanbul');
 
   useEffect(() => {
     if (!initialRouteId || !Number.isFinite(initialRouteId)) return;
     getRoute(initialRouteId)
       .then((r) => {
         setRouteTitle(r.title);
+        setRouteCity(r.city);
         setTitle(t('tripNew.prefillTitle', { title: r.title }, '{title} — rehberli gezi talebi'));
         setMessage(t('tripNew.prefillMessage', { city: r.city }, 'Bu rotayı ({city}) rehber eşliğinde gezmek istiyorum.'));
       })
@@ -70,48 +66,17 @@ export default function TripRequestNewPage(): ReactElement {
     );
   }
 
-  const handleSubmit = async (e: FormEvent) => {
+  const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!accessToken) return;
-    if (routeMode === 'custom' && plannedStops.length < 2) {
-      setError(t('tripNew.minStops', 'Özel rota için en az 2 durak seçin.'));
-      return;
-    }
-    if (routeMode === 'existing' && !selectedRouteId && plannedStops.length < 2) {
-      setError(t('tripNew.pickCatalog', 'Katalog rotası seçin veya özel rota oluşturun.'));
-      return;
-    }
-    setBusy(true);
-    setError('');
-    try {
-      const stopSummary =
-        plannedStops.length > 0
-          ? t('tripNew.itineraryPrefix', { stops: plannedStops.map((s) => s.name).join(' →') }, '\n\nGüzergah: {stops}')
-          : '';
-      await createTripRequest(accessToken, {
-        title,
-        city: 'Istanbul',
-        interests: interests.length ? interests : ['history'],
-        route_id: routeMode === 'existing' ? selectedRouteId : null,
-        route_mode: routeMode,
-        planned_stops: plannedStops,
-        group_size: groupSize,
-        preferred_date: preferredDate,
-        duration_minutes: 120,
-        budget,
-        preferred_language: preferredLanguage,
-        message: message + stopSummary,
-      });
-      navigate('/talepler');
-    } catch (err) {
-      setError(formatApiError(err));
-    } finally {
-      setBusy(false);
-    }
+    setError(t('tripNew.inactiveBody', 'Bu form önizlemedir. Talep yayınlama yakında açılacak.'));
   };
 
   return (
     <section className="mx-auto max-w-2xl space-y-6">
+      <div className="rounded-2xl border border-amber-500/35 bg-amber-500/10 p-4 text-sm text-amber-950 dark:text-amber-100">
+        <p className="font-display text-base font-bold">{t('tripNew.inactiveTitle', 'Yakında — rehberli gezi talepleri')}</p>
+        <p className="mt-2 leading-relaxed">{t('tripNew.inactiveBody', 'Bu form önizlemedir.')}</p>
+      </div>
       <header>
         <Link className="text-sm font-semibold text-primary" to={initialRouteId ? `/routes/${initialRouteId}` : '/talepler'}>
           ← {t('common.back', 'Geri')}
@@ -162,6 +127,7 @@ export default function TripRequestNewPage(): ReactElement {
               const r = catalogRoutes.find((x) => x.route_id === id);
               if (r) {
                 setRouteTitle(r.title);
+                setRouteCity(r.city);
                 setTitle(`${r.title} — ${t('trips.create', 'Talep oluştur').toLowerCase()}`);
               }
             }}
@@ -176,7 +142,7 @@ export default function TripRequestNewPage(): ReactElement {
           {routeTitle ? <p className="mt-1 text-xs text-stone-500">{t('tripNew.selected', { title: routeTitle }, 'Seçili: {title}')}</p> : null}
         </label>
       ) : (
-        <RouteBuilder stops={plannedStops} onChange={setPlannedStops} />
+        <RouteBuilder defaultCity={routeCity} stops={plannedStops} onChange={setPlannedStops} />
       )}
 
       {routeMode === 'existing' ? (
@@ -245,11 +211,12 @@ export default function TripRequestNewPage(): ReactElement {
         ) : null}
 
         <button
-          className="tap-scale w-full min-h-[48px] rounded-xl bg-primary font-bold text-white shadow-sm hover:bg-primary-dark disabled:opacity-60"
-          disabled={busy}
+          className="tap-scale w-full min-h-[48px] rounded-xl bg-stone-400 font-bold text-white shadow-sm cursor-not-allowed opacity-80"
+          disabled
           type="submit"
+          title={t('tripNew.inactiveSubmit', 'Henüz aktif değil (yakında)')}
         >
-          {busy ? t('tripNew.submitting', 'Gönderiliyor…') : t('tripNew.submit', 'Talebi yayınla (+40 XP)')}
+          {t('tripNew.inactiveSubmit', 'Henüz aktif değil (yakında)')}
         </button>
       </form>
     </section>

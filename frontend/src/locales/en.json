@@ -724,7 +724,22 @@
     "prefillMessage": "I want to explore this route ({city}) with a guide.",
     "prefillGuide": "I would also like an offer from guide {name}.",
     "prefillGuideTitle": "Trip request with {name}",
-    "itineraryPrefix": "\n\nItinerary: {stops}"
+    "itineraryPrefix": "\n\nItinerary: {stops}",
+    "inactiveTitle": "Coming soon — guide requests",
+    "inactiveBody": "This form is a preview. Guide verification and secure payments are being built. You can explore routes and the map; publishing requests will open soon.",
+    "inactiveSubmit": "Not active yet (coming soon)"
+  },
+  "routeBuilder": {
+    "title": "Build your route",
+    "hint": "Pick at least 2 stops. Guides will send offers for this itinerary.",
+    "city": "Province",
+    "district": "District",
+    "allDistricts": "All districts",
+    "noStops": "No stops yet",
+    "addStop": "Add stop",
+    "noPlaces": "No places for this filter.",
+    "moveUp": "Move up",
+    "remove": "Remove"
   },
   "premium": {
     "title": "Go Premium",
@@ -869,7 +884,26 @@
     "cityRequired": "City is required.",
     "durationRange": "Duration must be between 15–720 minutes.",
     "priceMin": "Price must be 0 or higher.",
-    "defaultTags": "history, culture"
+    "defaultTags": "history, culture",
+    "createSubtitle": "Saved as draft; add stops in order, then submit for review.",
+    "titlePlaceholder": "e.g. Sultanahmet culture walk",
+    "cityPlaceholder": "Istanbul",
+    "tagsPlaceholder": "history, art, food",
+    "durationHint": "Estimated duration (min)",
+    "cancel": "Cancel",
+    "saveRoute": "Save route",
+    "backPanel": "← Guide panel",
+    "sessionError": "Session may have expired. Sign out and sign in again."
+  },
+  "faq": {
+    "q1": "What is Historial GO?",
+    "a1": "A culture travel platform with personalized historic routes, map stops and multilingual audio guides.",
+    "q2": "How are routes approved?",
+    "a2": "Guides submit routes for review; after admin approval the guide can publish.",
+    "q3": "Is payment secure?",
+    "a3": "Production uses Stripe Checkout. Demo mode does not charge real fees.",
+    "q4": "Can I get a refund?",
+    "a4": "See our refund policy page for digital content conditions."
   },
   "guideVerify": {
     "guideOnly": "This page is for guide accounts only.",

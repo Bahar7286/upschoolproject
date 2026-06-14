@@ -264,6 +264,38 @@ def format_venue_reply(places: list[Any], where: str, *, locale: str = 'tr') -> 
     return '\n\n'.join(lines)
 
 
+def format_accommodation_reply(places: list[Any], where: str, *, locale: str = 'tr') -> str:
+    """Konaklama önerisi — yalnızca otel/pansiyon."""
+    if not places:
+        if locale == 'en':
+            return (
+                f'No lodging found for {where}. '
+                'Try the Map tab with the Stay filter for live results.'
+            )
+        return (
+            f'{where} için şu an kayıtlı konaklama bulamadım. '
+            'Harita sekmesinden "Konaklama" filtresiyle canlı sonuçlara bakabilirsin.'
+        )
+    if locale == 'en':
+        lines = [f'Places to stay in **{where}**:\n']
+        footer = '\nSee **Map → Stay** in the app for details.'
+    else:
+        lines = [f'**{where}** bölgesinde konaklama önerileri:\n']
+        footer = '\nDetay için uygulamada **Harita → Konaklama** filtresine bakabilirsin.'
+    for i, p in enumerate(places[:5], 1):
+        name = getattr(p, 'name', '')
+        addr = getattr(p, 'address', '') or ''
+        rating = getattr(p, 'rating', None)
+        count = getattr(p, 'user_rating_count', None)
+        stars = f' ⭐ {rating}' if rating else ''
+        reviews = f' ({count} reviews)' if count and locale == 'en' else (f' ({count} yorum)' if count else '')
+        lines.append(f'{i}. **{name}**{stars}{reviews}')
+        if addr:
+            lines.append(f'   📍 {addr}')
+    lines.append(footer)
+    return '\n\n'.join(lines)
+
+
 # --- Sesli anlatım ---
 
 SYSTEM_NARRATION = """Sen Historial-GO tarihî sesli rehbersin.

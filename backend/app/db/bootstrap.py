@@ -1,9 +1,10 @@
 from datetime import datetime, timezone
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
+from app.data.city_landmarks import city_landmark_places
 from app.data.istanbul_district_coords import ISTANBUL_DISTRICT_COORDS
 from app.data.istanbul_places import ISTANBUL_PLACES
 from app.data.national_routes import city_route_templates, normalize_city_key
@@ -217,6 +218,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
     await ensure_cities_seeded(session)
     await ensure_districts_seeded(session)
     await ensure_city_routes_seeded(session)
+    await ensure_route_stops_seeded(session)
     await ensure_co_visit_seed(session)
 
 
@@ -373,6 +375,96 @@ async def ensure_city_routes_seeded(session: AsyncSession) -> None:
     if to_add:
         session.add_all(to_add)
         await session.commit()
+
+
+async def ensure_route_stops_seeded(session: AsyncSession) -> None:
+    """Duraksız rotalara il bazlı en az 3 durak ekle (DB mekan → landmark → şehir merkezi)."""
+    import logging
+
+    log = logging.getLogger(__name__)
+    routes = list((await session.execute(select(Route))).scalars().all())
+    if not routes:
+        return
+
+    city_rows = list((await session.execute(select(City))).scalars().all())
+    city_by_name = {normalize_city_key(c.name_tr): c for c in city_rows}
+
+    added = 0
+    for route in routes:
+        count_row = await session.execute(
+            select(func.count(Stop.stop_id)).where(Stop.route_id == route.route_id)
+        )
+        if (count_row.scalar() or 0) > 0:
+            continue
+
+        city = (route.city or '').strip()
+        if not city:
+            continue
+
+        place_rows = await session.execute(
+            select(Place)
+            .where(Place.city == city)
+            .order_by(Place.place_id.asc())
+            .limit(8)
+        )
+        places = list(place_rows.scalars().all())
+
+        stop_defs: list[tuple[str, str, float, float]] = []
+        for p in places[:5]:
+            desc = (p.description or '').strip() or f'{p.name} — {p.district}, {city}'
+            stop_defs.append((p.name, desc, float(p.latitude), float(p.longitude)))
+
+        if len(stop_defs) < 2:
+            for lm in city_landmark_places(city)[:5]:
+                stop_defs.append(
+                    (
+                        lm.name,
+                        lm.address or lm.name,
+                        float(lm.lat),
+                        float(lm.lng),
+                    )
+                )
+
+        if len(stop_defs) < 2:
+            c = city_by_name.get(normalize_city_key(city))
+            if c and (float(c.center_lat) or float(c.center_lng)):
+                lat, lng = float(c.center_lat), float(c.center_lng)
+                templates = (
+                    (f'{city} merkez keşfi', f'{city} şehir merkezi ve çevre yürüyüşü', 0.0, 0.0),
+                    (f'{city} tarihi çevre', f'{city} tarihî noktalar', 0.012, 0.006),
+                    (f'{city} yerel lezzet', f'{city} bölgesinde yemek molası', -0.008, 0.005),
+                )
+                for title, desc, dla, dlg in templates:
+                    stop_defs.append((title, desc, lat + dla, lng + dlg))
+
+        if not stop_defs:
+            continue
+
+        seen: set[str] = set()
+        order = 1
+        for title, desc, lat, lng in stop_defs:
+            key = title.strip().lower()
+            if key in seen:
+                continue
+            seen.add(key)
+            session.add(
+                Stop(
+                    route_id=route.route_id,
+                    title=title[:180],
+                    description=desc[:900],
+                    latitude=lat,
+                    longitude=lng,
+                    order_index=order,
+                )
+            )
+            order += 1
+            if order > 5:
+                break
+        added += 1
+
+    if added:
+        await session.commit()
+        log.info('Route stops seeded for %s routes without stops', added)
 
 
 async def ensure_co_visit_seed(session: AsyncSession) -> None:

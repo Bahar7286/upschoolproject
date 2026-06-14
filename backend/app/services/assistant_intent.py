@@ -27,6 +27,12 @@ _FOOD_HINT = re.compile(
     r'lokasyon.*lokanta|somewhere to eat|where to eat)',
     re.IGNORECASE,
 )
+_ACCOMMODATION_HINT = re.compile(
+    r'(konaklama|konak|otel|hotel|pansiyon|hostel|motel|butik otel|'
+    r'where to stay|accommodation|lodging|stay in|place to stay|'
+    r'nerede kal|kalacak yer|gecelem)',
+    re.IGNORECASE,
+)
 _SPECIFIC_VENUE = re.compile(
     r'(tam bir mekan|gerçek mekan|ispesifik|somewhere specific|named restaurant|'
     r'lokasyon bir lokanta|bir lokanta|bir restoran|somewhere to eat|'
@@ -86,7 +92,13 @@ def needs_travel_plan(text: str) -> bool:
 
 
 def is_food_query(text: str) -> bool:
+    if is_accommodation_query(text):
+        return False
     return bool(_FOOD_HINT.search(text))
+
+
+def is_accommodation_query(text: str) -> bool:
+    return bool(_ACCOMMODATION_HINT.search(text))
 
 
 def is_specific_venue_request(text: str) -> bool:
@@ -101,6 +113,8 @@ def is_specific_venue_request(text: str) -> bool:
 def detect_query_category(text: str, interests: list[str] | None = None) -> str:
     """Mesaj ve ilgi alanlarından Places kategorisi."""
     t = _norm(text)
+    if is_accommodation_query(text):
+        return 'accommodation'
     if is_food_query(text):
         return 'restaurant'
     if any(w in t for w in ('müze', 'muze', 'museum')):
@@ -122,11 +136,13 @@ def detect_query_category(text: str, interests: list[str] | None = None) -> str:
 
 
 def resolve_intent(text: str, recent_user_text: str = '') -> str:
-    """greeting | thanks | specific_venue | food | route_plan | general"""
+    """greeting | thanks | accommodation | specific_venue | food | route_plan | general"""
     if is_greeting(text):
         return 'greeting'
     if is_thanks(text):
         return 'thanks'
+    if is_accommodation_query(text) or is_accommodation_query(recent_user_text):
+        return 'accommodation'
     if is_specific_venue_request(text):
         return 'specific_venue'
     if is_food_query(text) or is_food_query(recent_user_text):

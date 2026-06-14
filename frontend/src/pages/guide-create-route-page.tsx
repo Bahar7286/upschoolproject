@@ -1,5 +1,5 @@
 import type { FormEvent, ReactElement } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 
@@ -39,7 +39,10 @@ export default function GuideCreateRoutePage(): ReactElement {
   const [city, setCity] = useState('İstanbul');
   const [estimatedMinutes, setEstimatedMinutes] = useState(120);
   const [price, setPrice] = useState(149);
-  const [tagsText, setTagsText] = useState(DEFAULT_TAGS);
+  const [tagsText, setTagsText] = useState('');
+  useEffect(() => {
+    setTagsText(t('guideForm.defaultTags', DEFAULT_TAGS));
+  }, [t]);
   const [stops, setStops] = useState<DraftStop[]>([createEmptyDraftStop()]);
   const [error, setError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
@@ -67,21 +70,21 @@ export default function GuideCreateRoutePage(): ReactElement {
     event.preventDefault();
     setError('');
     const errs: FieldErrors = {};
-    const titleErr = validateRequired(title, 'Rota başlığı');
-    const cityErr = validateRequired(city, 'Şehir');
+    const titleErr = validateRequired(title, t('guideForm.titleLabel', 'Rota başlığı'));
+    const cityErr = validateRequired(city, t('guideForm.cityLabel', 'Şehir'));
     if (titleErr) errs.title = titleErr;
     if (cityErr) errs.city = cityErr;
     if (estimatedMinutes < 15 || estimatedMinutes > 720) {
-      errs.estimatedMinutes = 'Süre 15–720 dakika arasında olmalı.';
+      errs.estimatedMinutes = t('guideForm.durationRange', 'Süre 15–720 dakika arasında olmalı.');
     }
-    if (price < 0) errs.price = 'Fiyat 0 veya üzeri olmalı.';
+    if (price < 0) errs.price = t('guideForm.priceMin', 'Fiyat 0 veya üzeri olmalı.');
     const stopErrs = validateDraftStops(stops);
     setFieldErrors(errs);
     setStopErrors(stopErrs);
     if (Object.keys(errs).length > 0 || Object.keys(stopErrs).length > 0) return;
 
     if (!accessToken) {
-      setError('Oturum süresi dolmuş olabilir. Çıkış yapıp tekrar giriş yap.');
+      setError(t('guideForm.sessionError', 'Oturum süresi dolmuş olabilir.'));
       return;
     }
 
@@ -126,11 +129,11 @@ export default function GuideCreateRoutePage(): ReactElement {
     <section className="mx-auto max-w-2xl space-y-6">
       <header>
         <Link className="text-sm font-semibold text-primary hover:underline" to="/guide">
-          ← Rehber paneli
+          {t('guideForm.backPanel', '← Rehber paneli')}
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Yeni rota oluştur</h1>
+        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{t('guideForm.createTitle', 'Yeni rota oluştur')}</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Taslak olarak kaydedilir; durakları sırayla ekle, ardından incelemeye gönderebilirsin.
+          {t('guideForm.createSubtitle', 'Taslak olarak kaydedilir; durakları sırayla ekle.')}
         </p>
       </header>
 
@@ -149,12 +152,12 @@ export default function GuideCreateRoutePage(): ReactElement {
       >
         <div className="space-y-4">
           <label className="block text-sm font-semibold">
-            Rota başlığı
+            {t('guideForm.titleLabel', 'Rota başlığı')}
             <input
               className={fieldClass(!!fieldErrors.title)}
               maxLength={180}
               minLength={3}
-              placeholder="Örn. Sultanahmet kültür yürüyüşü"
+              placeholder={t('guideForm.titlePlaceholder', 'Örn. Sultanahmet kültür yürüyüşü')}
               required
               value={title}
               onChange={(e) => setTitle(e.target.value)}
@@ -163,12 +166,12 @@ export default function GuideCreateRoutePage(): ReactElement {
           </label>
 
           <label className="block text-sm font-semibold">
-            Şehir
+            {t('guideForm.cityLabel', 'Şehir')}
             <input
               className={fieldClass(!!fieldErrors.city)}
               list="guide-route-cities"
               maxLength={120}
-              placeholder="İstanbul"
+              placeholder={t('guideForm.cityPlaceholder', 'İstanbul')}
               required
               value={city}
               onChange={(e) => setCity(e.target.value)}
@@ -183,7 +186,7 @@ export default function GuideCreateRoutePage(): ReactElement {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-semibold">
-              Tahmini süre (dk)
+              {t('guideForm.durationHint', 'Tahmini süre (dk)')}
               <input
                 className={fieldClass(!!fieldErrors.estimatedMinutes)}
                 max={720}
@@ -199,7 +202,7 @@ export default function GuideCreateRoutePage(): ReactElement {
             </label>
 
             <label className="block text-sm font-semibold">
-              Fiyat (₺)
+              {t('guideForm.priceLabel', 'Fiyat (₺)')}
               <input
                 className={fieldClass(!!fieldErrors.price)}
                 min={0}
@@ -214,10 +217,10 @@ export default function GuideCreateRoutePage(): ReactElement {
           </div>
 
           <label className="block text-sm font-semibold">
-            Etiketler (virgülle ayır)
+            {t('guideForm.tagsLabel', 'Etiketler (virgülle ayır)')}
             <input
               className="mt-1 w-full rounded-xl border border-stone-300 px-3 py-2.5 dark:border-zinc-600"
-              placeholder="tarih, sanat, yemek"
+              placeholder={t('guideForm.tagsPlaceholder', 'tarih, sanat, yemek')}
               value={tagsText}
               onChange={(e) => setTagsText(e.target.value)}
             />
@@ -234,13 +237,13 @@ export default function GuideCreateRoutePage(): ReactElement {
 
         <div className="flex flex-wrap gap-3 pt-2">
           <LoadingButton className="min-h-[48px] flex-1 sm:flex-none" loading={loading} type="submit">
-            Rotayı kaydet
+            {t('guideForm.saveRoute', 'Rotayı kaydet')}
           </LoadingButton>
           <Link
             className="inline-flex min-h-[48px] items-center justify-center rounded-xl border-2 border-stone-300 px-5 font-semibold dark:border-zinc-600"
             to="/guide"
           >
-            İptal
+            {t('guideForm.cancel', 'İptal')}
           </Link>
         </div>
       </form>
