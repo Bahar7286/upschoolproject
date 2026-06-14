@@ -37,7 +37,7 @@ from app.api.routers import (
 
 from app.core.config import settings
 from app.middleware.rate_limit import RateLimitMiddleware
-from app.db.bootstrap import ensure_images_seeded, seed_initial_data
+from app.db.bootstrap import ensure_images_seeded, ensure_place_descriptions_enriched, seed_initial_data
 from app.db.connection import Base, SessionLocal, engine
 from app import models  # noqa: F401
 
@@ -55,6 +55,7 @@ async def lifespan(_: FastAPI) -> AsyncIterator[None]:
         async with SessionLocal() as session:
             await seed_initial_data(session)
             await ensure_images_seeded(session)
+            await ensure_place_descriptions_enriched(session)
     except Exception as exc:
         log.exception('Startup DB seed failed (API still listening): %s', exc)
 

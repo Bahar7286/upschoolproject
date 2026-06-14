@@ -382,22 +382,37 @@ def format_category_reply(
 
 # --- Sesli anlatım ---
 
-SYSTEM_NARRATION = """Sen Historial-GO tarihî sesli rehbersin.
+SYSTEM_NARRATION = """Sen Historial-GO tarihî sesli rehbersin. Metinler sesli okunacak — yazı dili değil, konuşma dili kullan.
 
 KURALLAR:
 - Doğru tarih/kültür bilgisi ver; emin değilsen genel ifade kullan, uydurma tarih/sayı yazma.
-- Her istenen dil için 150–250 kelime; akıcı, dinlenebilir, rehber tonu.
-- Yapı: kısa giriş → tarih/kültür → pratik ipucu (ziyaret süresi, dikkat) → kapanış.
-- Mekan adını mutlaka söyle.
+- scripts.tr: Türkçe, 200–280 kelime, sıcak rehber tonu, "siz" hitabı.
+- scripts.en: İngilizce, 200–280 kelime, natural spoken English for tourists (not literal translation of TR).
+- scripts.de: Almanca, 180–240 kelime (istenirse).
+- Yapı: karşılama + mekanın önemi → tarih/mimari/kültür (2–3 paragraf) → pratik ipucu (ziyaret süresi, sessizlik, fotoğraf) → kapanış daveti.
+- Mekan adını girişte ve bir kez daha ortada mutlaka söyle.
+- Şehir/ilçe bağlamını kullan (Türkiye, bölge).
 
 ÇIKTI: Sadece geçerli JSON:
 {"scripts":{"tr":"...","en":"...","de":"..."}}
 Yalnızca istenen dil kodları için anahtar doldur."""
 
 
-def build_narration_user(*, stop_title: str, description: str, languages: list[str]) -> str:
-    ctx = (description or 'Genel tarihî bilgi')[:1200]
-    return f'mekan={stop_title}; baglam={ctx}; diller={languages}'
+def build_narration_user(
+    *,
+    stop_title: str,
+    description: str,
+    languages: list[str],
+    city: str | None = None,
+    district: str | None = None,
+    category: str | None = None,
+) -> str:
+    ctx = (description or 'Genel tarihî bilgi')[:2800]
+    loc = ', '.join(p for p in (district, city) if p) or 'Türkiye'
+    cat = category or 'historical'
+    return (
+        f'mekan={stop_title}; konum={loc}; kategori={cat}; baglam={ctx}; diller={languages}'
+    )
 
 
 # --- Kişisel rota üretimi ---

@@ -51,6 +51,9 @@ class GeofenceCheckResponse(BaseModel):
 class StopNarrationRequest(BaseModel):
     stop_title: str = Field(min_length=2, max_length=180)
     description: str = Field(default='', max_length=4000)
+    city: str | None = Field(default=None, max_length=120)
+    district: str | None = Field(default=None, max_length=120)
+    category: str | None = Field(default=None, max_length=40)
     languages: list[str] = Field(default_factory=lambda: ['tr', 'en', 'de'], max_length=3)
 
 
@@ -69,6 +72,9 @@ class StopNarrationResponse(BaseModel):
 class NarrationAudioRequest(BaseModel):
     stop_title: str = Field(min_length=2, max_length=180)
     description: str = Field(default='', max_length=4000)
+    city: str | None = Field(default=None, max_length=120)
+    district: str | None = Field(default=None, max_length=120)
+    category: str | None = Field(default=None, max_length=40)
     language: str = Field(default='tr', pattern='^(tr|en|de)$')
 
 

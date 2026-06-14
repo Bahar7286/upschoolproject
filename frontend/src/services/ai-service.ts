@@ -46,6 +46,9 @@ export async function recommendWithAi(payload: AIRecommendPayload): Promise<AIRe
 export interface NarrationAudioPayload {
   stop_title: string;
   description?: string;
+  city?: string;
+  district?: string;
+  category?: string;
   language: 'tr' | 'en' | 'de';
 }
 
@@ -62,6 +65,9 @@ export interface NarrationAudioResponse {
 export interface NarrationPreviewPayload {
   stop_title: string;
   description?: string;
+  city?: string;
+  district?: string;
+  category?: string;
   languages?: ('tr' | 'en' | 'de')[];
 }
 
@@ -78,7 +84,7 @@ export async function fetchNarrationPreview(
   return requestJson<NarrationPreviewResponse>('/ai/narration/preview', {
     method: 'POST',
     body: JSON.stringify({
-      languages: ['tr'],
+      languages: ['tr', 'en'],
       ...payload,
     }),
   });

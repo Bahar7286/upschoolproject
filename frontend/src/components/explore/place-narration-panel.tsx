@@ -1,36 +1,54 @@
 import { Headphones, Loader2, Volume2 } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { langToSpeechCode, playAudioBase64, useSpeech } from '../../hooks/use-speech';
 import { useI18n } from '../../lib/i18n';
 import { fetchNarrationAudio, fetchNarrationPreview } from '../../services/ai-service';
+import { useOnboardingStore } from '../../stores/onboarding-store';
 
 type NarrationLang = 'tr' | 'en';
 
 type PlaceNarrationPanelProps = {
   stopTitle: string;
   description?: string;
+  city?: string;
+  district?: string;
+  category?: string;
   className?: string;
 };
 
 export function PlaceNarrationPanel({
   stopTitle,
   description = '',
+  city,
+  district,
+  category,
   className = '',
 }: PlaceNarrationPanelProps): ReactElement {
-  const { t } = useI18n();
+  const { t, locale } = useI18n();
+  const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
   const { speak, stop, speaking, supported } = useSpeech();
-  const [lang, setLang] = useState<NarrationLang>('tr');
+  const [lang, setLang] = useState<NarrationLang>(() =>
+    locale === 'en' || preferredLanguage === 'en' ? 'en' : 'tr',
+  );
   const [audioBusy, setAudioBusy] = useState(false);
 
+  useEffect(() => {
+    if (locale === 'en') setLang('en');
+    else if (locale === 'tr') setLang('tr');
+  }, [locale]);
+
   const { data, isPending, isError } = useQuery({
-    queryKey: ['narration-preview', stopTitle, description.slice(0, 200)],
+    queryKey: ['narration-preview', stopTitle, city ?? '', district ?? '', category ?? '', description.slice(0, 300)],
     queryFn: () =>
       fetchNarrationPreview({
         stop_title: stopTitle,
         description,
+        city,
+        district,
+        category,
         languages: ['tr', 'en'],
       }),
     staleTime: 30 * 60 * 1000,
@@ -53,6 +71,9 @@ export function PlaceNarrationPanel({
       const audio = await fetchNarrationAudio({
         stop_title: stopTitle,
         description,
+        city,
+        district,
+        category,
         language: lang,
       });
       if (audio.audio_base64) {
@@ -80,7 +101,11 @@ export function PlaceNarrationPanel({
           <Headphones className="h-5 w-5 text-primary" aria-hidden="true" />
           {t('place.narration', 'Sesli anlatım')}
         </h2>
-        <div className="inline-flex rounded-full border border-stone-900/10 bg-white p-0.5 dark:border-white/10 dark:bg-zinc-900">
+        <div
+          className="inline-flex rounded-full border border-stone-900/10 bg-white p-0.5 dark:border-white/10 dark:bg-zinc-900"
+          role="group"
+          aria-label={t('place.narrationLang', 'Anlatım dili')}
+        >
           {(['tr', 'en'] as const).map((code) => (
             <button
               key={code}
@@ -89,8 +114,9 @@ export function PlaceNarrationPanel({
                 lang === code ? 'bg-primary text-white' : 'text-stone-600 dark:text-stone-400'
               }`}
               onClick={() => setLang(code)}
+              aria-pressed={lang === code}
             >
-              {code}
+              {code === 'tr' ? t('place.langTr', 'Türkçe') : t('place.langEn', 'English')}
             </button>
           ))}
         </div>
@@ -105,7 +131,7 @@ export function PlaceNarrationPanel({
           <div className="h-16 animate-pulse rounded-xl bg-stone-200/80 dark:bg-zinc-800" />
         </div>
       ) : isError ? (
-        <p className="mt-3 text-sm text-stone-600 dark:text-stone-400">
+        <p className="mt-3 text-sm leading-relaxed text-stone-600 dark:text-stone-400">
           {description || stopTitle}
         </p>
       ) : (

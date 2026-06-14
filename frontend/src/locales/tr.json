@@ -579,7 +579,10 @@
     "narration": "Sesli anlatım",
     "narrationLoading": "Anlatım hazırlanıyor…",
     "narrationListen": "Dinle",
-    "narrationStop": "Durdur"
+    "narrationStop": "Durdur",
+    "narrationLang": "Anlatım dili",
+    "langTr": "Türkçe",
+    "langEn": "English"
   },
   "route": {
     "planTitle": "Rota planla",

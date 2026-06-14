@@ -424,7 +424,13 @@ export default function RouteDetailPage(): ReactElement {
                       </p>
                     ) : null}
                     {!locked ? (
-                      <PlaceNarrationPanel stopTitle={stop.title} description={stop.description} className="mt-2" />
+                      <PlaceNarrationPanel
+                        stopTitle={stop.title}
+                        description={stop.description}
+                        city={route.city}
+                        category="historical"
+                        className="mt-2"
+                      />
                     ) : null}
                     {!locked ? (
                       <div className="space-y-2">

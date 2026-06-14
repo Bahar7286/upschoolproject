@@ -159,7 +159,7 @@ export default function AssistantPage(): ReactElement {
 
   return (
     <section
-      className="page-container flex min-w-0 flex-col gap-3 pb-6 lg:max-w-4xl"
+      className="page-container max-w-4xl space-y-3 pb-[calc(6rem+env(safe-area-inset-bottom))]"
       aria-labelledby="asst-title"
     >
       <BackButton />
@@ -236,8 +236,8 @@ export default function AssistantPage(): ReactElement {
         </div>
       </div>
 
-      <div className="theme-card flex min-h-[min(52dvh,480px)] flex-col overflow-hidden rounded-2xl p-3 sm:p-4 lg:min-h-[420px]">
-        <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
+      <div className="theme-card space-y-3 rounded-2xl p-3 sm:p-4">
+        <div className="space-y-3" role="log" aria-live="polite" aria-relevant="additions">
           {msgs.map((m, idx) => (
             <div key={idx} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
               <div
@@ -267,12 +267,10 @@ export default function AssistantPage(): ReactElement {
         </div>
 
         {msgs.some((m) => m.role === 'assistant' && m.content.length > 20) ? (
-          <div className="shrink-0 pt-2">
-            <HelpfulFeedback contextKey={`assistant_${city}`} />
-          </div>
+          <HelpfulFeedback contextKey={`assistant_${city}`} />
         ) : null}
 
-        <div className="sticky bottom-0 z-10 mt-2 flex shrink-0 items-end gap-2 border-t border-stone-900/5 bg-[var(--card-bg,theme(colors.white))] pt-3 dark:border-white/10 dark:bg-zinc-900">
+        <div className="flex items-end gap-2 border-t border-stone-900/5 pt-3 dark:border-white/10">
           <textarea
             rows={1}
             className="max-h-32 min-h-[48px] min-w-0 flex-1 resize-none rounded-xl border border-stone-900/10 bg-white px-3 py-3 text-base leading-snug outline-none focus:border-primary dark:border-white/10 dark:bg-zinc-950 sm:text-sm"

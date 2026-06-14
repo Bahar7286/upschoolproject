@@ -579,7 +579,10 @@
     "narration": "Audio guide",
     "narrationLoading": "Preparing narration…",
     "narrationListen": "Listen",
-    "narrationStop": "Stop"
+    "narrationStop": "Stop",
+    "narrationLang": "Narration language",
+    "langTr": "Turkish",
+    "langEn": "English"
   },
   "route": {
     "planTitle": "Plan route",

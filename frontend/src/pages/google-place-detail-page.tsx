@@ -196,7 +196,11 @@ export default function GooglePlaceDetailPage(): ReactElement {
         ) : null}
       </header>
 
-      <PlaceNarrationPanel stopTitle={place.name} description={narrationDescription} />
+      <PlaceNarrationPanel
+        stopTitle={place.name}
+        description={narrationDescription}
+        city={place.formatted_address?.split(',').slice(-2, -1)[0]?.trim()}
+      />
 
       <AlsoVisitedPanel
         entityType="google_place"

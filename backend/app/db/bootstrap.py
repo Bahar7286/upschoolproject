@@ -246,19 +246,20 @@ async def ensure_city_landmark_places_seeded(session: AsyncSession) -> None:
         )
         if (count_row.scalar() or 0) > 0:
             continue
-        for lm in city_landmark_places(city_name):
-            addr = (lm.address or '').strip()
+        for lm_row in _LANDMARKS.get(city_name) or []:
+            addr = str(lm_row.get('address') or '').strip()
             district = addr.split(',')[0].strip() if addr else ''
+            desc = str(lm_row.get('description') or addr or lm_row['name']).strip()
             session.add(
                 Place(
-                    name=lm.name,
-                    category=str(getattr(lm, 'category', None) or 'historical'),
+                    name=str(lm_row['name']),
+                    category=str(lm_row.get('category') or 'historical'),
                     city=city_name,
                     district=district,
-                    latitude=float(lm.lat),
-                    longitude=float(lm.lng),
-                    description=addr or lm.name,
-                    tags=str(getattr(lm, 'category', None) or 'historical'),
+                    latitude=float(lm_row.get('lat') or 0),
+                    longitude=float(lm_row.get('lng') or 0),
+                    description=desc[:3500],
+                    tags=str(lm_row.get('category') or 'historical'),
                 )
             )
             added += 1
@@ -346,6 +347,23 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
                 coord_patched = True
         if coord_patched:
             await session.commit()
+
+
+async def ensure_place_descriptions_enriched(session: AsyncSession) -> None:
+    """Kısa mekan açıklamalarını Wikipedia ile zenginleştir (sesli anlatım kalitesi)."""
+    if os.getenv('TESTING') == '1':
+        return
+    import logging
+
+    from app.services.place_content_service import enrich_places_batch
+
+    log = logging.getLogger(__name__)
+    try:
+        updated = await enrich_places_batch(session, limit=250)
+        if updated:
+            log.info('Wikipedia place descriptions: %s updated', updated)
+    except Exception as exc:
+        log.warning('Place description enrich skipped: %s', exc)
 
 
 async def ensure_images_seeded(session: AsyncSession) -> None:

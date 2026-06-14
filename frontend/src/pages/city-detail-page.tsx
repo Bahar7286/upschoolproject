@@ -6,10 +6,12 @@ import { Link, useParams } from 'react-router-dom';
 
 import { CategoryIconCard } from '../components/explore/category-icon-card';
 import { DistrictRowCard } from '../components/explore/district-row-card';
+import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
 import { BackButton } from '../components/ui/back-button';
 import { ResetActiveRouteButton } from '../components/trip/reset-active-route-button';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { CITY_EXPLORE_CATEGORIES } from '../config/explore-categories';
+import { CITY_INTRO } from '../data/place-rich-content';
 import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
 import { useI18n } from '../lib/i18n';
 import { listCities, listDistrictsByCity } from '../services/city-service';
@@ -75,6 +77,15 @@ export default function CityDetailPage(): ReactElement {
         </h1>
         <p className="text-sm text-theme-muted">{t('city.pickDistrict', 'İlçe seç → mekanları gör')}</p>
       </header>
+
+      {city?.name_tr ? (
+        <PlaceNarrationPanel
+          stopTitle={city.name_tr}
+          description={CITY_INTRO[city.name_tr] ?? `${city.name_tr} ili, Türkiye'nin ${city.plate_code ?? ''}. plaka kodlu ilidir. Tarihî ve doğal zenginlikleriyle keşfedilmeye değer bir destinasyondur.`}
+          city={city.name_tr}
+          category="historical"
+        />
+      ) : null}
 
       <p className="px-1 text-xs font-bold uppercase tracking-wide text-primary">{t('city.categories', 'Mekan türleri')}</p>
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-3">

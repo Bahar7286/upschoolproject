@@ -8,7 +8,7 @@ import { AlsoVisitedPanel } from '../components/explore/also-visited-panel';
 import { DirectionsCta, VenueDetailHero } from '../components/explore/venue-detail-hero';
 import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
 import { useRecordPlaceVisit } from '../hooks/use-record-place-visit';
-import { getRichPlaceContent } from '../data/place-rich-content';
+import { getRichPlaceContent, buildNarrationContext, CITY_INTRO } from '../data/place-rich-content';
 import { resolvePlaceImage } from '../lib/region-images';
 import { formatApiError } from '../lib/api';
 import { useI18n } from '../lib/i18n';
@@ -88,8 +88,21 @@ export default function PlaceDetailPage(): ReactElement {
     return <div className="h-48 animate-pulse rounded-[22px] bg-stone-200 dark:bg-zinc-800" aria-busy="true" />;
   }
 
-  const { story, tips, hours } = getRichPlaceContent(place.name, place.category, place.description);
-  const narrationContext = `${story} ${place.description}`.trim();
+  const { story, tips, hours } = getRichPlaceContent(
+    place.name,
+    place.category,
+    place.description,
+    place.city,
+    place.district,
+  );
+  const narrationContext = buildNarrationContext({
+    name: place.name,
+    category: place.category,
+    city: place.city,
+    district: place.district,
+    description: place.description,
+    story,
+  });
   const backTo = cityRow ? `/cities/${cityRow.city_id}` : '/cities';
 
   return (
@@ -155,7 +168,13 @@ export default function PlaceDetailPage(): ReactElement {
 
         <DirectionsCta lat={place.latitude} lng={place.longitude} />
 
-        <PlaceNarrationPanel stopTitle={place.name} description={narrationContext} />
+        <PlaceNarrationPanel
+          stopTitle={place.name}
+          description={narrationContext}
+          city={place.city}
+          district={place.district}
+          category={place.category}
+        />
 
         <AlsoVisitedPanel entityType="place" placeId={place.place_id} placeName={place.name} city={place.city} />
 
