@@ -6,13 +6,59 @@ import { useMemo, useState } from 'react';
 import { usePlacesQuery } from '../../hooks/use-places-query';
 import { useI18n } from '../../lib/i18n';
 import { listCities, listDistrictsByCity } from '../../services/city-service';
+import { fetchGeoCenter } from '../../services/google-service';
+import { fetchRegionGooglePlaces } from '../../services/region-venues-service';
 import type { PlannedStop } from '../../services/trip-request-service';
+import type { GooglePlaceSummary } from '../../types/google';
+import type { PlaceCategory } from '../../types/place';
 
 type Props = {
   stops: PlannedStop[];
   onChange: (stops: PlannedStop[]) => void;
   defaultCity?: string;
 };
+
+type PickablePlace = {
+  place_id: number;
+  name: string;
+  district: string;
+};
+
+const ROUTE_CATEGORIES: PlaceCategory[] = ['historical', 'mosque', 'museum', 'palace', 'bazaar'];
+
+function hashGooglePlaceId(key: string): number {
+  let h = 0;
+  for (let i = 0; i < key.length; i += 1) {
+    h = (Math.imul(31, h) + key.charCodeAt(i)) | 0;
+  }
+  return Math.abs(h) + 1_000_000_000;
+}
+
+function mergePickablePlaces(
+  dbPlaces: { place_id: number; name: string; district: string }[],
+  googlePlaces: { place_id: string; name: string; address: string }[],
+): PickablePlace[] {
+  const seenNames = new Set(dbPlaces.map((p) => p.name.toLocaleLowerCase('tr-TR')));
+  const usedIds = new Set(dbPlaces.map((p) => p.place_id));
+  const out: PickablePlace[] = dbPlaces.map((p) => ({
+    place_id: p.place_id,
+    name: p.name,
+    district: p.district,
+  }));
+
+  for (const gp of googlePlaces) {
+    const nameKey = gp.name.toLocaleLowerCase('tr-TR');
+    if (seenNames.has(nameKey)) continue;
+    seenNames.add(nameKey);
+    let id = hashGooglePlaceId(gp.place_id || gp.name);
+    while (usedIds.has(id)) id += 1;
+    usedIds.add(id);
+    const district = gp.address?.split(',')[0]?.trim() || '';
+    out.push({ place_id: id, name: gp.name, district });
+  }
+
+  return out;
+}
 
 export function RouteBuilder({ stops, onChange, defaultCity = 'İstanbul' }: Props): ReactElement {
   const { t } = useI18n();
@@ -37,11 +83,61 @@ export function RouteBuilder({ stops, onChange, defaultCity = 'İstanbul' }: Pro
     staleTime: 60 * 60 * 1000,
   });
 
-  const { data: places = [], isLoading } = usePlacesQuery(
+  const { data: dbPlaces = [], isLoading: dbLoading } = usePlacesQuery(
     null,
     selectedCity?.name_tr ?? cityName,
     districtName || null,
   );
+
+  const { data: geoCenter } = useQuery({
+    queryKey: ['route-builder-geo', selectedCity?.city_id, districtName],
+    queryFn: async () => {
+      const district = districts.find((d) => d.name_tr === districtName);
+      if (district?.district_id) {
+        return fetchGeoCenter({ districtId: district.district_id });
+      }
+      return fetchGeoCenter({ cityId: selectedCity!.city_id });
+    },
+    enabled: Boolean(selectedCity?.city_id),
+    staleTime: 60 * 60 * 1000,
+  });
+
+  const { data: googlePlaces = [], isLoading: googleLoading } = useQuery({
+    queryKey: [
+      'route-builder-google',
+      geoCenter?.lat,
+      geoCenter?.lng,
+      selectedCity?.name_tr,
+      districtName,
+    ],
+    queryFn: async () => {
+      const merged = new Map<string, GooglePlaceSummary>();
+      for (const category of ROUTE_CATEGORIES) {
+        const batch = await fetchRegionGooglePlaces({
+          lat: geoCenter!.lat,
+          lng: geoCenter!.lng,
+          cityName: selectedCity!.name_tr,
+          districtName: districtName || undefined,
+          category,
+        });
+        for (const p of batch) {
+          if (p.place_id) merged.set(p.place_id, p);
+        }
+        if (merged.size >= 24) break;
+      }
+      return [...merged.values()];
+    },
+    enabled: Boolean(geoCenter && selectedCity?.name_tr),
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+
+  const places = useMemo(
+    () => mergePickablePlaces(dbPlaces, googlePlaces),
+    [dbPlaces, googlePlaces],
+  );
+
+  const isLoading = dbLoading || (places.length === 0 && googleLoading);
 
   const addPlace = (placeId: number, name: string) => {
     if (stops.some((s) => s.place_id === placeId)) return;

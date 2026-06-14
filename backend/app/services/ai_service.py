@@ -24,11 +24,13 @@ from app.schemas.ai_schema import (
 from app.services.google_places_service import google_places_service
 from app.services.assistant_intent import (
     build_conversation_history,
+    detect_explicit_category,
     detect_query_category,
     district_coords,
     extract_area_from_messages,
     extract_city_from_messages,
     extract_trip_params,
+    is_category_place_query,
     is_food_query,
     is_accommodation_query,
     needs_travel_plan,
@@ -49,6 +51,7 @@ from app.services.ai_prompts import (
     format_places_detail,
     format_places_reply,
     format_accommodation_reply,
+    format_category_reply,
     format_venue_reply,
 )
 from app.services.llm_service import LLMServiceError, llm_service
@@ -702,6 +705,23 @@ class AIService:
         history = build_conversation_history(payload.messages)
         intent = resolve_intent(last_user, recent_user)
         lat, lng = self._resolve_assistant_coords(payload, area, resolved_city)
+        explicit_category = detect_explicit_category(last_user)
+
+        if (
+            explicit_category in ('mosque', 'museum', 'palace', 'bazaar', 'historical')
+            and settings.google_places_enabled
+        ):
+            cat_reply = await self._assistant_category_reply(
+                category=explicit_category,
+                lat=lat,
+                lng=lng,
+                where=where,
+                last_user=last_user,
+                locale=payload.preferred_language,
+                city=resolved_city,
+            )
+            if cat_reply:
+                return cat_reply
 
         if intent == 'accommodation' and settings.google_places_enabled:
             acc_reply = await self._assistant_accommodation_reply(
@@ -733,7 +753,11 @@ class AIService:
         if needs_travel_plan(last_user) and settings.google_places_enabled:
             days, budget = extract_trip_params(last_user)
             query_category = detect_query_category(last_user, payload.interests)
-            use_balanced = not is_accommodation_query(last_user) and not is_food_query(last_user)
+            use_balanced = (
+                not is_accommodation_query(last_user)
+                and not is_food_query(last_user)
+                and not is_category_place_query(last_user)
+            )
             picks = await self._assistant_collect_places(
                 city=resolved_city,
                 lat=float(lat),
@@ -761,6 +785,12 @@ class AIService:
                     )
 
             if intent == 'route_plan' and places_formatted_reply.strip():
+                return AssistantChatResponse(
+                    reply=places_formatted_reply.strip(),
+                    source='places',
+                )
+
+            if intent == 'category_venue' and places_formatted_reply.strip():
                 return AssistantChatResponse(
                     reply=places_formatted_reply.strip(),
                     source='places',
@@ -907,6 +937,67 @@ class AIService:
 
         return AssistantChatResponse(
             reply=format_accommodation_reply(places, where, locale=locale),
+            source='places',
+        )
+
+    async def _assistant_category_reply(
+        self,
+        *,
+        category: str,
+        lat: float,
+        lng: float,
+        where: str,
+        last_user: str,
+        locale: str = 'tr',
+        city: str = '',
+    ) -> AssistantChatResponse | None:
+        query_map = {
+            'mosque': f'cami {where}',
+            'museum': f'müze {where}',
+            'palace': f'saray {where}',
+            'bazaar': f'çarşı {where}',
+            'historical': f'tarihi yer {where}',
+        }
+        query = query_map.get(category, f'turistik {where}')
+        lower = last_user.lower()
+        if category == 'mosque' and ('ulu' in lower or 'yesil' in lower or 'yeşil' in lower):
+            query = f'{last_user} {city or where}'
+
+        places: list = []
+        try:
+            places, _ = await google_places_service.search_text(
+                query=query, lat=lat, lng=lng, radius_m=12000, client_key='assistant'
+            )
+        except Exception as exc:
+            logger.debug('Assistant category text search: %s', exc)
+
+        if not places:
+            try:
+                places, _ = await google_places_service.search_nearby(
+                    lat=lat, lng=lng, radius_m=12000, category=category, client_key='assistant'
+                )
+            except Exception as exc:
+                logger.debug('Assistant category nearby: %s', exc)
+
+        area_district = where.split(',')[0].strip() if ',' in where else ''
+        if area_district:
+            places = filter_by_district(places, area_district)
+        if city.strip():
+            places = filter_by_city(places, city) or places
+
+        if not places:
+            landmarks = [
+                p for p in city_landmark_places(city or where)
+                if str(getattr(p, 'category', '') or 'historical') == category
+            ]
+            if landmarks:
+                places = landmarks
+
+        if not places:
+            return None
+
+        return AssistantChatResponse(
+            reply=format_category_reply(places, where, category, locale=locale),
             source='places',
         )
 

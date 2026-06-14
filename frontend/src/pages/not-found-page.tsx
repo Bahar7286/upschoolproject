@@ -10,7 +10,7 @@ export default function NotFoundPage(): ReactElement {
   const { t } = useI18n();
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] px-4 py-8 dark:from-zinc-950 dark:via-zinc-950 dark:to-black">
+    <div className="relative min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] px-4 py-8 dark:from-zinc-950 dark:via-zinc-950 dark:to-black">
       <div className="relative mx-auto flex max-w-md flex-col gap-8">
         <header className="flex items-start justify-between">
           <BrandLogo to="/" />

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 
 import { BackButton } from '../components/ui/back-button';
@@ -23,7 +23,11 @@ export default function CityPlacesPage(): ReactElement {
   const city_id = Number(cityId);
   const [searchParams] = useSearchParams();
   const category = (searchParams.get('category') as PlaceCategory | null) ?? null;
-  const [q, setQ] = useState('');
+  const [q, setQ] = useState(() => searchParams.get('q') ?? '');
+
+  useEffect(() => {
+    setQ(searchParams.get('q') ?? '');
+  }, [searchParams]);
 
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],

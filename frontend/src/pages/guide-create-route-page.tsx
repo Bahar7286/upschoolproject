@@ -10,6 +10,7 @@ import {
   type DraftStop,
 } from '../components/guide/route-stops-builder';
 import { LoadingButton } from '../components/ui/loading-button';
+import { BackButton } from '../components/ui/back-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { formatApiError } from '../lib/api';
 import {
@@ -128,9 +129,7 @@ export default function GuideCreateRoutePage(): ReactElement {
   return (
     <section className="mx-auto max-w-2xl space-y-6">
       <header>
-        <Link className="text-sm font-semibold text-primary hover:underline" to="/guide">
-          {t('guideForm.backPanel', '← Rehber paneli')}
-        </Link>
+        <BackButton to="/guide" />
         <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{t('guideForm.createTitle', 'Yeni rota oluştur')}</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           {t('guideForm.createSubtitle', 'Taslak olarak kaydedilir; durakları sırayla ekle.')}

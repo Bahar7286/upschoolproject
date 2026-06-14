@@ -1,7 +1,9 @@
 from app.services.assistant_intent import (
+    detect_explicit_category,
     detect_query_category,
     extract_area_from_text,
     is_accommodation_query,
+    is_category_place_query,
     is_food_query,
     is_specific_venue_request,
     resolve_intent,
@@ -38,3 +40,16 @@ def test_accommodation_not_food() -> None:
     assert is_accommodation_query('Bursa konaklama öner')
     assert not is_food_query('Bursa konaklama öner')
     assert resolve_intent('konaklama öner', '') == 'accommodation'
+
+
+def test_cami_is_mosque_not_accommodation() -> None:
+    assert detect_explicit_category('cami') == 'mosque'
+    assert resolve_intent('cami', '') == 'category_venue'
+    assert resolve_intent('cami', 'Bursa konaklama öner') == 'category_venue'
+    assert not is_accommodation_query('cami')
+    assert is_category_place_query('cami')
+
+
+def test_museum_short_query() -> None:
+    assert detect_explicit_category('müze') == 'museum'
+    assert resolve_intent('müze öner', '') == 'category_venue'

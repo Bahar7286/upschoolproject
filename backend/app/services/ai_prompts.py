@@ -296,6 +296,70 @@ def format_accommodation_reply(places: list[Any], where: str, *, locale: str = '
     return '\n\n'.join(lines)
 
 
+_CATEGORY_REPLY_HEADERS_TR: dict[str, str] = {
+    'mosque': '**{where}** bölgesinde cami önerileri:\n',
+    'museum': '**{where}** bölgesinde müze önerileri:\n',
+    'palace': '**{where}** bölgesinde saray önerileri:\n',
+    'bazaar': '**{where}** bölgesinde çarşı / alışveriş önerileri:\n',
+    'historical': '**{where}** bölgesinde tarihî mekan önerileri:\n',
+}
+
+_CATEGORY_REPLY_HEADERS_EN: dict[str, str] = {
+    'mosque': 'Mosques in **{where}**:\n',
+    'museum': 'Museums in **{where}**:\n',
+    'palace': 'Palaces in **{where}**:\n',
+    'bazaar': 'Bazaars & markets in **{where}**:\n',
+    'historical': 'Historic sights in **{where}**:\n',
+}
+
+_CATEGORY_MAP_FOOTER_TR: dict[str, str] = {
+    'mosque': '\nDetay için uygulamada **Harita → Cami** filtresine bakabilirsin.',
+    'museum': '\nDetay için uygulamada **Harita → Müze** filtresine bakabilirsin.',
+    'palace': '\nDetay için uygulamada **Harita** sekmesine bakabilirsin.',
+    'bazaar': '\nDetay için uygulamada **Harita → Çarşı** filtresine bakabilirsin.',
+    'historical': '\nDetay için uygulamada **Harita** sekmesine bakabilirsin.',
+}
+
+_CATEGORY_MAP_FOOTER_EN: dict[str, str] = {
+    'mosque': '\nSee **Map → Mosque** in the app for details.',
+    'museum': '\nSee **Map → Museum** in the app for details.',
+    'palace': '\nSee **Map** in the app for details.',
+    'bazaar': '\nSee **Map → Bazaar** in the app for details.',
+    'historical': '\nSee **Map** in the app for details.',
+}
+
+
+def format_category_reply(
+    places: list[Any],
+    where: str,
+    category: str,
+    *,
+    locale: str = 'tr',
+) -> str:
+    """Kategori bazlı mekan önerisi — cami, müze vb."""
+    headers = _CATEGORY_REPLY_HEADERS_EN if locale == 'en' else _CATEGORY_REPLY_HEADERS_TR
+    footers = _CATEGORY_MAP_FOOTER_EN if locale == 'en' else _CATEGORY_MAP_FOOTER_TR
+    header_tpl = headers.get(category, headers.get('historical', '**{where}**:\n'))
+    footer = footers.get(category, footers.get('historical', ''))
+    if not places:
+        if locale == 'en':
+            return f'No {category} places found for {where}. Try the Map tab with filters.'
+        return f'{where} için {category} kategorisinde mekan bulamadım. Harita sekmesinden filtreleyebilirsin.'
+    lines = [header_tpl.format(where=where)]
+    for i, p in enumerate(places[:5], 1):
+        name = getattr(p, 'name', '')
+        addr = getattr(p, 'address', '') or ''
+        rating = getattr(p, 'rating', None)
+        count = getattr(p, 'user_rating_count', None)
+        stars = f' ⭐ {rating}' if rating else ''
+        reviews = f' ({count} reviews)' if count and locale == 'en' else (f' ({count} yorum)' if count else '')
+        lines.append(f'{i}. **{name}**{stars}{reviews}')
+        if addr:
+            lines.append(f'   📍 {addr}')
+    lines.append(footer)
+    return '\n\n'.join(lines)
+
+
 # --- Sesli anlatım ---
 
 SYSTEM_NARRATION = """Sen Historial-GO tarihî sesli rehbersin.

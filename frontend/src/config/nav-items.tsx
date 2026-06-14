@@ -73,6 +73,32 @@ export function useTouristMobileMenuExtras(): NavItem[] {
   );
 }
 
+export function useAdminMobileMenuExtras(): NavItem[] {
+  const { t } = useI18n();
+  return useMemo(
+    () => [
+      { to: '/discover', label: t('nav.discover', 'Keşfet'), icon: Compass },
+      { to: '/map', label: t('nav.map', 'Harita'), icon: MapIcon },
+      { to: '/rehberler', label: t('nav.guides', 'Rehberler'), icon: Users },
+      { to: '/profile', label: t('nav.profile', 'Profil'), icon: UserRound },
+    ],
+    [t],
+  );
+}
+
+export function useGuideMobileMenuExtras(): NavItem[] {
+  const { t } = useI18n();
+  return useMemo(
+    () => [
+      { to: '/guide/dogrulama', label: t('nav.verification', 'Doğrulama'), icon: UserRound },
+      { to: '/cities', label: t('nav.cities', 'İller'), icon: MapPin },
+      { to: '/map', label: t('nav.map', 'Harita'), icon: MapIcon },
+      { to: '/profile', label: t('nav.profile', 'Profil'), icon: UserRound },
+    ],
+    [t],
+  );
+}
+
 export function useRoleBottomNav(isAdmin: boolean, isGuide: boolean): NavItem[] {
   const tourist = useTouristBottomNav();
   const guide = useGuideBottomNav();

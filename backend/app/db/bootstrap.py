@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
-from app.data.city_landmarks import city_landmark_places
+from app.data.city_landmarks import _LANDMARKS, city_landmark_places
 from app.data.istanbul_district_coords import ISTANBUL_DISTRICT_COORDS
 from app.data.istanbul_places import ISTANBUL_PLACES
 from app.data.national_routes import city_route_templates, normalize_city_key
@@ -217,9 +217,43 @@ async def seed_initial_data(session: AsyncSession) -> None:
 
     await ensure_cities_seeded(session)
     await ensure_districts_seeded(session)
+    await ensure_city_landmark_places_seeded(session)
     await ensure_city_routes_seeded(session)
     await ensure_route_stops_seeded(session)
     await ensure_co_visit_seed(session)
+
+
+async def ensure_city_landmark_places_seeded(session: AsyncSession) -> None:
+    """İstanbul dışındaki iller için landmark mekanları Place tablosuna ekle."""
+    import logging
+
+    log = logging.getLogger(__name__)
+    added = 0
+    for city_name in _LANDMARKS:
+        count_row = await session.execute(
+            select(func.count(Place.place_id)).where(Place.city == city_name)
+        )
+        if (count_row.scalar() or 0) > 0:
+            continue
+        for lm in city_landmark_places(city_name):
+            addr = (lm.address or '').strip()
+            district = addr.split(',')[0].strip() if addr else ''
+            session.add(
+                Place(
+                    name=lm.name,
+                    category=str(getattr(lm, 'category', None) or 'historical'),
+                    city=city_name,
+                    district=district,
+                    latitude=float(lm.lat),
+                    longitude=float(lm.lng),
+                    description=addr or lm.name,
+                    tags=str(getattr(lm, 'category', None) or 'historical'),
+                )
+            )
+            added += 1
+    if added:
+        await session.commit()
+        log.info('Landmark POI seed: %s places added for %s cities', added, len(_LANDMARKS))
 
 
 async def ensure_cities_seeded(session: AsyncSession) -> None:

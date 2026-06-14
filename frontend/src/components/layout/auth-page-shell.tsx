@@ -10,7 +10,7 @@ export function AuthPageShell({
 }): ReactElement {
   return (
     <div
-      className={`relative min-h-dvh overflow-hidden text-theme transition-colors duration-300 ${className}`}
+      className={`relative min-h-dvh overflow-x-hidden overflow-y-auto text-theme transition-colors duration-300 ${className}`}
       style={{ background: 'var(--hg-bg)' }}
     >
       <div

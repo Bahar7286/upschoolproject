@@ -1,4 +1,10 @@
 import type { ReactElement, ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+
+import {
+  resolveAssistantVenueHref,
+  type AssistantVenueLinkContext,
+} from '../../lib/assistant-venue-link';
 
 function renderInline(text: string): ReactNode[] {
   const parts = text.split(/(\*\*[^*]+\*\*)/g);
@@ -14,7 +20,11 @@ function renderInline(text: string): ReactNode[] {
   });
 }
 
-function renderVenueList(block: string, key: number): ReactElement | null {
+function renderVenueList(
+  block: string,
+  key: number,
+  linkContext?: AssistantVenueLinkContext,
+): ReactElement | null {
   const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
   const header = lines[0]?.startsWith('**') ? lines[0] : null;
   const items: { title: string; meta: string; addr: string }[] = [];
@@ -38,22 +48,47 @@ function renderVenueList(block: string, key: number): ReactElement | null {
     <div key={key} className="space-y-3">
       {header ? <p className="font-medium text-theme">{renderInline(header)}</p> : null}
       <ol className="space-y-3">
-        {items.map((item, i) => (
-          <li key={i} className="rounded-xl border border-stone-900/8 bg-stone-50/80 p-3 dark:border-white/10 dark:bg-zinc-800/60">
-            <p className="font-semibold text-theme">
-              {i + 1}. {item.title}
-              {item.meta ? <span className="font-normal text-theme-muted">{item.meta}</span> : null}
-            </p>
-            {item.addr ? <p className="mt-1 text-xs leading-relaxed text-theme-muted">📍 {item.addr}</p> : null}
-          </li>
-        ))}
+        {items.map((item, i) => {
+          const href =
+            linkContext && item.title
+              ? resolveAssistantVenueHref(item.title, item.addr, linkContext)
+              : null;
+          return (
+            <li key={i}>
+              {href ? (
+                <Link
+                  to={href}
+                  className="tap-scale block rounded-xl border border-stone-900/8 bg-stone-50/80 p-3 transition hover:border-primary/40 hover:bg-primary/5 dark:border-white/10 dark:bg-zinc-800/60 dark:hover:bg-primary/10"
+                >
+                  <p className="font-semibold text-primary">
+                    {i + 1}. {item.title}
+                    {item.meta ? <span className="font-normal text-theme-muted">{item.meta}</span> : null}
+                  </p>
+                  {item.addr ? (
+                    <p className="mt-1 text-xs leading-relaxed text-theme-muted">📍 {item.addr}</p>
+                  ) : null}
+                </Link>
+              ) : (
+                <div className="rounded-xl border border-stone-900/8 bg-stone-50/80 p-3 dark:border-white/10 dark:bg-zinc-800/60">
+                  <p className="font-semibold text-theme">
+                    {i + 1}. {item.title}
+                    {item.meta ? <span className="font-normal text-theme-muted">{item.meta}</span> : null}
+                  </p>
+                  {item.addr ? (
+                    <p className="mt-1 text-xs leading-relaxed text-theme-muted">📍 {item.addr}</p>
+                  ) : null}
+                </div>
+              )}
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
 }
 
-function renderBlock(block: string, key: number): ReactElement {
-  const venue = renderVenueList(block, key);
+function renderBlock(block: string, key: number, linkContext?: AssistantVenueLinkContext): ReactElement {
+  const venue = renderVenueList(block, key, linkContext);
   if (venue) return venue;
 
   const lines = block.split('\n').map((l) => l.trim()).filter(Boolean);
@@ -92,13 +127,19 @@ function renderBlock(block: string, key: number): ReactElement {
   );
 }
 
-export function AssistantMessageBody({ content }: { content: string }): ReactElement {
+export function AssistantMessageBody({
+  content,
+  linkContext,
+}: {
+  content: string;
+  linkContext?: AssistantVenueLinkContext;
+}): ReactElement {
   const normalized = content.replace(/\r\n/g, '\n').trim();
   const blocks = normalized.split(/\n\n+/).filter(Boolean);
 
   return (
     <div className="space-y-3 text-[15px] leading-relaxed">
-      {blocks.map((block, i) => renderBlock(block, i))}
+      {blocks.map((block, i) => renderBlock(block, i, linkContext))}
     </div>
   );
 }

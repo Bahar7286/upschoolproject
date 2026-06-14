@@ -88,6 +88,8 @@ def needs_travel_plan(text: str) -> bool:
     t = text.strip()
     if len(t) > 35:
         return True
+    if is_category_place_query(t):
+        return True
     return bool(_TRAVEL_HINT.search(t))
 
 
@@ -101,6 +103,32 @@ def is_accommodation_query(text: str) -> bool:
     return bool(_ACCOMMODATION_HINT.search(text))
 
 
+def detect_explicit_category(text: str) -> str | None:
+    """Net kategori isteği — kısa mesajlar (cami, müze) dahil."""
+    if is_accommodation_query(text):
+        return 'accommodation'
+    if is_food_query(text):
+        return 'restaurant'
+    t = _norm(text)
+    if len(text.strip()) <= 56:
+        if any(w in t for w in ('cami', 'camii', 'mosque')):
+            return 'mosque'
+        if any(w in t for w in ('müze', 'muze', 'museum')):
+            return 'museum'
+        if any(w in t for w in ('saray', 'palace')):
+            return 'palace'
+        if any(w in t for w in ('çarşı', 'carsi', 'bazaar', 'pazar')):
+            return 'bazaar'
+        if any(w in t for w in ('tarihi', 'historical', 'antik', 'kale', 'manastır', 'manastir')):
+            return 'historical'
+    return None
+
+
+def is_category_place_query(text: str) -> bool:
+    cat = detect_explicit_category(text)
+    return cat is not None and cat not in ('accommodation', 'restaurant')
+
+
 def is_specific_venue_request(text: str) -> bool:
     t = text.strip()
     if _SPECIFIC_VENUE.search(t):
@@ -112,11 +140,10 @@ def is_specific_venue_request(text: str) -> bool:
 
 def detect_query_category(text: str, interests: list[str] | None = None) -> str:
     """Mesaj ve ilgi alanlarından Places kategorisi."""
+    explicit = detect_explicit_category(text)
+    if explicit:
+        return explicit
     t = _norm(text)
-    if is_accommodation_query(text):
-        return 'accommodation'
-    if is_food_query(text):
-        return 'restaurant'
     if any(w in t for w in ('müze', 'muze', 'museum')):
         return 'museum'
     if any(w in t for w in ('cami', 'mosque')):
@@ -136,12 +163,21 @@ def detect_query_category(text: str, interests: list[str] | None = None) -> str:
 
 
 def resolve_intent(text: str, recent_user_text: str = '') -> str:
-    """greeting | thanks | accommodation | specific_venue | food | route_plan | general"""
+    """greeting | thanks | accommodation | category_venue | specific_venue | food | route_plan | general"""
     if is_greeting(text):
         return 'greeting'
     if is_thanks(text):
         return 'thanks'
-    if is_accommodation_query(text) or is_accommodation_query(recent_user_text):
+    explicit = detect_explicit_category(text)
+    if explicit == 'accommodation':
+        return 'accommodation'
+    if explicit == 'restaurant':
+        return 'food'
+    if explicit in ('mosque', 'museum', 'palace', 'bazaar', 'historical'):
+        return 'category_venue'
+    if is_accommodation_query(text) or (
+        is_accommodation_query(recent_user_text) and not detect_explicit_category(text)
+    ):
         return 'accommodation'
     if is_specific_venue_request(text):
         return 'specific_venue'

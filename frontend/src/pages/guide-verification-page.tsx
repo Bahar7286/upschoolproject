@@ -3,6 +3,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
 import { VerifiedGuideBadge } from '../components/guide/verified-guide-badge';
+import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 import {
@@ -113,6 +114,7 @@ export default function GuideVerificationPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-2xl space-y-6">
+      <BackButton to="/guide" />
       <header>
         <h1 className="font-display text-3xl font-extrabold">{t('guideVerify.title')}</h1>
         <p className="mt-2 text-sm text-stone-600 dark:text-stone-400">{t('guideVerify.intro')}</p>

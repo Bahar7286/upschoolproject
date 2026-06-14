@@ -69,7 +69,7 @@ export default function LandingPage(): ReactElement {
           </div>
         </header>
 
-        <section className="relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-heritage-ink via-stone-900 to-stone-800 p-8 text-white shadow-lift md:p-12">
+        <section className="landing-hero relative mt-12 overflow-hidden rounded-[28px] border border-white/10 bg-gradient-to-br from-heritage-ink via-stone-900 to-stone-800 p-8 text-white shadow-lift md:p-12">
           <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-300">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
             Historial-GO

@@ -200,3 +200,61 @@ async def test_ai_u08_assistant_bursa_not_istanbul_fallback() -> None:
     assert 'İstanbul için' not in result.reply
     assert 'Ulucami' in result.reply or 'Ulu Camii' in result.reply
     assert '1. **Bursa**' not in result.reply
+
+
+@pytest.mark.asyncio
+async def test_ai_u09_assistant_cami_returns_mosques_not_hotels() -> None:
+    from app.schemas.google_schema import GooglePlaceSummary
+
+    mosque = GooglePlaceSummary(
+        place_id='bursa-m1',
+        name='Ulu Camii',
+        lat=40.1826,
+        lng=29.0665,
+        address='Osmangazi, Bursa, Türkiye',
+        rating=4.8,
+        user_rating_count=1200,
+        category='mosque',
+        types=['mosque'],
+        google_maps_uri='https://maps.google.com',
+    )
+    hotel = GooglePlaceSummary(
+        place_id='bursa-h1',
+        name='ibis Hotel',
+        lat=40.2,
+        lng=29.0,
+        address='Bursa, Türkiye',
+        rating=4.2,
+        user_rating_count=100,
+        category='accommodation',
+        types=['lodging'],
+        google_maps_uri='https://maps.google.com',
+    )
+    service = AIService(route_service=MagicMock(), stop_service=MagicMock())
+    with patch('app.services.ai_service.settings') as mock_settings:
+        mock_settings.llm_enabled = True
+        mock_settings.google_places_enabled = True
+        with patch('app.services.ai_service.google_places_service') as mock_gp:
+            async def nearby_side_effect(**kwargs):
+                cat = kwargs.get('category', 'historical')
+                if cat == 'accommodation':
+                    return ([hotel], False)
+                if cat == 'mosque':
+                    return ([mosque], False)
+                return ([], False)
+
+            mock_gp.search_nearby = AsyncMock(side_effect=nearby_side_effect)
+            mock_gp.search_text = AsyncMock(return_value=([mosque], False))
+            result = await service.chat_assistant(
+                AssistantChatRequest(
+                    city='Bursa',
+                    district='',
+                    interests=['history'],
+                    messages=[AssistantMessage(role='user', content='cami')],
+                )
+            )
+    assert result.source == 'places'
+    assert 'cami' in result.reply.lower() or 'Cami' in result.reply
+    assert 'ibis' not in result.reply
+    assert 'konaklama' not in result.reply.lower()
+    assert 'Ulu Camii' in result.reply

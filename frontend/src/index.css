@@ -327,6 +327,25 @@ h2.font-display {
   color: var(--hg-fg);
 }
 
+/* Koyu hero bantları — classic temada da açık yazı */
+.font-display.text-white,
+h1.text-white.font-display,
+h2.text-white.font-display,
+.landing-hero,
+.landing-hero h1,
+.landing-hero p,
+.explore-hero,
+.explore-hero h1,
+.explore-hero p,
+.venue-hero__bar,
+.venue-hero__bar h1 {
+  color: #fafaf9;
+}
+.landing-hero h1.font-display,
+.explore-hero h1.font-display {
+  color: #ffffff !important;
+}
+
 .text-theme {
   color: var(--hg-fg);
 }

@@ -93,7 +93,7 @@ export default function RegisterPage(): ReactElement {
   };
 
   return (
-    <div className="relative min-h-dvh overflow-hidden bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] px-4 py-8 text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
+    <div className="relative min-h-dvh overflow-x-hidden overflow-y-auto bg-gradient-to-b from-[#f4f0e8] via-[#ebe4d8] to-[#e2dbd2] px-4 py-8 text-stone-900 transition-colors duration-300 dark:from-zinc-950 dark:via-zinc-950 dark:to-black dark:text-stone-100">
       <div
         className="pointer-events-none absolute inset-0 opacity-70 dark:opacity-40"
         aria-hidden="true"

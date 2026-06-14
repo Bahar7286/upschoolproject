@@ -1,10 +1,14 @@
 import { Menu, X } from 'lucide-react';
 import type { ReactElement } from 'react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { NavLink } from 'react-router-dom';
 
-import { useTouristMobileMenuExtras } from '../../config/nav-items';
+import {
+  useAdminMobileMenuExtras,
+  useGuideMobileMenuExtras,
+  useTouristMobileMenuExtras,
+} from '../../config/nav-items';
 import { useI18n } from '../../lib/i18n';
 
 function linkClass(isActive: boolean): string {
@@ -22,7 +26,14 @@ export function MobileHeaderMenu({
   isGuide: boolean;
 }): ReactElement {
   const { t } = useI18n();
-  const extras = useTouristMobileMenuExtras();
+  const touristExtras = useTouristMobileMenuExtras();
+  const guideExtras = useGuideMobileMenuExtras();
+  const adminExtras = useAdminMobileMenuExtras();
+  const extras = useMemo(() => {
+    if (isAdmin) return adminExtras;
+    if (isGuide) return guideExtras;
+    return touristExtras;
+  }, [isAdmin, isGuide, adminExtras, guideExtras, touristExtras]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -38,8 +49,6 @@ export function MobileHeaderMenu({
       window.removeEventListener('keydown', onKey);
     };
   }, [open]);
-
-  if (isAdmin || isGuide) return <span className="shrink-0 md:hidden" aria-hidden="true" />;
 
   const drawer =
     open && typeof document !== 'undefined'

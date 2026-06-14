@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CheckCircle2 } from 'lucide-react';
 
+import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
 import { useI18n } from '../lib/i18n';
 import { confirmCheckout } from '../services/payment-checkout-service';
@@ -69,6 +70,7 @@ export default function CheckoutSuccessPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-lg space-y-6 text-center">
+      <BackButton to="/purchases" className="mx-auto" />
       <CheckCircle2 className="mx-auto h-16 w-16 text-primary" aria-hidden="true" />
       <h1 className="font-display text-2xl font-extrabold text-theme">{t('checkout.confirmedTitle', 'Ödeme onaylandı')}</h1>
       <p className="text-sm text-theme-muted">{t('checkout.confirmedAmount', { amount: amount.toFixed(2) }, '₺{amount} işlendi.')}</p>

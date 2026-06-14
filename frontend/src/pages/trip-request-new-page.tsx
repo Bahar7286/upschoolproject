@@ -4,6 +4,7 @@ import { Link, useLocation, useSearchParams } from 'react-router-dom';
 import { ListOrdered, Route } from 'lucide-react';
 
 import { RouteBuilder } from '../components/trip/route-builder';
+import { BackButton } from '../components/ui/back-button';
 import { useRoutesQuery } from '../hooks/use-routes-query';
 import { useI18n } from '../lib/i18n';
 import { getRoute } from '../services/route-service';
@@ -78,9 +79,7 @@ export default function TripRequestNewPage(): ReactElement {
         <p className="mt-2 leading-relaxed">{t('tripNew.inactiveBody', 'Bu form önizlemedir.')}</p>
       </div>
       <header>
-        <Link className="text-sm font-semibold text-primary" to={initialRouteId ? `/routes/${initialRouteId}` : '/talepler'}>
-          ← {t('common.back', 'Geri')}
-        </Link>
+        <BackButton to={initialRouteId ? `/routes/${initialRouteId}` : '/talepler'} />
         <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{t('tripNew.title', 'Gezi talebi oluştur')}</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
           {t('tripNew.subtitle', 'Rotanızı tanımlayın; onaylı rehberler bu plana göre fiyat teklifi gönderir.')}

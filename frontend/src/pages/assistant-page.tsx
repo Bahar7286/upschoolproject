@@ -9,7 +9,8 @@ import { AssistantMessageBody } from '../components/ai/assistant-message-body';
 import { BackButton } from '../components/ui/back-button';
 import { useSubmitLock } from '../hooks/use-submit-lock';
 import { assistantChat, type AssistantMessage } from '../services/ai-service';
-import { listCities } from '../services/city-service';
+import { listCities, listDistrictsByCity } from '../services/city-service';
+import { listPlaces } from '../services/place-service';
 import { HelpfulFeedback } from '../components/feedback/helpful-feedback';
 import { ErrorAlert } from '../components/ui/error-alert';
 import {
@@ -36,17 +37,47 @@ export default function AssistantPage(): ReactElement {
   );
 
   const preferredCity = useOnboardingStore((s) => s.preferredCity);
+  const defaultCity =
+    searchParams.get('city') ?? user?.preferred_city ?? preferredCity ?? 'İstanbul';
+  const initialDistrict = searchParams.get('district') ?? '';
+  const [city, setCity] = useState(defaultCity);
+  const [district, setDistrict] = useState(initialDistrict);
+
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
     queryFn: listCities,
     staleTime: 60 * 60 * 1000,
   });
 
-  const defaultCity =
-    searchParams.get('city') ?? user?.preferred_city ?? preferredCity ?? 'İstanbul';
-  const initialDistrict = searchParams.get('district') ?? '';
-  const [city, setCity] = useState(defaultCity);
-  const [district, setDistrict] = useState(initialDistrict);
+  const selectedCity = useMemo(
+    () => cities.find((c) => c.name_tr === city) ?? null,
+    [cities, city],
+  );
+
+  const { data: districts = [] } = useQuery({
+    queryKey: ['districts', selectedCity?.city_id ?? 0],
+    queryFn: () => listDistrictsByCity(selectedCity!.city_id),
+    enabled: Boolean(selectedCity?.city_id),
+    staleTime: 60 * 60 * 1000,
+  });
+
+  const { data: cityPlaces = [] } = useQuery({
+    queryKey: ['assistant-places', city],
+    queryFn: () => listPlaces({ city, limit: 300 }),
+    enabled: city.trim().length >= 2,
+    staleTime: 5 * 60 * 1000,
+  });
+
+  const venueLinkContext = useMemo(
+    () => ({
+      cityId: selectedCity?.city_id,
+      cityName: city,
+      places: cityPlaces,
+      districts,
+    }),
+    [selectedCity?.city_id, city, cityPlaces, districts],
+  );
+
   const [input, setInput] = useState('');
   const [msgs, setMsgs] = useState<AssistantMessage[]>(() => [
     {
@@ -123,7 +154,7 @@ export default function AssistantPage(): ReactElement {
 
   return (
     <section
-      className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 pb-2"
+      className="mx-auto flex h-full min-h-[calc(100dvh-10rem)] w-full max-w-3xl flex-1 flex-col gap-3 pb-2 lg:min-h-0"
       aria-labelledby="asst-title"
     >
       <BackButton />
@@ -200,7 +231,7 @@ export default function AssistantPage(): ReactElement {
         </div>
       </div>
 
-      <div className="theme-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl p-3 sm:p-4">
+      <div className="theme-card flex min-h-[min(52dvh,480px)] flex-1 flex-col overflow-hidden rounded-2xl p-3 sm:p-4 lg:min-h-0">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
           {msgs.map((m, idx) => (
             <div key={idx} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
@@ -215,7 +246,7 @@ export default function AssistantPage(): ReactElement {
                 {m.role === 'user' ? (
                   <p className="whitespace-pre-wrap text-sm leading-relaxed">{m.content}</p>
                 ) : (
-                  <AssistantMessageBody content={m.content} />
+                  <AssistantMessageBody content={m.content} linkContext={venueLinkContext} />
                 )}
               </div>
             </div>
