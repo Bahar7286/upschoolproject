@@ -22,7 +22,7 @@ import { recommendRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 import type { RouteResponse } from '../types/route';
-import { cityNamesMatch, filterRoutesByCity } from '../utils/city-match';
+import { cityNamesMatch, filterRoutesByCityStrict } from '../utils/city-match';
 
 type ScoredRoute = RouteResponse & { aiScore?: number; aiReason?: string };
 
@@ -167,8 +167,8 @@ export default function DiscoverPage(): ReactElement {
             scored.push(route);
           }
         }
-        if (scored.length === 0) return filterRoutesByCity(routeSource, effectiveCity);
-        return filterRoutesByCity(scored, effectiveCity);
+        if (scored.length === 0) return filterRoutesByCityStrict(routeSource, effectiveCity);
+        return filterRoutesByCityStrict(scored, effectiveCity);
       } finally {
         window.clearTimeout(slowTimer);
         setSlowRecommend(false);
@@ -192,17 +192,10 @@ export default function DiscoverPage(): ReactElement {
       : routes.length > 0
         ? routes
         : routeSource;
-    return filterRoutesByCity(base, effectiveCity);
+    return filterRoutesByCityStrict(base, effectiveCity);
   }, [recommendMutation.data, routes, routeSource, effectiveCity]);
 
-  const strictCityEmpty = useMemo(() => {
-    const base = recommendMutation.data?.length
-      ? recommendMutation.data
-      : routes.length > 0
-        ? routes
-        : routeSource;
-    return base.length > 0 && base.every((r) => !cityNamesMatch(r.city, effectiveCity));
-  }, [recommendMutation.data, routes, routeSource, effectiveCity]);
+  const noCityRoutes = display.length === 0 && !personalRoute && !isPending;
 
   const listError = isError ? mapError(error, 'discover') : null;
   const recommendError = recommendMutation.isError
@@ -420,25 +413,20 @@ export default function DiscoverPage(): ReactElement {
         />
       ) : null}
 
-      {strictCityEmpty ? (
-        <p className="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100" role="status">
-          <strong>{effectiveCity}</strong> için henüz kayıtlı rota yok; mevcut rotalar gösteriliyor.{' '}
-          <Link className="font-bold text-primary underline" to="/cities">
-            İlleri keşfet
-          </Link>
-        </p>
+      {noCityRoutes ? (
+        <EmptyState
+          icon={EMPTY_STATES.search.icon}
+          title={`${effectiveCity} için henüz rehber rotası yok`}
+          description="AI ile kişisel rota oluşturabilir veya illerden mekanları keşfedebilirsin."
+          actionLabel="Kişisel rota oluştur"
+          actionTo="/discover?ai=1"
+        />
       ) : null}
 
       {isPending && routes.length === 0 ? (
         <ListSkeleton count={6} />
-      ) : display.length === 0 && !personalRoute ? (
-        <EmptyState
-          {...EMPTY_STATES.search}
-          title="Henüz rota yok"
-          description={`${effectiveCity} için rehber rotası bulunamadı. İllere göz atabilir veya AI ile kişisel rota oluşturabilirsin.`}
-          actionLabel="İlleri keşfet"
-          actionTo="/cities"
-        />
+      ) : display.length === 0 && !personalRoute && !noCityRoutes ? (
+        null
       ) : display.length > 0 ? (
         <>
           <h2 className="font-display text-lg font-bold text-theme">

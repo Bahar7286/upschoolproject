@@ -557,10 +557,10 @@ function StatCard({
   label: string;
 }): ReactElement {
   return (
-    <div className="stat-tile rounded-2xl p-4 text-center">
+    <div className="rounded-2xl border border-stone-900/10 bg-white p-4 text-center dark:border-white/10 dark:bg-zinc-900">
       <Icon className="mx-auto h-5 w-5 text-primary" aria-hidden="true" />
-      <p className="mt-2 text-xl font-bold text-theme">{value}</p>
-      <p className="stat-label text-xs font-semibold">{label}</p>
+      <p className="mt-2 text-xl font-bold text-stone-900 dark:text-stone-50">{value}</p>
+      <p className="mt-1 text-xs font-semibold text-stone-600 dark:text-stone-300">{label}</p>
     </div>
   );
 }

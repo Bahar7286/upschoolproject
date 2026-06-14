@@ -64,46 +64,10 @@ export function GoogleExploreMap({
   }, [map, center.lat, center.lng, zoom]);
 
   useEffect(() => {
-    if (!map || !onLoadFailed || loadError) return;
-
-    const hasVtTiles = (): boolean => {
-      const imgs = map.getDiv()?.querySelectorAll('img') ?? [];
-      for (const img of imgs) {
-        const src = img.src || '';
-        if (
-          (src.includes('maps/vt') || src.includes('khms') || src.includes('google.com/vt')) &&
-          img.naturalWidth > 80 &&
-          img.naturalHeight > 80
-        ) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    let tilesSeen = false;
-    const failTimer = window.setTimeout(() => {
-      if (!tilesSeen) onLoadFailed();
-    }, 4500);
-
-    const checkTiles = () => {
-      if (hasVtTiles()) {
-        tilesSeen = true;
-        window.clearTimeout(failTimer);
-      }
-    };
-
-    const listener = map.addListener('tilesloaded', checkTiles);
-    const idleListener = map.addListener('idle', () => {
-      window.setTimeout(checkTiles, 400);
-    });
-
-    return () => {
-      window.clearTimeout(failTimer);
-      google.maps.event.removeListener(listener);
-      google.maps.event.removeListener(idleListener);
-    };
-  }, [map, onLoadFailed, loadError]);
+    if (loadError) {
+      onLoadFailed?.();
+    }
+  }, [loadError, onLoadFailed]);
 
   const polyPath = useMemo(() => {
     if (routePolyline && routePolyline.length > 1) return routePolyline;
@@ -133,12 +97,6 @@ export function GoogleExploreMap({
     },
     [navigate],
   );
-
-  useEffect(() => {
-    if (loadError) {
-      onLoadFailed?.();
-    }
-  }, [loadError, onLoadFailed]);
 
   if (loadError) {
     return (

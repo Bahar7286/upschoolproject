@@ -11,8 +11,6 @@ import { LeafletExploreMap } from './leaflet-explore-map';
 
 type Engine = 'leaflet' | 'google';
 
-const GOOGLE_LOAD_TIMEOUT_MS = 5_000;
-
 export interface ExploreMapProps {
   routes: RouteResponse[];
   places?: PlaceResponse[];
@@ -62,14 +60,6 @@ export function ExploreMap({
       setEngine('leaflet');
     }
   }, [mapPickActive]);
-
-  useEffect(() => {
-    if (engine !== 'google' || googleFailed || !hasGoogleKey) return;
-    const timer = window.setTimeout(() => {
-      fallbackToLeaflet();
-    }, GOOGLE_LOAD_TIMEOUT_MS);
-    return () => window.clearTimeout(timer);
-  }, [engine, googleFailed, hasGoogleKey, fallbackToLeaflet, defaultCenter.lat, defaultCenter.lng]);
 
   const activeEngine = googleFailed ? 'leaflet' : engine;
 

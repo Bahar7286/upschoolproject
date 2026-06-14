@@ -26,7 +26,7 @@ const defaults = {
   preferredCity: 'İstanbul',
   interests: [] as string[],
   durationMinutes: 120,
-  budget: 150,
+  budget: 1500,
   preferredLanguage: 'tr' as const,
 };
 

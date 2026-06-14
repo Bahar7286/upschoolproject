@@ -6,6 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.core.security import hash_password
 from app.data.istanbul_district_coords import ISTANBUL_DISTRICT_COORDS
 from app.data.istanbul_places import ISTANBUL_PLACES
+from app.data.national_routes import city_route_templates, normalize_city_key
 from app.data.tr_cities import TR_CITIES
 from app.data.tr_districts import TR_DISTRICTS
 from app.models.guide_profile_model import GuideProfile
@@ -58,7 +59,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
                 title='Istanbul Old City Walk',
                 city='Istanbul',
                 estimated_minutes=120,
-                price=9.9,
+                price=249.0,
                 tags='history,museum',
                 guide_id=2,
                 status='published',
@@ -67,7 +68,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
                 title='Kadikoy Street Art Trail',
                 city='Istanbul',
                 estimated_minutes=90,
-                price=7.5,
+                price=199.0,
                 tags='art,food',
                 guide_id=2,
                 status='published',
@@ -215,6 +216,7 @@ async def seed_initial_data(session: AsyncSession) -> None:
 
     await ensure_cities_seeded(session)
     await ensure_districts_seeded(session)
+    await ensure_city_routes_seeded(session)
     await ensure_co_visit_seed(session)
 
 
@@ -338,6 +340,39 @@ async def ensure_images_seeded(session: AsyncSession) -> None:
             log.info('Wikipedia place images: %s/%s updated', result.updated, missing_places)
     except Exception as exc:
         log.warning('Wikipedia image sync skipped: %s', exc)
+
+
+async def ensure_city_routes_seeded(session: AsyncSession) -> None:
+    """81 il — eksik şehirler için en az bir kayıtlı rota."""
+    guide_row = await session.execute(
+        select(User.user_id).where(User.email == 'guide@example.com').limit(1)
+    )
+    guide_id = guide_row.scalar_one_or_none() or 2
+
+    existing = await session.execute(select(Route.city))
+    covered = {normalize_city_key(str(c or '')) for c in existing.scalars().all()}
+
+    to_add: list[Route] = []
+    for item in city_route_templates():
+        key = normalize_city_key(item['city'])
+        if key in covered:
+            continue
+        to_add.append(
+            Route(
+                title=item['title'],
+                city=item['city'],
+                estimated_minutes=int(item['estimated_minutes']),
+                price=float(item['price']),
+                tags=str(item['tags']),
+                guide_id=guide_id,
+                status='published',
+            )
+        )
+        covered.add(key)
+
+    if to_add:
+        session.add_all(to_add)
+        await session.commit()
 
 
 async def ensure_co_visit_seed(session: AsyncSession) -> None:

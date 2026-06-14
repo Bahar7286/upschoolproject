@@ -1,7 +1,12 @@
 /** İl adı karşılaştırma — Istanbul/İstanbul, ASCII/Türkçe uyumu. */
 
+const CITY_ALIASES: Record<string, string> = {
+  kapadokya: 'nevsehir',
+  nevesehir: 'nevsehir',
+};
+
 export function normalizeCityKey(name: string): string {
-  return name
+  const n = name
     .trim()
     .toLocaleLowerCase('tr-TR')
     .normalize('NFD')
@@ -13,6 +18,7 @@ export function normalizeCityKey(name: string): string {
     .replace(/ö/g, 'o')
     .replace(/ç/g, 'c')
     .replace(/\s+/g, '');
+  return CITY_ALIASES[n] ?? n;
 }
 
 export function cityNamesMatch(a: string, b: string): boolean {
@@ -23,9 +29,14 @@ export function cityNamesMatch(a: string, b: string): boolean {
   return na.includes(nb) || nb.includes(na);
 }
 
-/** Şehre göre filtrele; eşleşme yoksa tüm listeyi döndür (boş ekran önleme). */
-export function filterRoutesByCity<T extends { city: string }>(routes: T[], city: string): T[] {
+/** Şehre göre filtrele — yalnızca eşleşen il. */
+export function filterRoutesByCityStrict<T extends { city: string }>(routes: T[], city: string): T[] {
   if (!city.trim()) return routes;
-  const matched = routes.filter((r) => cityNamesMatch(r.city, city));
+  return routes.filter((r) => cityNamesMatch(r.city, city));
+}
+
+/** Eşleşme yoksa tüm listeyi döndür (yalnızca bilinçli yedek senaryolar için). */
+export function filterRoutesByCity<T extends { city: string }>(routes: T[], city: string): T[] {
+  const matched = filterRoutesByCityStrict(routes, city);
   return matched.length > 0 ? matched : routes;
 }

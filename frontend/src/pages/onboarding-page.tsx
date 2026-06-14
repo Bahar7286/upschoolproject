@@ -13,6 +13,7 @@ import { updatePreferences } from '../services/profile-service';
 import { listRoutes, recommendRoutes } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import { filterRoutesByCityStrict } from '../utils/city-match';
 import type { RouteResponse } from '../types/route';
 
 const INTERESTS = [
@@ -33,17 +34,15 @@ const DURATIONS = [
 ];
 
 const BUDGETS = [
-  { value: 0, label: 'Ücretsiz' },
-  { value: 75, label: '₺50–100' },
-  { value: 150, label: '₺100+' },
+  { value: 500, label: '₺300–500' },
+  { value: 1500, label: '₺500–1500' },
+  { value: 3500, label: '₺1500+' },
 ];
 
 const POPULAR_CITIES = ['İstanbul', 'Ankara', 'İzmir', 'Antalya', 'Bursa', 'Kapadokya', 'Trabzon', 'Gaziantep'];
 
 const TOTAL_STEPS = 5;
 const RECOMMEND_TIMEOUT_MS = 10_000;
-
-import { filterRoutesByCity } from '../utils/city-match';
 
 function scoreByInterests(routes: RouteResponse[], interestIds: string[]): RouteResponse[] {
   if (interestIds.length === 0) return routes;
@@ -52,8 +51,7 @@ function scoreByInterests(routes: RouteResponse[], interestIds: string[]): Route
     return { route: r, score: overlap };
   });
   scored.sort((a, b) => b.score - a.score);
-  const withMatch = scored.filter((s) => s.score > 0).map((s) => s.route);
-  return withMatch.length > 0 ? withMatch : routes;
+  return scored.filter((s) => s.score > 0).map((s) => s.route);
 }
 
 export default function OnboardingPage(): ReactElement {
@@ -122,7 +120,7 @@ export default function OnboardingPage(): ReactElement {
       } catch {
         routes = await listRoutes();
       }
-      const byCity = filterRoutesByCity(routes, preferredCity);
+      const byCity = filterRoutesByCityStrict(routes, preferredCity);
       const ranked = scoreByInterests(byCity, interests);
       setRecommended(ranked.slice(0, 3));
       if (ranked.length === 0) {
@@ -352,6 +350,9 @@ export default function OnboardingPage(): ReactElement {
             <h1 className="font-display text-2xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50">
               Bütçen nedir?
             </h1>
+            <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
+              Günlük gezi bütçesi (ulaşım, yemek, müze girişleri dahil)
+            </p>
           </header>
           <div className="flex flex-wrap gap-2" role="group" aria-label="Bütçe">
             {BUDGETS.map((b) => (
@@ -485,7 +486,7 @@ export default function OnboardingPage(): ReactElement {
                     >
                       <p className="font-bold text-heritage-ink dark:text-stone-50">{route.title}</p>
                       <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-                        {route.city} · {route.estimated_minutes} dk · ₺{route.price}
+                        {route.city} · {route.estimated_minutes} dk · ₺{route.price.toFixed(0)}
                       </p>
                     </Link>
                   </li>

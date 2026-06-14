@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { cityNamesMatch, filterRoutesByCity } from './city-match';
+import { cityNamesMatch, filterRoutesByCity, filterRoutesByCityStrict } from './city-match';
 
 describe('cityNamesMatch', () => {
   it('matches Istanbul and İstanbul', () => {
@@ -22,5 +22,12 @@ describe('filterRoutesByCity', () => {
     const out = filterRoutesByCity(routes, 'İstanbul');
     expect(out).toHaveLength(1);
     expect(out[0].route_id).toBe(1);
+  });
+});
+
+describe('filterRoutesByCityStrict', () => {
+  it('returns empty when no city match', () => {
+    const routes = [{ city: 'Istanbul', route_id: 1 }];
+    expect(filterRoutesByCityStrict(routes, 'Bursa')).toHaveLength(0);
   });
 });
