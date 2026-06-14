@@ -6,9 +6,11 @@ import { ArrowLeft, Mail } from 'lucide-react';
 import { BrandLogo } from '../components/brand/brand-logo';
 import { ThemeToggle } from '../components/theme/theme-toggle';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { requestPasswordReset } from '../services/auth-service';
 
 export default function ForgotPasswordPage(): ReactElement {
+  const { t } = useI18n();
   const [email, setEmail] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -41,14 +43,14 @@ export default function ForgotPasswordPage(): ReactElement {
         </header>
 
         <section className="theme-card rounded-[22px] p-6">
-          <h1 className="font-display text-2xl font-extrabold text-theme">Şifremi unuttum</h1>
+          <h1 className="font-display text-2xl font-extrabold text-theme">{t('authForgot.title', 'Şifremi unuttum')}</h1>
           <p className="mt-2 text-sm text-theme-muted">
-            E-posta kayıtlıysa sıfırlama bağlantısı gönderilir. Birkaç dakika sürebilir; spam/önemsiz klasörünü kontrol edin.
+            {t('authForgot.hint', 'E-posta kayıtlıysa sıfırlama bağlantısı gönderilir.')}
           </p>
 
           <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
             <label className="text-sm font-semibold text-theme" htmlFor="forgot-email">
-              E-posta
+              {t('authForgot.email', 'E-posta')}
             </label>
             <input
               id="forgot-email"
@@ -70,7 +72,7 @@ export default function ForgotPasswordPage(): ReactElement {
             ) : null}
             {resetUrl && import.meta.env.DEV ? (
               <p className="break-anywhere rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs">
-                <strong>Geliştirici bağlantısı:</strong>{' '}
+                <strong>{t('authForgot.devLink', 'Geliştirici bağlantısı:')}</strong>{' '}
                 <Link
                   className="font-bold text-primary underline"
                   to={(() => {
@@ -82,7 +84,7 @@ export default function ForgotPasswordPage(): ReactElement {
                     }
                   })()}
                 >
-                  Şifreyi sıfırla
+                  {t('authForgot.resetLink', 'Şifreyi sıfırla')}
                 </Link>
               </p>
             ) : null}
@@ -92,13 +94,13 @@ export default function ForgotPasswordPage(): ReactElement {
               disabled={busy}
             >
               <Mail className="mr-2 inline h-5 w-5" aria-hidden="true" />
-              {busy ? 'Gönderiliyor…' : 'Sıfırlama bağlantısı iste'}
+              {busy ? t('authForgot.submitting', 'Gönderiliyor…') : t('authForgot.submit', 'Sıfırlama bağlantısı iste')}
             </button>
           </form>
 
           <Link className="mt-6 inline-flex items-center gap-2 text-sm font-semibold text-theme-muted" to="/login">
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Girişe dön
+            {t('authForgot.backLogin', 'Girişe dön')}
           </Link>
         </section>
       </div>

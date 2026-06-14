@@ -21,6 +21,7 @@ import { listCities } from '../services/city-service';
 import { createGuideRoute } from '../services/guide-service';
 import { createStop } from '../services/stop-service';
 import { useAuthStore } from '../stores/auth-store';
+import { useI18n } from '../lib/i18n';
 
 const DEFAULT_TAGS = 'tarih, kültür';
 
@@ -30,6 +31,7 @@ const fieldClass = (hasError: boolean) =>
   }`;
 
 export default function GuideCreateRoutePage(): ReactElement {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const user = useAuthStore((s) => s.user);
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -53,9 +55,9 @@ export default function GuideCreateRoutePage(): ReactElement {
   if (user?.role !== 'guide') {
     return (
       <section className="mx-auto max-w-lg space-y-4">
-        <p className="text-sm text-stone-600 dark:text-stone-400">Bu sayfa yalnızca rehber hesapları içindir.</p>
+        <p className="text-sm text-stone-600 dark:text-stone-400">{t('guideForm.guideOnly', 'Bu sayfa yalnızca rehber hesapları içindir.')}</p>
         <Link className="font-bold text-primary" to="/register">
-          Rehber kaydı
+          {t('guideForm.guideSignup', 'Rehber kaydı')}
         </Link>
       </section>
     );

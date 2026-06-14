@@ -13,10 +13,11 @@ import { mapError } from '../lib/user-errors';
 import { resolvePlaceImage } from '../lib/region-images';
 import { listFavorites, removeFavorite } from '../services/favorite-service';
 import { useAuthStore } from '../stores/auth-store';
-import { PLACE_CATEGORY_LABELS } from '../types/place';
+import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
 
 export default function FavoritesPage(): ReactElement {
   const { t } = useI18n();
+  const categoryLabels = usePlaceCategoryLabels();
   const emptyStates = useEmptyStates();
   const accessToken = useAuthStore((s) => s.accessToken);
   const qc = useQueryClient();
@@ -87,7 +88,7 @@ export default function FavoritesPage(): ReactElement {
                     loading="lazy"
                   />
                   <span className="absolute left-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-bold text-white backdrop-blur-sm">
-                    {PLACE_CATEGORY_LABELS[place.category]}
+                    {categoryLabels[place.category]}
                   </span>
                 </div>
                 <div className="space-y-1 p-4">

@@ -2,47 +2,36 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
 import { LegalPageShell } from '../components/legal/legal-page-shell';
+import { useI18n } from '../lib/i18n';
 
 export default function TermsPage(): ReactElement {
+  const { t } = useI18n();
   return (
-    <LegalPageShell title="Kullanım Şartları">
-      <p>
-        Historial-GO&apos;ya kayıt olarak veya ziyaret ederek bu şartları kabul etmiş sayılırsınız. Platform, rehberlerin
-        dijital rota içerikleri oluşturabildiği <strong>erken aşama</strong> bir turizm uygulamasıdır.
-      </p>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Hizmet kapsamı</h2>
+    <LegalPageShell title={t('legal.termsTitle', 'Kullanım Şartları')}>
+      <p>{t('legal.termsIntro', "Historial-GO'ya kayıt olarak veya ziyaret ederek bu şartları kabul etmiş sayılırsınız.")}</p>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">{t('legal.termsScopeTitle', 'Hizmet kapsamı')}</h2>
       <ul className="list-disc space-y-1 pl-5">
-        <li>Şehir ve mekan keşfi, AI destekli rota önerileri, sesli anlatım</li>
-        <li>Rehberler tarafından oluşturulan dijital rotaların satın alınması (demo veya Stripe)</li>
-        <li>Onaylı rehberlere gezi talebi ve teklif alma</li>
+        <li>{t('legal.termsScope1', 'Şehir ve mekan keşfi, AI destekli rota önerileri, sesli anlatım')}</li>
+        <li>{t('legal.termsScope2', 'Rehberler tarafından oluşturulan dijital rotaların satın alınması')}</li>
+        <li>{t('legal.termsScope3', 'Onaylı rehberlere gezi talebi ve teklif alma')}</li>
       </ul>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Kullanıcı yükümlülükleri</h2>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">{t('legal.termsUserTitle', 'Kullanıcı yükümlülükleri')}</h2>
+      <p>{t('legal.termsUserBody', 'Hesap bilgilerinizi gizli tutun. Satın aldığınız içerikleri yalnızca kişisel kullanım için kullanın.')}</p>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">{t('legal.termsGuideTitle', 'Rehberler')}</h2>
       <p>
-        Hesap bilgilerinizi gizli tutun. Satın aldığınız içerikleri yalnızca kişisel kullanım için kullanın; izinsiz
-        paylaşım ve yeniden satış yasaktır. Yanıltıcı yorum veya kötü niyetli içerik bildirimi yasaktır.
+        {t('legal.termsGuideBody', 'Rehber hesapları kokart doğrulamasına tabidir.')}{' '}
+        <Link className="text-primary underline" to="/rehber-guven">{t('legal.termsGuideLink', 'rehber doğrulama')}</Link>.
       </p>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Rehberler</h2>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">{t('legal.termsPaymentTitle', 'Ödeme ve komisyon')}</h2>
       <p>
-        Rehber hesapları kokart doğrulamasına tabidir. Doğrulanmamış rehberler &quot;onaylı&quot; rozeti taşıyamaz.
-        Detay: <Link className="text-primary underline" to="/rehber-guven">rehber doğrulama</Link>.
+        {t('legal.termsPaymentBody', 'Fiyatlar TL cinsinden gösterilir.')}{' '}
+        <Link className="text-primary underline" to="/odeme-guvenlik">{t('legal.termsPaymentSecurity', 'Ödeme güvenliği')}</Link>
+        {' · '}
+        <Link className="text-primary underline" to="/iade">{t('legal.termsRefund', 'iade politikası')}</Link>
+        {' '}{t('legal.termsPaymentSuffix', 'geçerlidir.')}
       </p>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Ödeme ve komisyon</h2>
-      <p>
-        Fiyatlar TL cinsinden gösterilir. Platform komisyonu ödeme özetinde belirtilir.{' '}
-        <Link className="text-primary underline" to="/odeme-guvenlik">
-          Ödeme güvenliği
-        </Link>{' '}
-        ve{' '}
-        <Link className="text-primary underline" to="/iade">
-          iade politikası
-        </Link>{' '}
-        geçerlidir.
-      </p>
-      <h2 className="font-bold text-heritage-ink dark:text-stone-100">Sorumluluk sınırı</h2>
-      <p>
-        Tarihî bilgiler rehber ve AI kaynaklıdır; hata riski vardır. Canlı rehberlik hizmetinde sözleşme tarafları gezgin
-        ile rehberdir. Platform aracı konumundadır.
-      </p>
+      <h2 className="font-bold text-heritage-ink dark:text-stone-100">{t('legal.termsLiabilityTitle', 'Sorumluluk sınırı')}</h2>
+      <p>{t('legal.termsLiabilityBody', 'Tarihî bilgiler rehber ve AI kaynaklıdır; hata riski vardır.')}</p>
     </LegalPageShell>
   );
 }

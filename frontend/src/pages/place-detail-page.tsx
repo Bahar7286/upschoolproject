@@ -12,6 +12,7 @@ import { useRecordPlaceVisit } from '../hooks/use-record-place-visit';
 import { getRichPlaceContent } from '../data/place-rich-content';
 import { resolvePlaceImage } from '../lib/region-images';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { listCities } from '../services/city-service';
 import { getPlace } from '../services/place-service';
 import { addFavorite, listFavorites, removeFavorite } from '../services/favorite-service';
@@ -19,6 +20,7 @@ import type { PlaceResponse } from '../types/place';
 import { useAuthStore } from '../stores/auth-store';
 
 export default function PlaceDetailPage(): ReactElement {
+  const { t } = useI18n();
   const { placeId } = useParams();
   const id = Number(placeId);
   const [place, setPlace] = useState<PlaceResponse | null>(null);
@@ -134,7 +136,7 @@ export default function PlaceDetailPage(): ReactElement {
       <div className="space-y-4 px-3 sm:px-4 md:px-0">
         <section className="rounded-2xl border border-stone-900/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-900">
           <h2 className="flex items-center gap-2 font-display text-lg font-bold">
-            <span aria-hidden="true">🌍</span> Konum
+            <span aria-hidden="true">🌍</span> {t('placeDetail.location', 'Konum')}
           </h2>
           <p className="mt-2 rounded-xl bg-stone-50 px-3 py-2 text-sm text-stone-600 dark:bg-zinc-800 dark:text-stone-300">
             {place.name} — {place.district}, {place.city}
@@ -159,7 +161,7 @@ export default function PlaceDetailPage(): ReactElement {
 
         {tips.length ? (
           <section className="rounded-2xl border border-stone-900/10 bg-white p-4 dark:border-white/10 dark:bg-zinc-900">
-            <h2 className="font-display text-lg font-bold">Pratik ipuçları</h2>
+            <h2 className="font-display text-lg font-bold">{t('placeDetail.tipsTitle', 'Pratik ipuçları')}</h2>
             <ul className="mt-2 list-inside list-disc space-y-1 text-sm text-stone-700 dark:text-stone-300">
               {tips.map((tip) => (
                 <li key={tip}>{tip}</li>
@@ -172,7 +174,7 @@ export default function PlaceDetailPage(): ReactElement {
           className="tap-scale flex min-h-[48px] w-full items-center justify-center rounded-xl border-2 border-primary font-bold text-primary"
           to={`/map?destLat=${place.latitude}&destLng=${place.longitude}&city=${encodeURIComponent(place.city)}`}
         >
-          Uygulama içi haritada rota
+          {t('placeDetail.mapRoute', 'Uygulama içi haritada rota')}
         </Link>
       </div>
     </article>

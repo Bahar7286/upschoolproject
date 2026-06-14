@@ -195,7 +195,7 @@ export default function AssistantPage(): ReactElement {
             className="mt-1 w-full rounded-lg border border-stone-900/12 bg-white px-2 py-2 text-base text-stone-900 outline-none placeholder:text-stone-400 focus:ring-2 focus:ring-primary/40 dark:border-white/15 dark:bg-zinc-900 dark:text-stone-100 dark:placeholder:text-stone-500 sm:text-sm"
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
-            placeholder="Örn. Eminönü"
+            placeholder={t('assistant.districtPlaceholder', 'e.g. Eminönü')}
           />
         </div>
       </div>
@@ -240,7 +240,7 @@ export default function AssistantPage(): ReactElement {
           <textarea
             rows={1}
             className="max-h-32 min-h-[48px] min-w-0 flex-1 resize-none rounded-xl border border-stone-900/10 bg-white px-3 py-3 text-base leading-snug outline-none focus:border-primary dark:border-white/10 dark:bg-zinc-950 sm:text-sm"
-            placeholder="Soru sor…"
+            placeholder={t('assistant.placeholder', 'Ask a question…')}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
@@ -256,7 +256,7 @@ export default function AssistantPage(): ReactElement {
             onClick={handleSend}
             disabled={sendLoading}
             aria-busy={sendLoading}
-            aria-label="Gönder"
+            aria-label={t('assistant.send', 'Send')}
           >
             <Send className="h-5 w-5" aria-hidden="true" />
           </button>

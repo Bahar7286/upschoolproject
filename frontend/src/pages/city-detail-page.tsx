@@ -10,10 +10,10 @@ import { BackButton } from '../components/ui/back-button';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 
 import { useI18n } from '../lib/i18n';
+import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
 import { listCities, listDistrictsByCity } from '../services/city-service';
 import { listPlaces } from '../services/place-service';
 import type { PlaceCategory } from '../types/place';
-import { PLACE_CATEGORY_LABELS } from '../types/place';
 
 const CATEGORIES: { id: PlaceCategory; labelKey: string; emoji: string }[] = [
   { id: 'museum', labelKey: 'city.sightseeing', emoji: '🏛️' },
@@ -25,6 +25,7 @@ const CATEGORIES: { id: PlaceCategory; labelKey: string; emoji: string }[] = [
 
 export default function CityDetailPage(): ReactElement {
   const { t } = useI18n();
+  const categoryLabels = usePlaceCategoryLabels();
   const { cityId } = useParams();
   const id = Number(cityId);
 
@@ -63,7 +64,7 @@ export default function CityDetailPage(): ReactElement {
   if (!Number.isFinite(id) || id <= 0) {
     return (
       <section className="mx-auto max-w-3xl">
-        <p className="text-sm">Geçersiz şehir.</p>
+        <p className="text-sm">{t('cityDetail.invalidCity', 'Geçersiz şehir.')}</p>
       </section>
     );
   }
@@ -77,7 +78,7 @@ export default function CityDetailPage(): ReactElement {
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-primary">Plaka {city.plate_code}</p>
         ) : null}
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="city-title">
-          {city?.name_tr ?? 'Yükleniyor…'}
+          {city?.name_tr ?? t('cityDetail.loadingName', 'Yükleniyor…')}
         </h1>
         <p className="text-sm text-theme-muted">{t('city.pickDistrict', 'İlçe seç → mekanları gör')}</p>
       </header>
@@ -114,7 +115,7 @@ export default function CityDetailPage(): ReactElement {
         {isPending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
         {isError ? (
           <div className="alert-error space-y-2 rounded-xl px-3 py-2 text-sm" role="alert">
-            <p>İlçe listesi API&apos;den alınamadı; yerel liste deneniyor…</p>
+            <p>{t('cityDetail.districtLoadError', 'İlçe listesi API\'den alınamadı; yerel liste deneniyor…')}</p>
             <button
               type="button"
               className="font-bold text-primary underline"
@@ -126,7 +127,7 @@ export default function CityDetailPage(): ReactElement {
         ) : null}
         {!isPending && districts.length === 0 ? (
           <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-950 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
-            Bu il için ilçe listesi şu an yüklenemedi. Lütfen biraz sonra sayfayı yenileyin.
+            {t('cityDetail.noDistricts', 'Bu il için ilçe listesi şu an yüklenemedi. Lütfen biraz sonra sayfayı yenileyin.')}
           </p>
         ) : null}
 
@@ -149,7 +150,7 @@ export default function CityDetailPage(): ReactElement {
       {city ? (
         <section className="space-y-2" aria-labelledby="map-heading">
           <h2 className="sr-only" id="map-heading">
-            Harita özeti
+            {t('cityDetail.mapSummary', 'Harita özeti')}
           </h2>
           <RegionInlineMap
             cityId={city.city_id}
@@ -162,11 +163,14 @@ export default function CityDetailPage(): ReactElement {
 
       <section className="space-y-2 px-1" aria-labelledby="categories-heading">
         <h2 className="font-display text-sm font-bold text-theme-muted" id="categories-heading">
-          Şehir geneli · {PLACE_CATEGORY_LABELS.museum} / {PLACE_CATEGORY_LABELS.restaurant} /{' '}
-          {PLACE_CATEGORY_LABELS.accommodation}
+          {t('cityDetail.cityWide', {
+            museum: categoryLabels.museum,
+            restaurant: categoryLabels.restaurant,
+            accommodation: categoryLabels.accommodation,
+          }, 'Şehir geneli · {museum} / {restaurant} / {accommodation}')}
         </h2>
         <p className="text-xs text-theme-muted">
-          İlçe seçmeden şehir genelinde aramak için yukarıdaki kategori düğmelerini kullanın.
+          {t('cityDetail.categoryHint', 'İlçe seçmeden şehir genelinde aramak için yukarıdaki kategori düğmelerini kullanın.')}
         </p>
       </section>
     </section>

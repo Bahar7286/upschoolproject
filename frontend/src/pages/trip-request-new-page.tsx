@@ -6,6 +6,7 @@ import { ListOrdered, Route } from 'lucide-react';
 import { RouteBuilder } from '../components/trip/route-builder';
 import { useRoutesQuery } from '../hooks/use-routes-query';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { createTripRequest, type PlannedStop } from '../services/trip-request-service';
 import { getRoute } from '../services/route-service';
 import { useAuthStore } from '../stores/auth-store';
@@ -14,6 +15,7 @@ import { useOnboardingStore } from '../stores/onboarding-store';
 type RouteMode = 'existing' | 'custom';
 
 export default function TripRequestNewPage(): ReactElement {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const location = useLocation();
@@ -44,25 +46,25 @@ export default function TripRequestNewPage(): ReactElement {
     getRoute(initialRouteId)
       .then((r) => {
         setRouteTitle(r.title);
-        setTitle(`${r.title} — rehberli gezi talebi`);
-        setMessage(`Bu rotayı (${r.city}) rehber eşliğinde gezmek istiyorum.`);
+        setTitle(t('tripNew.prefillTitle', { title: r.title }, '{title} — rehberli gezi talebi'));
+        setMessage(t('tripNew.prefillMessage', { city: r.city }, 'Bu rotayı ({city}) rehber eşliğinde gezmek istiyorum.'));
       })
       .catch(() => undefined);
-  }, [initialRouteId]);
+  }, [initialRouteId, t]);
 
   useEffect(() => {
     if (preferredGuide && !message) {
-      setMessage(`${preferredGuide} rehberinden de teklif almak istiyorum.`);
-      if (!title) setTitle(`${preferredGuide} ile gezi talebi`);
+      setMessage(t('tripNew.prefillGuide', { name: preferredGuide }, '{name} rehberinden de teklif almak istiyorum.'));
+      if (!title) setTitle(t('tripNew.prefillGuideTitle', { name: preferredGuide }, '{name} ile gezi talebi'));
     }
-  }, [preferredGuide, message, title]);
+  }, [preferredGuide, message, title, t]);
 
   if (!accessToken || user?.role === 'guide') {
     return (
       <section className="mx-auto max-w-lg space-y-4">
-        <p className="text-sm text-stone-600">Gezi talebi yalnızca turist hesapları içindir.</p>
+        <p className="text-sm text-stone-600">{t('tripNew.touristOnly', 'Gezi talebi yalnızca turist hesapları içindir.')}</p>
         <Link className="font-bold text-primary" to="/login">
-          Giriş yap
+          {t('common.login', 'Giriş yap')}
         </Link>
       </section>
     );
@@ -72,11 +74,11 @@ export default function TripRequestNewPage(): ReactElement {
     e.preventDefault();
     if (!accessToken) return;
     if (routeMode === 'custom' && plannedStops.length < 2) {
-      setError('Özel rota için en az 2 durak seçin.');
+      setError(t('tripNew.minStops', 'Özel rota için en az 2 durak seçin.'));
       return;
     }
     if (routeMode === 'existing' && !selectedRouteId && plannedStops.length < 2) {
-      setError('Katalog rotası seçin veya özel rota oluşturun.');
+      setError(t('tripNew.pickCatalog', 'Katalog rotası seçin veya özel rota oluşturun.'));
       return;
     }
     setBusy(true);
@@ -84,7 +86,7 @@ export default function TripRequestNewPage(): ReactElement {
     try {
       const stopSummary =
         plannedStops.length > 0
-          ? `\n\nGüzergah: ${plannedStops.map((s) => s.name).join(' → ')}`
+          ? t('tripNew.itineraryPrefix', { stops: plannedStops.map((s) => s.name).join(' →') }, '\n\nGüzergah: {stops}')
           : '';
       await createTripRequest(accessToken, {
         title,
@@ -112,15 +114,15 @@ export default function TripRequestNewPage(): ReactElement {
     <section className="mx-auto max-w-2xl space-y-6">
       <header>
         <Link className="text-sm font-semibold text-primary" to={initialRouteId ? `/routes/${initialRouteId}` : '/talepler'}>
-          ← Geri
+          ← {t('common.back', 'Geri')}
         </Link>
-        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">Gezi talebi oluştur</h1>
+        <h1 className="mt-2 font-display text-2xl font-extrabold tracking-tight sm:text-3xl">{t('tripNew.title', 'Gezi talebi oluştur')}</h1>
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          Rotanızı tanımlayın; onaylı rehberler bu plana göre fiyat teklifi gönderir.
+          {t('tripNew.subtitle', 'Rotanızı tanımlayın; onaylı rehberler bu plana göre fiyat teklifi gönderir.')}
         </p>
         {groupSize >= 10 ? (
           <p className="mt-2 rounded-xl bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-950 dark:text-amber-100">
-            10+ kişi: rehber tekliflerinde %10 grup indirimi · 20+ kişi: %15
+            {t('tripNew.groupDiscount', '10+ kişi: rehber tekliflerinde %10 grup indirimi · 20+ kişi: %15')}
           </p>
         ) : null}
       </header>
@@ -134,7 +136,7 @@ export default function TripRequestNewPage(): ReactElement {
           onClick={() => setRouteMode('existing')}
         >
           <Route className="h-4 w-4" aria-hidden="true" />
-          Katalog rotası
+          {t('tripNew.catalogRoute', 'Katalog rotası')}
         </button>
         <button
           className={`tap-scale flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border-2 px-3 py-3 text-sm font-bold ${
@@ -144,13 +146,13 @@ export default function TripRequestNewPage(): ReactElement {
           onClick={() => setRouteMode('custom')}
         >
           <ListOrdered className="h-4 w-4" aria-hidden="true" />
-          Kendi rotam
+          {t('tripNew.customRoute', 'Kendi rotam')}
         </button>
       </div>
 
       {routeMode === 'existing' ? (
         <label className="block text-sm font-semibold">
-          Platform rotası
+          {t('tripNew.platformRoute', 'Platform rotası')}
           <select
             className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 text-[15px]"
             value={selectedRouteId ?? ''}
@@ -160,30 +162,30 @@ export default function TripRequestNewPage(): ReactElement {
               const r = catalogRoutes.find((x) => x.route_id === id);
               if (r) {
                 setRouteTitle(r.title);
-                setTitle(`${r.title} — gezi talebi`);
+                setTitle(`${r.title} — ${t('trips.create', 'Talep oluştur').toLowerCase()}`);
               }
             }}
           >
-            <option value="">Rota seçin…</option>
+            <option value="">{t('tripNew.pickRoute', 'Rota seçin…')}</option>
             {catalogRoutes.map((r) => (
               <option key={r.route_id} value={r.route_id}>
                 {r.title} · {r.city}
               </option>
             ))}
           </select>
-          {routeTitle ? <p className="mt-1 text-xs text-stone-500">Seçili: {routeTitle}</p> : null}
+          {routeTitle ? <p className="mt-1 text-xs text-stone-500">{t('tripNew.selected', { title: routeTitle }, 'Seçili: {title}')}</p> : null}
         </label>
       ) : (
         <RouteBuilder stops={plannedStops} onChange={setPlannedStops} />
       )}
 
       {routeMode === 'existing' ? (
-        <p className="text-xs text-stone-500">İsterseniz ek duraklar için “Kendi rotam” sekmesine geçin.</p>
+        <p className="text-xs text-stone-500">{t('tripNew.customHint', 'İsterseniz ek duraklar için “Kendi rotam” sekmesine geçin.')}</p>
       ) : null}
 
       <form className="theme-card space-y-4 rounded-[22px] border p-5" onSubmit={handleSubmit}>
         <label className="block text-sm font-semibold">
-          Başlık
+          {t('tripNew.titleLabel', 'Başlık')}
           <input
             className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 text-[15px]"
             required
@@ -193,7 +195,7 @@ export default function TripRequestNewPage(): ReactElement {
           />
         </label>
         <label className="block text-sm font-semibold">
-          Tarih
+          {t('tripNew.dateLabel', 'Tarih')}
           <input
             className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 text-[15px]"
             required
@@ -203,7 +205,7 @@ export default function TripRequestNewPage(): ReactElement {
           />
         </label>
         <label className="block text-sm font-semibold">
-          Grup büyüklüğü
+          {t('tripNew.groupSizeLabel', 'Grup büyüklüğü')}
           <input
             className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 text-[15px]"
             min={1}
@@ -215,7 +217,7 @@ export default function TripRequestNewPage(): ReactElement {
           />
         </label>
         <label className="block text-sm font-semibold">
-          Bütçe hedefi (₺)
+          {t('tripNew.budgetLabel', 'Bütçe hedefi (₺)')}
           <input
             className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 text-[15px]"
             min={0}
@@ -225,7 +227,7 @@ export default function TripRequestNewPage(): ReactElement {
           />
         </label>
         <label className="block text-sm font-semibold">
-          Mesajınız
+          {t('tripNew.messageLabel', 'Mesajınız')}
           <textarea
             className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 text-[15px]"
             required
@@ -247,7 +249,7 @@ export default function TripRequestNewPage(): ReactElement {
           disabled={busy}
           type="submit"
         >
-          {busy ? 'Gönderiliyor…' : 'Talebi yayınla (+40 XP)'}
+          {busy ? t('tripNew.submitting', 'Gönderiliyor…') : t('tripNew.submit', 'Talebi yayınla (+40 XP)')}
         </button>
       </form>
     </section>

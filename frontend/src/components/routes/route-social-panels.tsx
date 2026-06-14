@@ -7,6 +7,7 @@ import { EmptyState } from '../ui/empty-state';
 import { ErrorAlert } from '../ui/error-alert';
 import { Button } from '../ui/button';
 import { useEmptyStates } from '../../hooks/use-empty-states';
+import { useI18n } from '../../lib/i18n';
 import { mapError } from '../../lib/user-errors';
 import {
   createRouteReview,
@@ -21,14 +22,15 @@ import { useAuthStore } from '../../stores/auth-store';
 import type { NoteResponse, ReviewResponse, ReviewSummary } from '../../types/social';
 
 function Stars({ value, onChange }: { value: number; onChange?: (n: number) => void }): ReactElement {
+  const { t } = useI18n();
   return (
-    <div className="inline-flex gap-1" role={onChange ? 'radiogroup' : undefined} aria-label="Puan">
+    <div className="inline-flex gap-1" role={onChange ? 'radiogroup' : undefined} aria-label={t('social.ratingLabel', 'Puan')}>
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           className={onChange ? 'tap-scale focus-ring' : 'pointer-events-none'}
           key={n}
           type="button"
-          aria-label={`${n} yıldız`}
+          aria-label={t('social.starLabel', { n }, '{n} yıldız')}
           disabled={!onChange}
           onClick={() => onChange?.(n)}
         >
@@ -43,6 +45,7 @@ function Stars({ value, onChange }: { value: number; onChange?: (n: number) => v
 }
 
 export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement {
+  const { t, locale } = useI18n();
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
   const user = useAuthStore((s) => s.user);
@@ -83,7 +86,7 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
     try {
       const saved = await saveMyRouteNote(routeId, draft.trim(), accessToken);
       setNote(saved);
-      setSuccess('Kişisel not kaydedildi. Yalnızca siz görebilirsiniz.');
+      setSuccess(t('social.notesSaved', 'Kişisel not kaydedildi. Yalnızca siz görebilirsiniz.'));
     } catch (err) {
       setError(mapError(err).message);
     } finally {
@@ -98,7 +101,7 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
       await deleteMyRouteNote(routeId, accessToken);
       setNote(null);
       setDraft('');
-      setSuccess('Not silindi.');
+      setSuccess(t('social.notesDeleted', 'Not silindi.'));
     } catch (err) {
       setError(mapError(err).message);
     } finally {
@@ -113,14 +116,14 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
     >
       <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold" id="notes-title">
         <StickyNote className="h-5 w-5 text-amber-600" aria-hidden="true" />
-        Kişisel notlarım
+        {t('social.notesTitle', 'Kişisel notlarım')}
         <span className="inline-flex items-center gap-1 rounded-full bg-stone-900/5 px-2 py-0.5 text-xs font-semibold text-stone-600 dark:bg-white/10 dark:text-stone-400">
           <Lock className="h-3 w-3" aria-hidden="true" />
-          Gizli
+          {t('social.notesHidden', 'Gizli')}
         </span>
       </h2>
       <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-        Bu notları yalnızca {user?.full_name ?? 'siz'} görebilirsiniz.
+        {t('social.notesOnlyYou', { name: user?.full_name ?? t('common.you', 'Sen') }, 'Bu notları yalnızca {name} görebilirsiniz.')}
       </p>
 
       {error ? (
@@ -138,33 +141,34 @@ export function RouteNotesPanel({ routeId }: { routeId: number }): ReactElement 
         className="mt-4 w-full rounded-xl border border-stone-900/15 bg-white px-3 py-2.5 dark:border-white/15 dark:bg-zinc-950"
         rows={4}
         value={draft}
-        placeholder={accessToken ? 'Bu rota hakkında kişisel notlarınız…' : 'Not almak için giriş yapın.'}
+        placeholder={accessToken ? t('social.notesPlaceholder', 'Bu rota hakkında kişisel notlarınız…') : t('social.notesPlaceholderLogin', 'Not almak için giriş yapın.')}
         disabled={!accessToken || busy}
         onChange={(e) => setDraft(e.target.value)}
       />
       <div className="mt-3 flex flex-wrap gap-2">
         <Button disabled={busy || !draft.trim()} type="button" onClick={handleSave}>
-          {busy ? 'Kaydediliyor…' : note ? 'Notu güncelle' : 'Notu kaydet'}
+          {busy ? t('common.saving', 'Kaydediliyor…') : note ? t('social.notesUpdate', 'Notu güncelle') : t('social.notesSave', 'Notu kaydet')}
         </Button>
         {note ? (
           <Button disabled={busy} type="button" variant="secondary" onClick={handleDelete}>
-            Sil
+            {t('social.notesDelete', 'Sil')}
           </Button>
         ) : null}
         {!accessToken ? (
           <Link className="tap-scale inline-flex min-h-[48px] items-center text-sm font-semibold text-primary underline" to="/login">
-            Giriş yap
+            {t('common.login', 'Giriş yap')}
           </Link>
         ) : null}
       </div>
       {note ? (
-        <p className="mt-2 text-xs text-stone-500">Son güncelleme: {new Date(note.updated_at).toLocaleString('tr-TR')}</p>
+        <p className="mt-2 text-xs text-stone-500">{t('social.notesUpdatedAt', 'Son güncelleme:')} {new Date(note.updated_at).toLocaleString(locale === 'en' ? 'en-GB' : 'tr-TR')}</p>
       ) : null}
     </section>
   );
 }
 
 export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElement {
+  const { t, locale } = useI18n();
   const emptyStates = useEmptyStates();
   const navigate = useNavigate();
   const accessToken = useAuthStore((s) => s.accessToken);
@@ -210,7 +214,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
       return;
     }
     if (myReview) {
-      setError('Bu rota için zaten yorum yaptınız.');
+      setError(t('social.reviewsAlready', 'Bu rota için zaten yorum yaptınız.'));
       return;
     }
     setBusy(true);
@@ -219,7 +223,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
     try {
       await createRouteReview(routeId, { rating, comment: comment.trim() }, accessToken);
       setComment('');
-      setSuccess('Yorumunuz yayınlandı.');
+      setSuccess(t('social.reviewsPublishedSuccess', 'Yorumunuz yayınlandı.'));
       await load();
     } catch (err) {
       setError(mapError(err).message);
@@ -233,7 +237,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
     setBusy(true);
     try {
       await deleteRouteReview(routeId, myReview.review_id, accessToken);
-      setSuccess('Yorumunuz silindi.');
+      setSuccess(t('social.reviewsDeletedSuccess', 'Yorumunuz silindi.'));
       await load();
     } catch (err) {
       setError(mapError(err).message);
@@ -249,11 +253,12 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
     >
       <h2 className="inline-flex items-center gap-2 font-display text-lg font-bold" id="reviews-title">
         <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
-        Gezgin yorumları
+        {t('social.reviewsTitle', 'Gezgin yorumları')}
       </h2>
       {summary ? (
         <p className="mt-1 text-sm text-stone-600 dark:text-stone-400">
-          <Stars value={Math.round(summary.average_rating)} /> {summary.average_rating}/5 · {summary.review_count} yorum
+          <Stars value={Math.round(summary.average_rating)} />{' '}
+          {t('social.reviewsCount', { rating: summary.average_rating, count: summary.review_count }, '{rating}/5 · {count} yorum')}
         </p>
       ) : null}
 
@@ -276,7 +281,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
               <Stars value={r.rating} />
             </div>
             <p className="mt-2 text-sm text-stone-700 dark:text-stone-300">{r.comment}</p>
-            <p className="mt-2 text-xs text-stone-500">{new Date(r.created_at).toLocaleDateString('tr-TR')}</p>
+            <p className="mt-2 text-xs text-stone-500">{new Date(r.created_at).toLocaleDateString(locale === 'en' ? 'en-GB' : 'tr-TR')}</p>
           </li>
         ))}
         {reviews.length === 0 ? (
@@ -291,7 +296,7 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
 
       {!myReview ? (
         <form className="mt-5 border-t border-stone-900/10 pt-5 dark:border-white/10" onSubmit={handleSubmit}>
-          <p className="font-semibold">Yorum yaz</p>
+          <p className="font-semibold">{t('social.reviewsWrite', 'Yorum yaz')}</p>
           <div className="mt-2">
             <Stars value={rating} onChange={setRating} />
           </div>
@@ -301,19 +306,19 @@ export function RouteReviewsPanel({ routeId }: { routeId: number }): ReactElemen
             required
             minLength={3}
             value={comment}
-            placeholder={accessToken ? 'Deneyiminizi paylaşın…' : 'Yorum yapmak için giriş yapın.'}
+            placeholder={accessToken ? t('social.reviewsPlaceholder', 'Deneyiminizi paylaşın…') : t('social.reviewsPlaceholderLogin', 'Yorum yapmak için giriş yapın.')}
             disabled={!accessToken || busy}
             onChange={(e) => setComment(e.target.value)}
           />
           <Button className="mt-3" disabled={busy || !accessToken} type="submit">
-            {busy ? 'Gönderiliyor…' : 'Yorumu yayınla'}
+            {busy ? t('tripNew.submitting', 'Gönderiliyor…') : t('social.reviewsSubmit', 'Yorumu yayınla')}
           </Button>
         </form>
       ) : (
         <div className="mt-5 border-t border-stone-900/10 pt-5 dark:border-white/10">
-          <p className="text-sm text-stone-600 dark:text-stone-400">Bu rota için yorumunuz yayında.</p>
+          <p className="text-sm text-stone-600 dark:text-stone-400">{t('social.reviewsPublished', 'Bu rota için yorumunuz yayında.')}</p>
           <Button className="mt-2" disabled={busy} type="button" variant="secondary" onClick={handleDeleteMine}>
-            Yorumumu sil
+            {t('social.reviewsDeleteMine', 'Yorumumu sil')}
           </Button>
         </div>
       )}

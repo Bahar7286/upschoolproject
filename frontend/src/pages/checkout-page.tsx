@@ -6,6 +6,7 @@ import { CheckCircle2, CreditCard, Lock, Shield } from 'lucide-react';
 import { BackButton } from '../components/ui/back-button';
 
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import {
   confirmCheckout,
   fetchPaymentConfig,
@@ -26,6 +27,7 @@ export type CheckoutState = {
 };
 
 export default function CheckoutPage(): ReactElement {
+  const { t } = useI18n();
   const navigate = useNavigate();
   const location = useLocation();
   const state = location.state as CheckoutState | null;
@@ -51,9 +53,9 @@ export default function CheckoutPage(): ReactElement {
   if (!state || !accessToken || !user) {
     return (
       <section className="mx-auto max-w-lg space-y-4 text-center">
-        <p className="text-sm">Ödeme oturumu bulunamadı.</p>
+        <p className="text-sm">{t('checkout.sessionMissing', 'Ödeme oturumu bulunamadı.')}</p>
         <Link className="font-bold text-primary" to="/talepler">
-          Taleplere dön
+          {t('checkout.backToTrips', 'Taleplere dön')}
         </Link>
       </section>
     );
@@ -98,11 +100,11 @@ export default function CheckoutPage(): ReactElement {
   const handleDemoPay = async (e: FormEvent) => {
     e.preventDefault();
     if (last4.length !== 4) {
-      setError('Kart numarasının son 4 hanesini girin.');
+      setError(t('checkout.cardLast4Error', 'Kart numarasının son 4 hanesini girin.'));
       return;
     }
     if (last4 === '0000') {
-      setError('Test kartı 0000 reddedilir.');
+      setError(t('checkout.cardRejected', 'Test kartı 0000 reddedilir.'));
       return;
     }
     setBusy(true);
@@ -126,13 +128,13 @@ export default function CheckoutPage(): ReactElement {
     return (
       <section className="mx-auto max-w-lg space-y-6 text-center">
         <CheckCircle2 className="mx-auto h-16 w-16 text-primary" aria-hidden="true" />
-        <h1 className="font-display text-2xl font-extrabold">Ödeme onaylandı</h1>
-        <p className="text-sm text-theme-muted">₺{done.amount.toFixed(2)} işlendi.</p>
+        <h1 className="font-display text-2xl font-extrabold">{t('checkout.confirmedTitle', 'Ödeme onaylandı')}</h1>
+        <p className="text-sm text-theme-muted">{t('checkout.confirmedAmount', { amount: done.amount.toFixed(2) }, '₺{amount} işlendi.')}</p>
         <p className="rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 font-mono text-sm font-bold">
           {done.ref}
         </p>
         <Link className="tap-scale inline-flex min-h-[48px] items-center rounded-xl bg-primary px-6 font-bold text-white" to="/purchases">
-          Satın alımlarım
+          {t('checkout.myPurchases', 'Satın alımlarım')}
         </Link>
       </section>
     );
@@ -142,16 +144,16 @@ export default function CheckoutPage(): ReactElement {
     <section className="mx-auto max-w-lg space-y-6">
       <BackButton />
       <header>
-        <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-theme">Güvenli ödeme</h1>
+        <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-theme">{t('checkout.title', 'Güvenli ödeme')}</h1>
         <p className="mt-1 text-sm text-theme-muted">{state.title}</p>
         <p className="mt-2 text-xs text-theme-muted">
-          Ödemen güvenli bağlantı ile işlenir.{' '}
+          {t('checkout.secureHint', 'Ödemen güvenli bağlantı ile işlenir.')}{' '}
           <Link className="font-semibold text-primary underline" to="/odeme-guvenlik">
-            Ödeme güvenliği
+            {t('checkout.paymentSecurity', 'Ödeme güvenliği')}
           </Link>
           {' · '}
           <Link className="font-semibold text-primary underline" to="/iade">
-            İade politikası
+            {t('checkout.refundPolicy', 'İade politikası')}
           </Link>
         </p>
       </header>
@@ -159,16 +161,16 @@ export default function CheckoutPage(): ReactElement {
       <div className="theme-card p-5">
         <dl className="space-y-2 text-sm">
           <div className="flex justify-between">
-            <dt className="text-theme-muted">Toplam</dt>
+            <dt className="text-theme-muted">{t('checkout.total', 'Toplam')}</dt>
             <dd className="font-bold">₺{state.amount.toFixed(2)}</dd>
           </div>
           <div className="flex justify-between">
-            <dt className="text-theme-muted">Platform (%15)</dt>
+            <dt className="text-theme-muted">{t('checkout.platformFee', 'Platform (%15)')}</dt>
             <dd>₺{platformFee.toFixed(2)}</dd>
           </div>
           {state.guideName ? (
             <div className="flex justify-between">
-              <dt className="text-theme-muted">Rehber ({state.guideName})</dt>
+              <dt className="text-theme-muted">{t('checkout.guideShare', { name: state.guideName }, 'Rehber ({name})')}</dt>
               <dd className="text-primary">₺{guideNet.toFixed(2)}</dd>
             </div>
           ) : null}
@@ -179,7 +181,7 @@ export default function CheckoutPage(): ReactElement {
         <div className="theme-card space-y-4 p-5">
           <p className="flex items-center gap-2 text-sm font-semibold text-theme">
             <Shield className="h-4 w-4 text-primary" aria-hidden="true" />
-            Stripe Checkout ile güvenli ödeme
+            {t('checkout.stripeTitle', 'Stripe Checkout ile güvenli ödeme')}
           </p>
           {error ? (
             <p className="alert-error rounded-xl px-3 py-2 text-sm" role="alert">
@@ -193,17 +195,17 @@ export default function CheckoutPage(): ReactElement {
             onClick={() => void handleStripePay()}
           >
             <CreditCard className="h-5 w-5" aria-hidden="true" />
-            {busy ? 'Yönlendiriliyor…' : `Stripe ile ₺${state.amount.toFixed(2)} öde`}
+            {busy ? t('checkout.stripeRedirecting', 'Yönlendiriliyor…') : t('checkout.stripePay', { amount: state.amount.toFixed(2) }, 'Stripe ile ₺{amount} öde')}
           </button>
         </div>
       ) : (
         <form className="theme-card space-y-4 p-5" onSubmit={handleDemoPay}>
           <div className="flex items-center gap-2 text-sm font-semibold text-theme-muted">
             <Lock className="h-4 w-4 text-primary" aria-hidden="true" />
-            Test ödemesi
+            {t('checkout.testPayment', 'Test ödemesi')}
           </div>
           <label className="block text-sm font-semibold">
-            Kart üzerindeki isim
+            {t('checkout.cardHolder', 'Kart üzerindeki isim')}
             <input
               className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5"
               required
@@ -212,7 +214,7 @@ export default function CheckoutPage(): ReactElement {
             />
           </label>
           <label className="block text-sm font-semibold">
-            Kart numarası
+            {t('checkout.cardNumber', 'Kart numarası')}
             <input
               className="theme-input mt-1 w-full rounded-xl border px-3 py-2.5 font-mono"
               inputMode="numeric"
@@ -240,7 +242,7 @@ export default function CheckoutPage(): ReactElement {
           </div>
           <input
             className="theme-input w-full rounded-xl border px-3 py-2.5"
-            placeholder="Kupon (isteğe bağlı)"
+            placeholder={t('checkout.coupon', 'Kupon (isteğe bağlı)')}
             value={coupon}
             onChange={(e) => setCoupon(e.target.value)}
           />
@@ -254,10 +256,10 @@ export default function CheckoutPage(): ReactElement {
             disabled={busy}
             type="submit"
           >
-            {busy ? 'İşleniyor…' : `₺${state.amount.toFixed(2)} öde`}
+            {busy ? t('checkout.processing', 'İşleniyor…') : t('checkout.payAmount', { amount: state.amount.toFixed(2) }, '₺{amount} öde')}
           </button>
           <p className="text-center text-xs text-theme-muted">
-            Bu ortamda gerçek ücret tahsil edilmez; yalnızca deneme amaçlı kayıt oluşturulur.
+            {t('checkout.demoNote', 'Bu ortamda gerçek ücret tahsil edilmez; yalnızca deneme amaçlı kayıt oluşturulur.')}
           </p>
         </form>
       )}

@@ -5,9 +5,11 @@ import { KeyRound } from 'lucide-react';
 
 import { BrandLogo } from '../components/brand/brand-logo';
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 import { resetPasswordWithToken } from '../services/auth-service';
 
 export default function ResetPasswordPage(): ReactElement {
+  const { t } = useI18n();
   const [params] = useSearchParams();
   const navigate = useNavigate();
   const token = params.get('token') ?? '';
@@ -20,18 +22,18 @@ export default function ResetPasswordPage(): ReactElement {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (password !== confirm) {
-      setError('Şifreler eşleşmiyor.');
+      setError(t('authReset.mismatch', 'Şifreler eşleşmiyor.'));
       return;
     }
     if (!token) {
-      setError('Geçersiz bağlantı. Yeniden şifre sıfırlama isteyin.');
+      setError(t('authReset.invalidLink', 'Geçersiz bağlantı. Yeniden şifre sıfırlama isteyin.'));
       return;
     }
     setBusy(true);
     setError('');
     try {
       await resetPasswordWithToken(token, password);
-      navigate('/login', { replace: true, state: { message: 'Şifreniz güncellendi.' } });
+      navigate('/login', { replace: true, state: { message: t('authReset.updated', 'Şifreniz güncellendi.') } });
     } catch (err) {
       setError(formatApiError(err));
     } finally {
@@ -44,12 +46,12 @@ export default function ResetPasswordPage(): ReactElement {
       <div className="mx-auto max-w-md">
         <BrandLogo to="/" size="md" />
         <section className="theme-card mt-8 rounded-[22px] p-6">
-          <h1 className="font-display text-2xl font-extrabold text-theme">Yeni şifre</h1>
+          <h1 className="font-display text-2xl font-extrabold text-theme">{t('authReset.title', 'Yeni şifre')}</h1>
           <form className="mt-6 flex flex-col gap-4" onSubmit={handleSubmit}>
             <input
               className="theme-input min-h-[48px] rounded-xl px-4"
               type="password"
-              placeholder="Yeni şifre (min. 6)"
+              placeholder={t('authReset.passwordPlaceholder', 'Yeni şifre (min. 6)')}
               minLength={6}
               required
               value={password}
@@ -58,7 +60,7 @@ export default function ResetPasswordPage(): ReactElement {
             <input
               className="theme-input min-h-[48px] rounded-xl px-4"
               type="password"
-              placeholder="Yeni şifre tekrar"
+              placeholder={t('authReset.confirmPlaceholder', 'Yeni şifre tekrar')}
               minLength={6}
               required
               value={confirm}
@@ -75,11 +77,11 @@ export default function ResetPasswordPage(): ReactElement {
               disabled={busy}
             >
               <KeyRound className="h-5 w-5" aria-hidden="true" />
-              {busy ? 'Kaydediliyor…' : 'Şifreyi güncelle'}
+              {busy ? t('authReset.saving', 'Kaydediliyor…') : t('authReset.submit', 'Şifreyi güncelle')}
             </button>
           </form>
           <Link className="mt-4 inline-block text-sm font-semibold text-primary" to="/sifremi-unuttum">
-            Yeni bağlantı iste
+            {t('authReset.newLink', 'Yeni bağlantı iste')}
           </Link>
         </section>
       </div>

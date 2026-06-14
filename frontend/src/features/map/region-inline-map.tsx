@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 import { formatApiError } from '../../lib/api';
+import { useI18n } from '../../lib/i18n';
 import { isValidMapCenter } from '../../utils/map-coords';
 import { fetchGeoCenter } from '../../services/google-service';
 import { fetchRegionGooglePlaces } from '../../services/region-venues-service';
@@ -33,6 +34,7 @@ export function RegionInlineMap({
   fallbackCenter,
   showDbCount,
 }: RegionInlineMapProps): ReactElement {
+  const { t } = useI18n();
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const isDistrict = Boolean(districtId && districtId > 0);
   const zoom = isDistrict ? 14 : 11;
@@ -106,27 +108,27 @@ export function RegionInlineMap({
       ? `${geoCenter.district_name}, ${geoCenter.city_name}`
       : districtName && cityName
         ? `${districtName}, ${cityName}`
-        : cityName ?? 'Bölge';
+        : cityName ?? t('mapRegion.regionFallback', 'Bölge');
 
   return (
-    <div className="space-y-2" aria-label={`${regionLabel} haritası`}>
+    <div className="space-y-2" aria-label={t('mapRegion.mapAria', { region: regionLabel }, '{region} haritası')}>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-stone-600 dark:text-stone-400">
-          {geoLoading ? 'Harita yükleniyor…' : regionLabel}
-          {nearbyPlaces.length > 0 ? ` · ${nearbyPlaces.length} yer` : ''}
+          {geoLoading ? t('mapRegion.loading', 'Harita yükleniyor…') : regionLabel}
+          {nearbyPlaces.length > 0 ? ` · ${t('mapRegion.placesCount', { count: nearbyPlaces.length }, '{count} yer')}` : ''}
           {import.meta.env.DEV && showDbCount && dbPlaces.length > 0
             ? ` · ${dbPlaces.length} katalog`
             : ''}
         </p>
         <Link className="text-xs font-bold text-primary hover:underline" to={mapLink}>
-          Tam ekran harita →
+          {t('mapRegion.fullscreen', 'Tam ekran harita →')}
         </Link>
       </div>
 
       {placesError ? (
         <p className="rounded-xl border border-amber-500/35 bg-amber-500/10 px-3 py-2 text-xs text-amber-950 dark:text-amber-100" role="alert">
           {formatApiError(placesError)}
-          <span className="mt-1 block">Harita verisi şu an alınamadı; listeden mekan seçmeye devam edebilirsin.</span>
+          <span className="mt-1 block">{t('mapRegion.fallbackHint', 'Harita verisi şu an alınamadı; listeden mekan seçmeye devam edebilirsin.')}</span>
         </p>
       ) : null}
 
@@ -153,8 +155,7 @@ export function RegionInlineMap({
 
       {!googleKey ? (
         <p className="text-xs text-stone-500">
-          Google harita için <code className="text-xs">VITE_GOOGLE_MAPS_API_KEY</code> tanımlayın; şimdilik OSM
-          gösteriliyor.
+          {t('mapRegion.osmHint', 'Google harita için VITE_GOOGLE_MAPS_API_KEY tanımlayın; şimdilik OSM gösteriliyor.')}
         </p>
       ) : null}
     </div>

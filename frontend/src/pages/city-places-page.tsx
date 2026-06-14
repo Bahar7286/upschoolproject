@@ -1,21 +1,24 @@
 import { useQuery } from '@tanstack/react-query';
 import type { ReactElement } from 'react';
 import { useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 
 import { BackButton } from '../components/ui/back-button';
 import { GoogleVenuePlaceCard } from '../components/explore/google-venue-place-card';
 import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
+import { usePlaceCategoryLabels } from '../hooks/use-place-category-labels';
 import { googlePlaceDetailPath } from '../lib/routes';
+import { useI18n } from '../lib/i18n';
 import { listCities } from '../services/city-service';
 import { fetchGeoCenter } from '../services/google-service';
 import { fetchRegionGooglePlaces } from '../services/region-venues-service';
 import { listPlaces } from '../services/place-service';
 import type { PlaceCategory } from '../types/place';
-import { PLACE_CATEGORY_LABELS } from '../types/place';
 
 export default function CityPlacesPage(): ReactElement {
+  const { t } = useI18n();
+  const categoryLabels = usePlaceCategoryLabels();
   const { cityId } = useParams();
   const city_id = Number(cityId);
   const [searchParams] = useSearchParams();
@@ -71,9 +74,9 @@ export default function CityPlacesPage(): ReactElement {
       <BackButton to={city ? `/cities/${city.city_id}` : '/cities'} />
       <header className="space-y-2">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-theme" id="cityp-title">
-          {city?.name_tr ?? 'Şehir'} {category ? `· ${PLACE_CATEGORY_LABELS[category]}` : ''}
+          {city?.name_tr ?? t('cityPlaces.cityFallback', 'Şehir')} {category ? `· ${categoryLabels[category]}` : ''}
         </h1>
-        <p className="text-sm text-theme-muted">Şehir genelinde mekanlar</p>
+        <p className="text-sm text-theme-muted">{t('cityPlaces.subtitle', 'Şehir genelinde mekanlar')}</p>
       </header>
 
       {city ? (
@@ -88,7 +91,7 @@ export default function CityPlacesPage(): ReactElement {
       <div className="theme-card flex items-center gap-2 rounded-2xl p-3">
         <input
           className="w-full bg-transparent text-sm outline-none"
-          placeholder="Mekan ara"
+          placeholder={t('cityPlaces.searchPlaceholder', 'Mekan ara')}
           value={q}
           onChange={(e) => setQ(e.target.value)}
         />
@@ -97,7 +100,7 @@ export default function CityPlacesPage(): ReactElement {
       {isPending || googlePending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
       {isError ? (
         <p className="alert-error rounded-xl px-3 py-2 text-sm" role="alert">
-          Mekanlar yüklenemedi.
+          {t('cityPlaces.loadError', 'Mekanlar yüklenemedi.')}
         </p>
       ) : null}
 

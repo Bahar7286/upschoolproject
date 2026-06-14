@@ -25,7 +25,8 @@ import { useRoutesQuery } from '../hooks/use-routes-query';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
 import type { GamificationResponse } from '../types/user';
-import { BADGE_LABELS } from '../types/user';
+import { useBadgeLabels } from '../hooks/use-badge-labels';
+import { useFontLabels, useThemeLabels } from '../hooks/use-theme-labels';
 import type { NoteResponse } from '../types/social';
 import type { PlanResponse } from '../types/plan';
 import { LanguageSwitcher, useI18n } from '../lib/i18n';
@@ -36,8 +37,6 @@ import { mapError } from '../lib/user-errors';
 import { ThemePreviewCard } from '../components/theme/theme-preview-card';
 import { FONT_META, THEME_META } from '../lib/theme-meta';
 import {
-  FONT_LABELS,
-  THEME_LABELS,
   useThemeStore,
   type FontPreference,
   type ThemePreference,
@@ -49,6 +48,9 @@ type Tab = 'overview' | 'history' | 'notes' | 'play' | 'look';
 
 export default function ProfilePage(): ReactElement {
   const { t, locale } = useI18n();
+  const themeLabels = useThemeLabels();
+  const fontLabels = useFontLabels();
+  const badgeLabels = useBadgeLabels();
   const TABS: { id: Tab; label: string; icon: typeof Award }[] = [
     { id: 'overview', label: t('profile.tabs.overview', 'Özet'), icon: Award },
     { id: 'history', label: t('profile.tabs.history', 'Geçmiş'), icon: History },
@@ -492,7 +494,7 @@ export default function ProfilePage(): ReactElement {
                   }`}
                 >
                   <Award className="h-8 w-8 text-primary" aria-hidden="true" />
-                  <span className="text-[11px] font-bold text-theme">{BADGE_LABELS[id] ?? id}</span>
+                  <span className="text-[11px] font-bold text-theme">{badgeLabels[id] ?? id}</span>
                 </div>
               );
             })}
@@ -555,7 +557,7 @@ export default function ProfilePage(): ReactElement {
               {THEME_META.map((meta) => (
                 <ThemePreviewCard
                   key={meta.id}
-                  label={THEME_LABELS[meta.id]}
+                  label={themeLabels[meta.id]}
                   meta={meta}
                   selected={themePreference === meta.id}
                   onSelect={() => handleSaveTheme(meta.id)}
@@ -566,7 +568,7 @@ export default function ProfilePage(): ReactElement {
           <div>
             <p className="mb-2 text-sm font-bold text-theme">{t('profile.pickFont', 'Yazı tipi')}</p>
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-              {(Object.keys(FONT_LABELS) as FontPreference[]).map((f) => (
+              {(Object.keys(fontLabels) as FontPreference[]).map((f) => (
                 <button
                   key={f}
                   type="button"
@@ -578,7 +580,7 @@ export default function ProfilePage(): ReactElement {
                     void handleSaveTheme(themePreference, f);
                   }}
                 >
-                  <span className="block font-bold">{FONT_LABELS[f]}</span>
+                  <span className="block font-bold">{fontLabels[f]}</span>
                   <span className="font-option-sub block text-xs">{FONT_META[f]}</span>
                 </button>
               ))}

@@ -4,8 +4,8 @@ import { Link } from 'react-router-dom';
 import { resolvePlaceImage } from '../../lib/region-images';
 import { usePlaceImage } from '../../hooks/use-place-image';
 import { RegionThumb } from '../ui/region-thumb';
+import { usePlaceCategoryLabels } from '../../hooks/use-place-category-labels';
 import type { PlaceCategory } from '../../types/place';
-import { PLACE_CATEGORY_LABELS } from '../../types/place';
 
 export function VenuePlaceCard({
   placeId,
@@ -24,6 +24,7 @@ export function VenuePlaceCard({
   cityName?: string;
   to: string;
 }): ReactElement {
+  const categoryLabels = usePlaceCategoryLabels();
   const img = resolvePlaceImage(placeId, category, imageUrl, name);
   const displayImg = usePlaceImage(img, name, cityName);
 
@@ -37,7 +38,7 @@ export function VenuePlaceCard({
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
         <span className="absolute left-2 top-2 rounded-full bg-black/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-white backdrop-blur-sm">
-          {PLACE_CATEGORY_LABELS[category]}
+          {categoryLabels[category]}
         </span>
       </div>
       <div className="p-3">

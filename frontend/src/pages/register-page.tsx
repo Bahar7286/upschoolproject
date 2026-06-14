@@ -20,8 +20,9 @@ import { useI18n } from '../lib/i18n';
 import { fetchCurrentUser, registerUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import { useThemeLabels } from '../hooks/use-theme-labels';
 import type { ThemePreference } from '../stores/theme-store';
-import { THEME_LABELS, useThemeStore } from '../stores/theme-store';
+import { useThemeStore } from '../stores/theme-store';
 
 const ROLES = [
   {
@@ -42,6 +43,7 @@ type Role = 'tourist' | 'guide' | 'admin';
 
 export default function RegisterPage(): ReactElement {
   const { t } = useI18n();
+  const themeLabels = useThemeLabels();
   const navigate = useNavigate();
   const setSession = useAuthStore((s) => s.setSession);
   const themePreference = useThemeStore((s) => s.preference);
@@ -260,7 +262,7 @@ export default function RegisterPage(): ReactElement {
                       }`}
                       onClick={() => setThemePreference(id)}
                     >
-                      <span className="block text-stone-900 dark:text-stone-50">{THEME_LABELS[id]}</span>
+                      <span className="block text-stone-900 dark:text-stone-50">{themeLabels[id]}</span>
                       <span className="mt-0.5 block text-[11px] font-normal leading-snug text-stone-500 dark:text-stone-400">
                         {t.tagline}
                       </span>

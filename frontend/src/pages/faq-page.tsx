@@ -3,6 +3,7 @@ import type { ReactElement } from 'react';
 import { LegalPageShell } from '../components/legal/legal-page-shell';
 import { JsonLd } from '../components/seo/json-ld';
 import { PageMeta } from '../components/seo/page-meta';
+import { useI18n } from '../lib/i18n';
 
 const FAQ = [
   {
@@ -24,8 +25,9 @@ const FAQ = [
 ];
 
 export default function FaqPage(): ReactElement {
+  const { t } = useI18n();
   return (
-    <LegalPageShell title="Sık Sorulan Sorular">
+    <LegalPageShell title={t('legal.faqTitle', 'Sık sorulan sorular')}>
       <PageMeta
         title="SSS — Historial GO"
         description="Historial GO hakkında sık sorulan sorular: rotalar, ödeme, rehber doğrulama ve iade."
