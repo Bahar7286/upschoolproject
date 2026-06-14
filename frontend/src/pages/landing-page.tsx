@@ -107,7 +107,7 @@ export default function LandingPage(): ReactElement {
         <section className="relative mt-12 overflow-hidden rounded-[28px] border border-stone-900/10 bg-gradient-to-br from-heritage-ink via-stone-900 to-stone-800 p-8 text-white shadow-lift dark:border-white/10 md:p-12">
           <p className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-amber-300">
             <Sparkles className="h-4 w-4" aria-hidden="true" />
-            İstanbul · AI · B2B2C
+            İstanbul · AI · Kültür Turizmi
           </p>
           <h1 className="mt-4 max-w-2xl font-display text-4xl font-extrabold leading-tight tracking-tight md:text-5xl">
             Şehri kendi hikayenle keşfet

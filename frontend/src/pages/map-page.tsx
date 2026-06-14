@@ -12,13 +12,14 @@ import { BackButton } from '../components/ui/back-button';
 import { ExploreMap } from '../features/map/explore-map';
 import { decodePolyline } from '../utils/polyline';
 import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
-import { listCities } from '../services/city-service';
+import { listCities, listDistrictsByCity } from '../services/city-service';
 
 import { usePlacesQuery } from '../hooks/use-places-query';
 
 import { useRoutesQuery } from '../hooks/use-routes-query';
 
 import { formatApiError } from '../lib/api';
+import { useI18n } from '../lib/i18n';
 
 import { useGeofenceWatch } from '../hooks/use-geofence-watch';
 import { langToSpeechCode, playAudioBase64, useSpeechSynthesis } from '../hooks/use-speech';
@@ -26,12 +27,13 @@ import { fetchNarrationAudio } from '../services/ai-service';
 import { completeRoute } from '../services/profile-service';
 import { fetchCurrentUser } from '../services/auth-service';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import { useAuthStore } from '../stores/auth-store';
 
 import { ActiveRoutePlanner, useAddPlaceToActiveRoute } from '../features/active-route/active-route-planner';
 import { listTripExtraStops } from '../services/trip-extra-stop-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 
-import { useAuthStore } from '../stores/auth-store';
+import { filterGoogleByDistrict } from '../utils/district-filter';
 
 import {
 
@@ -68,6 +70,7 @@ const ALL_CATEGORIES: PlaceCategory[] = [
 
 
 export default function MapPage(): ReactElement {
+  const { t } = useI18n();
 
   const { data: routes = [], isPending, isError, error } = useRoutesQuery();
 
@@ -84,7 +87,7 @@ export default function MapPage(): ReactElement {
   const polylineParam = searchParams.get('polyline');
   const destLatParam = Number(searchParams.get('destLat'));
   const destLngParam = Number(searchParams.get('destLng'));
-  const [placesRadius, setPlacesRadius] = useState(10000);
+  const [placesRadius, setPlacesRadius] = useState(() => (districtIdParam > 0 ? 4000 : 10000));
   const [googlePlacesError, setGooglePlacesError] = useState('');
 
   useEffect(() => {
@@ -123,6 +126,21 @@ export default function MapPage(): ReactElement {
     if (c?.center_lat && c.center_lng) return { lat: c.center_lat, lng: c.center_lng };
     return null;
   }, [cities, resolvedCityId]);
+
+  const { data: districts = [] } = useQuery({
+    queryKey: ['districts', resolvedCityId],
+    queryFn: () => listDistrictsByCity(resolvedCityId!),
+    enabled: Boolean(resolvedCityId && resolvedCityId > 0),
+    staleTime: 24 * 60 * 60 * 1000,
+  });
+
+  const resolvedDistrictName = useMemo(() => {
+    if (district?.trim()) return district;
+    if (districtIdParam > 0) {
+      return districts.find((d) => d.district_id === districtIdParam)?.name_tr ?? '';
+    }
+    return '';
+  }, [district, districtIdParam, districts]);
 
   const { data: geoCenter } = useQuery({
     queryKey: ['geo-center', resolvedCityId, districtIdParam],
@@ -167,20 +185,23 @@ export default function MapPage(): ReactElement {
   });
 
   useEffect(() => {
-    if (!googleNearby) return;
+    if (!googleNearby || districtIdParam > 0) return;
     if (googleNearby.places.length === 0 && placesRadius < 20000) {
       setPlacesRadius((r) => Math.min(r + 5000, 20000));
     }
-  }, [googleNearby, placesRadius]);
+  }, [googleNearby, placesRadius, districtIdParam]);
 
   const sortedGooglePlaces = useMemo(() => {
-    const list = googleNearby?.places ?? [];
+    let list = googleNearby?.places ?? [];
+    if (resolvedDistrictName) {
+      list = filterGoogleByDistrict(list, resolvedDistrictName);
+    }
     return [...list].sort(
       (a, b) =>
         (b.user_rating_count ?? 0) - (a.user_rating_count ?? 0) ||
         (b.rating ?? 0) - (a.rating ?? 0),
     );
-  }, [googleNearby]);
+  }, [googleNearby, resolvedDistrictName]);
 
   const routePolyline = useMemo(() => {
     if (!polylineParam) return null;
@@ -191,7 +212,7 @@ export default function MapPage(): ReactElement {
     }
   }, [polylineParam]);
 
-  const { data: places = [] } = usePlacesQuery(categoryFilter, city, district);
+  const { data: places = [] } = usePlacesQuery(categoryFilter, city, resolvedDistrictName || undefined);
 
   const routeParam = Number(searchParams.get('route'));
 
@@ -210,6 +231,7 @@ export default function MapPage(): ReactElement {
   const routeTitle = useActiveRouteStore((s) => s.routeTitle);
 
   const mergedStopsFn = useActiveRouteStore((s) => s.mergedStops);
+  const clearActiveRoute = useActiveRouteStore((s) => s.clearActiveRoute);
   const setExtraStops = useActiveRouteStore((s) => s.setExtraStops);
 
   const currentStopIndex = useActiveRouteStore((s) => s.currentStopIndex);
@@ -227,7 +249,7 @@ export default function MapPage(): ReactElement {
   const [mapPickMsg, setMapPickMsg] = useState('');
   const { addPlace } = useAddPlaceToActiveRoute();
 
-  const focusRouteId = activeParam && Number.isFinite(routeParam) ? routeParam : activeRouteId;
+  const focusRouteId = activeParam && Number.isFinite(routeParam) ? routeParam : activeRouteId ?? undefined;
 
   const mergedStops = focusRouteId === activeRouteId ? mergedStopsFn() : [];
 
@@ -371,6 +393,9 @@ export default function MapPage(): ReactElement {
       const me = await fetchCurrentUser(accessToken);
 
       setUser(me);
+      if (focusRouteId === 0) {
+        clearActiveRoute();
+      }
 
     } catch (err) {
 
@@ -587,7 +612,7 @@ export default function MapPage(): ReactElement {
 
         </button>
 
-        {focusRouteId && mergedStops.length > 0 ? (
+        {focusRouteId != null && mergedStops.length > 0 ? (
 
           <>
 
@@ -611,11 +636,29 @@ export default function MapPage(): ReactElement {
 
             <button
 
+              className="tap-scale responsive-btn rounded-xl border-2 border-stone-400 px-5 text-sm font-semibold hover:border-stone-900 dark:border-zinc-500"
+
+              type="button"
+
+              onClick={() => {
+                clearActiveRoute();
+                setCompleteMsg('');
+                setCurrentStopIndex(0);
+              }}
+
+            >
+
+              {t('map.resetRoute', 'Rotayı sıfırla')}
+
+            </button>
+
+            <button
+
               className="tap-scale responsive-btn rounded-xl border-2 border-primary px-5 text-sm font-semibold text-primary hover:bg-primary/10 disabled:opacity-60"
 
               type="button"
 
-              disabled={busy || !accessToken}
+              disabled={busy || !accessToken || focusRouteId === 0}
 
               onClick={handleCompleteRoute}
 

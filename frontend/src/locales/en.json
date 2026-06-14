@@ -1,9 +1,28 @@
 {
+  "map": {
+    "resetRoute": "Reset route",
+    "liveMap": "Live map",
+    "openInMap": "Open on map",
+    "myLocation": "Show my location"
+  },
+  "assistant": {
+    "title": "AI Assistant",
+    "subtitle": "Recommendations and mini plans by city, district and interests",
+    "city": "City",
+    "district": "District (optional)",
+    "districtPlaceholder": "e.g. Eminönü",
+    "placeholder": "Ask a question…",
+    "send": "Send",
+    "typing": "Typing…"
+  },
   "auth": {
     "login": "Log in",
     "register": "Sign up",
     "logout": "Log out",
-    "traveler": "Traveler"
+    "traveler": "Traveler",
+    "demoTourist": "Demo tourist",
+    "demoGuide": "Demo guide",
+    "demoAdmin": "Demo admin"
   },
   "nav": {
     "discover": "Discover",
@@ -39,7 +58,14 @@
     "aiLimit": "Daily AI limit reached on the free plan. Go Premium for unlimited use.",
     "aiLoading": "Preparing personal recommendations…",
     "aiCta": "Build My Route",
-    "allRoutes": "All routes"
+    "allRoutes": "All routes",
+    "personalRoute": "AI Personal Route",
+    "openOnMap": "Open on map",
+    "askAssistant": "Ask assistant",
+    "clearRoute": "Clear"
+  },
+  "common": {
+    "back": "Back"
   },
   "district": {
     "pickCategory": "Choose a category",
@@ -87,11 +113,6 @@
     "narrationLoading": "Preparing narration…",
     "narrationListen": "Listen",
     "narrationStop": "Stop"
-  },
-  "map": {
-    "openInMap": "Open on map",
-    "liveMap": "Live map",
-    "myLocation": "Show my location"
   },
   "route": {
     "planTitle": "Plan route",

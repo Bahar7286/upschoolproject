@@ -13,6 +13,7 @@ import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { formatApiError } from '../lib/api';
 import { googlePlaceDetailPath } from '../lib/routes';
+import { filterGoogleByDistrict } from '../utils/district-filter';
 import { listCities, listDistrictsByCity } from '../services/city-service';
 import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
 import { listPlaces } from '../services/place-service';
@@ -137,9 +138,9 @@ export default function DistrictPlacesPage(): ReactElement {
       fetchGooglePlacesNearby({
         lat: center!.lat,
         lng: center!.lng,
-        radius_m: 8000,
+        radius_m: 4000,
         category,
-      }).then((r) => r.places),
+      }).then((r) => filterGoogleByDistrict(r.places, district?.name_tr ?? '')),
     enabled: Boolean(center && category),
     staleTime: 10 * 60 * 1000,
     retry: false,

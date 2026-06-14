@@ -298,8 +298,9 @@ def get_trip_request_service(
 def get_ai_service(
     route_service: RouteService = Depends(get_route_service),
     stop_service: StopService = Depends(get_stop_service),
+    place_repo: PlaceRepository = Depends(get_place_repository),
 ) -> AIService:
-    return AIService(route_service=route_service, stop_service=stop_service)
+    return AIService(route_service=route_service, stop_service=stop_service, place_repository=place_repo)
 
 
 async def require_admin(

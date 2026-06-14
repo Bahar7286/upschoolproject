@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { CheckCircle2, CreditCard, Lock, Shield } from 'lucide-react';
 
+import { BackButton } from '../components/ui/back-button';
+
 import { formatApiError } from '../lib/api';
 import {
   confirmCheckout,
@@ -138,10 +140,8 @@ export default function CheckoutPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-lg space-y-6">
+      <BackButton />
       <header>
-        <Link className="text-sm font-semibold text-primary" to="/talepler">
-          ← Geri
-        </Link>
         <h1 className="mt-2 font-display text-3xl font-extrabold tracking-tight text-theme">Güvenli ödeme</h1>
         <p className="mt-1 text-sm text-theme-muted">{state.title}</p>
         <p className="mt-2 text-xs text-theme-muted">

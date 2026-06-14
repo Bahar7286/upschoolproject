@@ -14,7 +14,7 @@ export default function TermsPage(): ReactElement {
       <ul className="list-disc space-y-1 pl-5">
         <li>Şehir ve mekan keşfi, AI destekli rota önerileri, sesli anlatım</li>
         <li>Rehberler tarafından oluşturulan dijital rotaların satın alınması (demo veya Stripe)</li>
-        <li>Onaylı rehberlere gezi talebi ve teklif alma (B2B2C)</li>
+        <li>Onaylı rehberlere gezi talebi ve teklif alma</li>
       </ul>
       <h2 className="font-bold text-heritage-ink dark:text-stone-100">Kullanıcı yükümlülükleri</h2>
       <p>

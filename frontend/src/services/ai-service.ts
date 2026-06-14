@@ -129,6 +129,7 @@ export interface AssistantChatPayload {
   district?: string;
   interests?: string[];
   messages: AssistantMessage[];
+  preferred_language?: 'tr' | 'en' | 'de';
   location_lat?: number;
   location_lng?: number;
 }
@@ -136,6 +137,51 @@ export interface AssistantChatPayload {
 export interface AssistantChatResponse {
   reply: string;
   source: string;
+}
+
+export interface PersonalRouteStop {
+  order: number;
+  name: string;
+  lat: number;
+  lng: number;
+  category: string;
+  reason: string;
+  dwell_minutes: number;
+  place_id: number | null;
+  narration_snippet: string;
+}
+
+export interface PersonalRouteGeneratePayload {
+  city: string;
+  district?: string;
+  interests: string[];
+  duration_minutes: number;
+  budget: number;
+  preferred_language?: 'tr' | 'en' | 'de';
+  location_lat?: number;
+  location_lng?: number;
+  max_stops?: number;
+}
+
+export interface PersonalRouteGenerateResponse {
+  title: string;
+  summary: string;
+  city: string;
+  district: string;
+  total_minutes: number;
+  estimated_cost: number;
+  stops: PersonalRouteStop[];
+  source: string;
+}
+
+export async function generatePersonalRoute(
+  payload: PersonalRouteGeneratePayload,
+): Promise<PersonalRouteGenerateResponse> {
+  return requestJson<PersonalRouteGenerateResponse>('/ai/routes/generate', {
+    method: 'POST',
+    timeoutMs: ASSISTANT_REQUEST_TIMEOUT_MS,
+    body: JSON.stringify(payload),
+  });
 }
 
 export async function assistantChat(payload: AssistantChatPayload): Promise<AssistantChatResponse> {

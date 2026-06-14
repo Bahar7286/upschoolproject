@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 
 import { Button } from '../components/ui/button';
+import { BackButton } from '../components/ui/back-button';
 import { formatApiError } from '../lib/api';
 import { createPlan, deletePlan, listPlans, updatePlan } from '../services/plan-service';
 import { listRoutes } from '../services/route-service';
@@ -156,6 +157,7 @@ export default function PlannerPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-5xl space-y-6" aria-labelledby="planner-title">
+      <BackButton />
       <header>
         <h1
           className="inline-flex items-center gap-2 font-display text-3xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50"

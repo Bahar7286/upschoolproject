@@ -3,6 +3,8 @@ import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { BackButton } from '../components/ui/back-button';
+
 import { fetchNarrationAudio } from '../services/ai-service';
 import { langToSpeechCode, playAudioBase64, useSpeechSynthesis } from '../hooks/use-speech';
 import { loadOfflineRoutePackage, saveOfflineRoutePackage } from '../lib/offline-package';
@@ -97,6 +99,7 @@ export default function AudioGuidePage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-lg space-y-6" aria-labelledby="audio-title">
+      <BackButton />
       <header className="space-y-1">
         <h1 className="font-display text-3xl font-extrabold tracking-tight text-heritage-ink dark:text-stone-50" id="audio-title">
           Sesli rehberlik

@@ -11,6 +11,8 @@ from app.schemas.ai_schema import (
     GeofenceCheckResponse,
     NarrationAudioRequest,
     NarrationAudioResponse,
+    PersonalRouteGenerateRequest,
+    PersonalRouteGenerateResponse,
     StopNarrationRequest,
     StopNarrationResponse,
 )
@@ -31,6 +33,15 @@ async def recommend_with_ai(
     service: AIService = Depends(get_ai_service),
 ) -> list[AIRecommendationItem]:
     return await service.generate_recommendations(payload)
+
+
+@router.post('/routes/generate', response_model=PersonalRouteGenerateResponse)
+async def generate_personal_route(
+    payload: PersonalRouteGenerateRequest,
+    service: AIService = Depends(get_ai_service),
+) -> PersonalRouteGenerateResponse:
+    """AI ile kişisel gezi rotası — aday mekanlardan durak seçimi ve sıralama."""
+    return await service.generate_personal_route(payload)
 
 
 @router.post('/geofence-check', response_model=GeofenceCheckResponse)

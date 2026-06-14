@@ -41,6 +41,10 @@ def create_foreign_key_if_missing(
     remote_cols: list[str],
     ondelete: str | None = None,
 ) -> None:
+    bind = op.get_bind()
+    if bind.dialect.name == 'sqlite':
+        # SQLite cannot ALTER constraints; test DBs rely on SQLAlchemy metadata instead.
+        return
     if has_foreign_key(source_table, name):
         return
     op.create_foreign_key(name, source_table, referent_table, local_cols, remote_cols, ondelete=ondelete)

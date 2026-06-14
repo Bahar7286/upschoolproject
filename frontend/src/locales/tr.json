@@ -3,7 +3,10 @@
     "login": "Giriş",
     "register": "Kayıt",
     "logout": "Çıkış",
-    "traveler": "Gezgin"
+    "traveler": "Gezgin",
+    "demoTourist": "Demo turist",
+    "demoGuide": "Demo rehber",
+    "demoAdmin": "Demo admin"
   },
   "nav": {
     "discover": "Keşfet",
@@ -39,7 +42,30 @@
     "aiLimit": "Ücretsiz planda günlük AI öneri limiti doldu. Premium ile sınırsız kullanabilirsin.",
     "aiLoading": "Kişisel öneriler hazırlanıyor…",
     "aiCta": "Kişisel Rotanı Oluştur",
-    "allRoutes": "Tüm rotalar"
+    "allRoutes": "Tüm rotalar",
+    "personalRoute": "AI Kişisel Rota",
+    "openOnMap": "Haritada aç",
+    "askAssistant": "Asistana sor",
+    "clearRoute": "Temizle"
+  },
+  "common": {
+    "back": "Geri"
+  },
+  "map": {
+    "resetRoute": "Rotayı sıfırla",
+    "liveMap": "Canlı harita",
+    "openInMap": "Haritada aç",
+    "myLocation": "Konumumu göster"
+  },
+  "assistant": {
+    "title": "AI Asistan",
+    "subtitle": "Şehir/ilçe ve ilgi alanına göre öneri + mini plan",
+    "city": "Şehir",
+    "district": "İlçe (opsiyonel)",
+    "districtPlaceholder": "Örn. Eminönü",
+    "placeholder": "Soru sor…",
+    "send": "Gönder",
+    "typing": "Yazıyor…"
   },
   "district": {
     "pickCategory": "Kategori seçin",
@@ -87,11 +113,6 @@
     "narrationLoading": "Anlatım hazırlanıyor…",
     "narrationListen": "Dinle",
     "narrationStop": "Durdur"
-  },
-  "map": {
-    "openInMap": "Haritada aç",
-    "liveMap": "Canlı harita",
-    "myLocation": "Konumumu göster"
   },
   "route": {
     "planTitle": "Rota planla",

@@ -13,6 +13,7 @@ import { inputErrorClass, validateEmail, validatePassword, type FieldErrors } fr
 import { fetchCurrentUser, loginUser } from '../services/auth-service';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import { DEMO_ACCOUNTS } from '../config/contact';
 
 export default function LoginPage(): ReactElement {
   const navigate = useNavigate();
@@ -105,13 +106,25 @@ export default function LoginPage(): ReactElement {
             </div>
           ) : null}
 
-          <div className="mb-5 rounded-xl border border-stone-900/10 bg-stone-50/90 px-3 py-2.5 text-xs leading-snug text-stone-700 dark:border-white/10 dark:bg-zinc-950/80 dark:text-stone-300">
-            <span className="mr-1 inline-flex h-5 w-5 align-middle text-stone-500 dark:text-stone-400">
-              <Lock className="h-5 w-5" aria-hidden="true" strokeWidth={2} />
-            </span>
-            <strong className="font-semibold text-stone-800 dark:text-stone-200">Demo:</strong>{' '}
-            <code className="rounded bg-white/80 px-1 font-mono text-[11px] dark:bg-zinc-900">tourist@example.com</code> · şifre{' '}
-            <code className="rounded bg-white/80 px-1 font-mono text-[11px] dark:bg-zinc-900">demo123</code>
+          <div className="mb-5 grid gap-2">
+            <p className="text-xs font-bold uppercase tracking-wide text-theme-muted">Demo hesaplar</p>
+            {DEMO_ACCOUNTS.map((acc) => (
+              <button
+                key={acc.email}
+                type="button"
+                className="tap-scale rounded-xl border border-stone-900/10 bg-stone-50/90 px-3 py-2.5 text-left text-xs dark:border-white/10 dark:bg-zinc-950/80"
+                onClick={() => {
+                  setEmail(acc.email);
+                  setPassword(acc.password);
+                }}
+              >
+                <strong className="text-theme">{acc.role}</strong>
+                <span className="mx-1 text-theme-muted">·</span>
+                <code className="font-mono">{acc.email}</code>
+                <span className="mx-1 text-theme-muted">/</span>
+                <code className="font-mono">{acc.password}</code>
+              </button>
+            ))}
           </div>
 
           <form className="flex flex-col gap-4" onSubmit={handleSubmit} noValidate>

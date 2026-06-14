@@ -21,7 +21,9 @@ import { useOnboardingStore } from '../stores/onboarding-store';
 import { VerifiedGuideBadge } from '../components/guide/verified-guide-badge';
 import { RouteQualityPanel } from '../components/routes/route-quality-panel';
 import { RouteNotesPanel, RouteReviewsPanel } from '../components/routes/route-social-panels';
+import { BackButton } from '../components/ui/back-button';
 import { Breadcrumbs } from '../components/ui/breadcrumbs';
+import { PlaceNarrationPanel } from '../components/explore/place-narration-panel';
 import { ContentReportForm } from '../components/routes/content-report-form';
 import { JsonLd } from '../components/seo/json-ld';
 import { PageMeta } from '../components/seo/page-meta';
@@ -227,6 +229,7 @@ export default function RouteDetailPage(): ReactElement {
 
   return (
     <section className="space-y-6">
+      <BackButton />
       <PageMeta
         title={`${route.title} — ${route.city} Yürüyüş Rotası`}
         description={metaDesc}
@@ -417,6 +420,9 @@ export default function RouteDetailPage(): ReactElement {
                       <p className="text-xs text-stone-500">
                         {stop.latitude.toFixed(5)}, {stop.longitude.toFixed(5)}
                       </p>
+                    ) : null}
+                    {!locked ? (
+                      <PlaceNarrationPanel stopTitle={stop.title} description={stop.description} className="mt-2" />
                     ) : null}
                     {!locked ? (
                       <div className="space-y-2">

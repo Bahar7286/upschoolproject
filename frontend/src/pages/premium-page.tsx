@@ -3,6 +3,8 @@ import type { ReactElement } from 'react';
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 
+import { BackButton } from '../components/ui/back-button';
+
 import { formatApiError } from '../lib/api';
 import {
   fetchPremiumRequestStatus,
@@ -65,6 +67,7 @@ export default function PremiumPage(): ReactElement {
 
   return (
     <section className="mx-auto max-w-2xl space-y-5 text-center" aria-labelledby="prem-title">
+      <BackButton className="text-left" />
       <header className="space-y-2">
         <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-3xl bg-amber-500/15 text-amber-700 dark:text-amber-300">
           <Crown className="h-7 w-7" aria-hidden="true" />

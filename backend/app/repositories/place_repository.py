@@ -118,7 +118,8 @@ class PlaceRepository(BaseRepository):
     async def count_by_category(self, city: str | None = None) -> dict[str, int]:
         stmt = select(Place.category, func.count(Place.place_id))
         if city:
-            stmt = stmt.where(func.lower(Place.city) == city.lower())
+            opts = {v.lower() for v in _variants(city)}
+            stmt = stmt.where(func.lower(Place.city).in_(opts))
         stmt = stmt.group_by(Place.category)
         result = await self.db.execute(stmt)
         return {row[0]: int(row[1]) for row in result.all()}

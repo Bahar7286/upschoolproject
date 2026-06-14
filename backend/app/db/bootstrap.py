@@ -4,6 +4,7 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.security import hash_password
+from app.data.istanbul_district_coords import ISTANBUL_DISTRICT_COORDS
 from app.data.istanbul_places import ISTANBUL_PLACES
 from app.data.tr_cities import TR_CITIES
 from app.data.tr_districts import TR_DISTRICTS
@@ -281,6 +282,21 @@ async def ensure_districts_seeded(session: AsyncSession) -> None:
             patched = True
     if patched:
         await session.commit()
+
+    # İstanbul ilçeleri için gerçek merkez koordinatları
+    istanbul_city = await session.execute(select(City.city_id).where(City.slug == 'istanbul').limit(1))
+    istanbul_id = istanbul_city.scalar_one_or_none()
+    if istanbul_id:
+        dist_rows = await session.execute(select(District).where(District.city_id == istanbul_id))
+        coord_patched = False
+        for d in dist_rows.scalars().all():
+            slug = (d.slug or '').lower()
+            coords = ISTANBUL_DISTRICT_COORDS.get(slug)
+            if coords and (d.center_lat != coords[0] or d.center_lng != coords[1]):
+                d.center_lat, d.center_lng = coords
+                coord_patched = True
+        if coord_patched:
+            await session.commit()
 
 
 async def ensure_images_seeded(session: AsyncSession) -> None:

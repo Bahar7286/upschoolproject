@@ -2,9 +2,11 @@ import { ArrowLeft } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import { useI18n } from '../../lib/i18n';
+
 export function BackButton({
   to,
-  label = 'Geri',
+  label,
   className = '',
 }: {
   to?: string;
@@ -12,6 +14,8 @@ export function BackButton({
   className?: string;
 }): ReactElement {
   const navigate = useNavigate();
+  const { t } = useI18n();
+  const text = label ?? t('common.back', 'Geri');
 
   return (
     <button
@@ -23,7 +27,7 @@ export function BackButton({
       }}
     >
       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-      {label}
+      {text}
     </button>
   );
 }

@@ -179,7 +179,7 @@ export function AppLayout(): ReactElement {
 
       <main className="app-main mx-auto w-full min-w-0 max-w-7xl flex-1 min-h-0 overflow-y-auto overscroll-y-contain px-3 py-5 pb-[calc(4.5rem+env(safe-area-inset-bottom))] sm:px-4 sm:py-6 md:px-8 md:pb-10 lg:pb-10">
         <OnboardingGate>
-          <div className="animate-fade-in-up">
+          <div className="animate-fade-in-up flex min-h-0 flex-1 flex-col">
             <Outlet />
           </div>
         </OnboardingGate>

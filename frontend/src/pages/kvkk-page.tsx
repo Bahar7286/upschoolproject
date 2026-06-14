@@ -1,14 +1,15 @@
 import type { ReactElement } from 'react';
 
 import { LegalPageShell } from '../components/legal/legal-page-shell';
+import { SUPPORT_EMAIL } from '../config/contact';
 
 export default function KvkkPage(): ReactElement {
   return (
     <LegalPageShell title="KVKK Aydınlatma Metni">
       <p>
         <strong>Veri sorumlusu:</strong> Historial-GO (erken erişim turizm platformu). İletişim:{' '}
-        <a className="font-semibold text-primary underline" href="mailto:destek@historial-go.example">
-          destek@historial-go.example
+        <a className="font-semibold text-primary underline" href={`mailto:${SUPPORT_EMAIL}`}>
+          {SUPPORT_EMAIL}
         </a>
       </p>
       <h2 className="font-bold text-heritage-ink dark:text-stone-100">İşlenen veriler</h2>

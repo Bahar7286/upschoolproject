@@ -3,8 +3,7 @@ import { Link } from 'react-router-dom';
 import { Mail, MessageSquareWarning } from 'lucide-react';
 
 import { LegalPageShell } from '../components/legal/legal-page-shell';
-
-const SUPPORT_EMAIL = 'destek@historial-go.example';
+import { SUPPORT_EMAIL } from '../config/contact';
 
 export default function ContactPage(): ReactElement {
   return (

@@ -1,7 +1,6 @@
-import { renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-import * as aiService from '../services/ai-service';
 import { useGeofenceWatch } from './use-geofence-watch';
 
 describe('useGeofenceWatch', () => {
@@ -10,12 +9,6 @@ describe('useGeofenceWatch', () => {
 
   beforeEach(() => {
     positionCallback = null;
-    vi.spyOn(aiService, 'checkGeofence').mockResolvedValue({
-      triggered: true,
-      stop_id: 10,
-      message: 'Tetiklendi',
-      distance_m: 5,
-    });
     vi.stubGlobal(
       'navigator',
       {
@@ -34,7 +27,7 @@ describe('useGeofenceWatch', () => {
     vi.restoreAllMocks();
   });
 
-  it('FE-06 calls onTriggered when geofence fires', async () => {
+  it('FE-06 calls onTriggered when user is within geofence radius', async () => {
     const onTriggered = vi.fn();
     const stops = [
       {
@@ -49,28 +42,32 @@ describe('useGeofenceWatch', () => {
       },
     ];
 
-    const { unmount } = renderHook(() => useGeofenceWatch(1, stops, onTriggered));
+    const { unmount, result } = renderHook(() => useGeofenceWatch(1, stops, onTriggered));
 
     expect(positionCallback).toBeTruthy();
-    positionCallback?.({
-      coords: { latitude: 41.0, longitude: 28.9, accuracy: 1, altitude: null, altitudeAccuracy: null, heading: null, speed: null },
-      timestamp: Date.now(),
-    } as GeolocationPosition);
+    expect(result.current.watching).toBe(true);
 
-    await waitFor(
-      () => {
-        expect(aiService.checkGeofence).toHaveBeenCalled();
-      },
-      { timeout: 3000 },
-    );
+    await act(async () => {
+      positionCallback?.({
+        coords: {
+          latitude: 41.0,
+          longitude: 28.9,
+          accuracy: 1,
+          altitude: null,
+          altitudeAccuracy: null,
+          heading: null,
+          speed: null,
+        },
+        timestamp: Date.now(),
+      } as GeolocationPosition);
+    });
 
-    await waitFor(
-      () => {
-        expect(onTriggered).toHaveBeenCalledWith(0, 'Tetiklendi');
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(onTriggered).toHaveBeenCalledWith(0, 'Sesli rehber tetiklendi: Durak');
+    });
 
+    expect(result.current.geofenceMessage).toBe('Sesli rehber tetiklendi: Durak');
     unmount();
+    expect(clearWatch).toHaveBeenCalledWith(1);
   });
 });

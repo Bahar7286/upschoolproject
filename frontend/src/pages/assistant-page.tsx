@@ -22,10 +22,13 @@ import {
 import { type UserFacingError } from '../lib/user-errors';
 import { useAuthStore } from '../stores/auth-store';
 import { useOnboardingStore } from '../stores/onboarding-store';
+import { useI18n } from '../lib/i18n';
 
 export default function AssistantPage(): ReactElement {
   const user = useAuthStore((s) => s.user);
   const interests = useOnboardingStore((s) => s.interests);
+  const preferredLanguage = useOnboardingStore((s) => s.preferredLanguage);
+  const { t } = useI18n();
   const [searchParams] = useSearchParams();
   const effectiveInterests = useMemo(
     () => (interests.length ? interests : user?.interests?.length ? user.interests : ['history', 'art', 'food']),
@@ -106,6 +109,7 @@ export default function AssistantPage(): ReactElement {
           district,
           interests: effectiveInterests,
           messages: apiMessages,
+          preferred_language: preferredLanguage,
           location_lat: coords?.lat,
           location_lng: coords?.lng,
         });
@@ -125,12 +129,12 @@ export default function AssistantPage(): ReactElement {
       className="mx-auto flex min-h-0 w-full max-w-3xl flex-1 flex-col gap-3 pb-2"
       aria-labelledby="asst-title"
     >
-      <BackButton to="/discover" />
+      <BackButton />
       <header className="shrink-0 space-y-1">
         <h1 className="font-display text-2xl font-extrabold tracking-tight text-theme sm:text-3xl" id="asst-title">
-          AI Asistan
+          {t('assistant.title', 'AI Asistan')}
         </h1>
-        <p className="text-sm text-theme-muted">Şehir/ilçe ve ilgi alanına göre öneri + mini plan</p>
+        <p className="text-sm text-theme-muted">{t('assistant.subtitle', 'Şehir/ilçe ve ilgi alanına göre öneri + mini plan')}</p>
       </header>
 
       {import.meta.env.DEV ? (
@@ -199,7 +203,7 @@ export default function AssistantPage(): ReactElement {
         </div>
       </div>
 
-      <div className="theme-card flex min-h-[min(52dvh,480px)] flex-1 flex-col overflow-hidden rounded-2xl p-3 sm:min-h-[min(58dvh,560px)] sm:p-4">
+      <div className="theme-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl p-3 sm:p-4">
         <div className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain pr-1">
           {msgs.map((m, idx) => (
             <div key={idx} className={m.role === 'user' ? 'flex justify-end' : 'flex justify-start'}>
@@ -208,7 +212,7 @@ export default function AssistantPage(): ReactElement {
                   'max-w-[92%] rounded-2xl px-4 py-3 sm:max-w-[85%]',
                   m.role === 'user'
                     ? 'bg-primary text-sm leading-relaxed text-white'
-                    : 'bg-stone-100 dark:bg-zinc-800',
+                    : 'theme-card text-sm leading-relaxed',
                 ].join(' ')}
               >
                 {m.role === 'user' ? (
@@ -221,7 +225,7 @@ export default function AssistantPage(): ReactElement {
           ))}
           {sendLoading ? (
             <div className="flex justify-start">
-              <div className="inline-flex items-center gap-2 rounded-2xl bg-stone-100 px-4 py-3 text-sm text-stone-700 dark:bg-zinc-800 dark:text-stone-200">
+              <div className="inline-flex items-center gap-2 rounded-2xl theme-card px-4 py-3 text-sm text-theme-muted">
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                 Yazıyor…
               </div>

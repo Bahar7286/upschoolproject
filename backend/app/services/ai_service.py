@@ -15,6 +15,9 @@ from app.schemas.ai_schema import (
     GeofenceCheckResponse,
     NarrationAudioRequest,
     NarrationAudioResponse,
+    PersonalRouteGenerateRequest,
+    PersonalRouteGenerateResponse,
+    PersonalRouteStop,
     StopNarrationRequest,
     StopNarrationResponse,
 )
@@ -33,9 +36,11 @@ from app.services.ai_prompts import (
     SYSTEM_ASSISTANT,
     SYSTEM_ASSISTANT_VENUE,
     SYSTEM_NARRATION,
+    SYSTEM_PERSONAL_ROUTE,
     SYSTEM_ROUTE_RECOMMEND,
     build_assistant_user,
     build_narration_user,
+    build_personal_route_user,
     build_route_recommend_user,
     format_places_detail,
     format_venue_reply,
@@ -44,8 +49,10 @@ from app.services.llm_service import LLMServiceError, llm_service
 from app.services.tts_service import synthesize_mp3_base64
 from app.services.wikipedia_service import fetch_wikipedia_summary
 from app.schemas.ai_schema import NarrationSource
+from app.repositories.place_repository import PlaceRepository
 from app.services.route_service import RouteService
 from app.services.stop_service import StopService
+from app.utils.district_filter import filter_by_district
 from app.utils.geolocation import calculate_distance_meters, is_user_near_location
 
 logger = logging.getLogger(__name__)
@@ -80,6 +87,8 @@ _LLM_RECOMMEND_MAX_TOKENS = 700
 _LLM_ASSISTANT_MAX_TOKENS = 500
 _LLM_ASSISTANT_TIMEOUT_SEC = 28.0
 _LLM_NARRATION_MAX_TOKENS = 1400
+_LLM_PERSONAL_ROUTE_TIMEOUT_SEC = 45.0
+_LLM_PERSONAL_ROUTE_MAX_TOKENS = 1200
 
 
 def _prefilter_routes_for_llm(routes: list, interests: list[str], limit: int = _LLM_CATALOG_LIMIT) -> list:
@@ -109,9 +118,15 @@ _REASON_TEMPLATES = {
 
 
 class AIService:
-    def __init__(self, route_service: RouteService, stop_service: StopService | None = None) -> None:
+    def __init__(
+        self,
+        route_service: RouteService,
+        stop_service: StopService | None = None,
+        place_repository: PlaceRepository | None = None,
+    ) -> None:
         self.route_service = route_service
         self.stop_service = stop_service
+        self.place_repository = place_repository
 
     @staticmethod
     def status() -> AIStatusResponse:
@@ -268,6 +283,233 @@ class AIService:
         recommendations.sort(key=lambda item: item.score, reverse=True)
         return recommendations[: payload.max_results]
 
+    async def generate_personal_route(
+        self, payload: PersonalRouteGenerateRequest
+    ) -> PersonalRouteGenerateResponse:
+        lat, lng = self._resolve_generate_coords(payload)
+        candidates = await self._collect_route_candidates(payload, lat, lng)
+        if not candidates:
+            area = f'{payload.district}, {payload.city}' if payload.district else payload.city
+            return PersonalRouteGenerateResponse(
+                title=f'{area} gezi planı',
+                summary=(
+                    'Bu bölge için henüz yeterli mekan verisi yok. '
+                    'İller sekmesinden başka bir ilçe deneyebilir veya Harita sekmesini kullanabilirsin.'
+                ),
+                city=payload.city,
+                district=payload.district,
+                total_minutes=0,
+                estimated_cost=0,
+                stops=[],
+                source='rules',
+            )
+
+        if settings.llm_enabled:
+            try:
+                result = await asyncio.wait_for(
+                    self._llm_personal_route(payload, candidates),
+                    timeout=_LLM_PERSONAL_ROUTE_TIMEOUT_SEC,
+                )
+                if result.stops:
+                    return result
+            except (asyncio.TimeoutError, LLMServiceError) as exc:
+                logger.warning('Personal route LLM failed, rules fallback: %s', exc)
+
+        return self._rule_personal_route(payload, candidates)
+
+    async def _collect_route_candidates(
+        self, payload: PersonalRouteGenerateRequest, lat: float, lng: float
+    ) -> list[dict[str, object]]:
+        seen: set[str] = set()
+        out: list[dict[str, object]] = []
+
+        def add(
+            cid: str,
+            name: str,
+            plat: float,
+            plng: float,
+            category: str,
+            desc: str = '',
+            place_id: int | None = None,
+        ) -> None:
+            key = cid.lower()
+            if key in seen:
+                return
+            seen.add(key)
+            out.append(
+                {
+                    'candidate_id': cid,
+                    'name': name,
+                    'lat': plat,
+                    'lng': plng,
+                    'category': category,
+                    'description': (desc or '')[:200],
+                    'place_id': place_id,
+                }
+            )
+
+        if self.place_repository:
+            db_places = await self.place_repository.list_places(
+                city=payload.city,
+                district=payload.district or None,
+                limit=80,
+            )
+            for p in db_places:
+                add(f'db-{p.place_id}', p.name, p.latitude, p.longitude, p.category, p.description, p.place_id)
+
+        if settings.google_places_enabled:
+            cat = _interest_to_category(payload.interests)
+            radius = 3500 if payload.district.strip() else 8000
+            try:
+                google_places, _ = await google_places_service.search_nearby(
+                    lat=lat, lng=lng, radius_m=radius, category=cat or 'historical'
+                )
+                if payload.district.strip():
+                    google_places = filter_by_district(google_places, payload.district)
+                for gp in google_places[:25]:
+                    gid = getattr(gp, 'place_id', '') or getattr(gp, 'name', '')
+                    add(
+                        f'g-{gid}',
+                        getattr(gp, 'name', ''),
+                        float(getattr(gp, 'lat', lat)),
+                        float(getattr(gp, 'lng', lng)),
+                        cat or 'historical',
+                        getattr(gp, 'address', ''),
+                    )
+            except Exception as exc:
+                logger.debug('Personal route Google lookup: %s', exc)
+
+        return out[:40]
+
+    async def _llm_personal_route(
+        self, payload: PersonalRouteGenerateRequest, candidates: list[dict[str, object]]
+    ) -> PersonalRouteGenerateResponse:
+        user = build_personal_route_user(
+            city=payload.city,
+            district=payload.district,
+            interests=payload.interests,
+            budget=payload.budget,
+            duration_minutes=payload.duration_minutes,
+            max_stops=payload.max_stops,
+            language=payload.preferred_language,
+            candidates=candidates,
+        )
+        data = await llm_service.complete_json(
+            system=SYSTEM_PERSONAL_ROUTE,
+            user=user,
+            temperature=0.25,
+            max_tokens=_LLM_PERSONAL_ROUTE_MAX_TOKENS,
+        )
+        by_id = {str(c['candidate_id']): c for c in candidates}
+        raw_stops = data.get('stops', []) if isinstance(data, dict) else []
+        stops: list[PersonalRouteStop] = []
+        total_dwell = 0
+        for row in raw_stops[: payload.max_stops]:
+            if not isinstance(row, dict):
+                continue
+            cid = str(row.get('candidate_id', ''))
+            cand = by_id.get(cid)
+            if not cand:
+                continue
+            dwell = min(120, max(15, int(row.get('dwell_minutes', 30))))
+            if total_dwell + dwell > payload.duration_minutes + 30:
+                break
+            total_dwell += dwell
+            stops.append(
+                PersonalRouteStop(
+                    order=len(stops) + 1,
+                    name=str(cand['name']),
+                    lat=float(cand['lat']),
+                    lng=float(cand['lng']),
+                    category=str(cand.get('category', '')),
+                    reason=str(row.get('reason', ''))[:500],
+                    dwell_minutes=dwell,
+                    place_id=cand.get('place_id'),
+                    narration_snippet=str(row.get('narration_snippet', ''))[:600],
+                )
+            )
+        area = f'{payload.district}, {payload.city}' if payload.district else payload.city
+        return PersonalRouteGenerateResponse(
+            title=str(data.get('title', f'{area} kişisel rotası'))[:180],
+            summary=str(data.get('summary', ''))[:1200],
+            city=payload.city,
+            district=payload.district,
+            total_minutes=int(data.get('total_minutes', total_dwell)) or total_dwell,
+            estimated_cost=min(float(payload.budget), float(data.get('estimated_cost', payload.budget * 0.6))),
+            stops=stops,
+            source='llm',
+        )
+
+    def _rule_personal_route(
+        self, payload: PersonalRouteGenerateRequest, candidates: list[dict[str, object]]
+    ) -> PersonalRouteGenerateResponse:
+        interest_set = {i.lower() for i in payload.interests}
+        scored: list[tuple[float, dict[str, object]]] = []
+        for c in candidates:
+            cat = str(c.get('category', '')).lower()
+            tags = str(c.get('description', '')).lower()
+            score = 0.0
+            for interest in interest_set:
+                if interest in cat or interest in tags:
+                    score += 1.0
+            if 'food' in interest_set or 'gastronomy' in interest_set:
+                if cat == 'restaurant':
+                    score += 2.0
+            if 'history' in interest_set and cat in ('historical', 'museum', 'mosque', 'palace'):
+                score += 1.5
+            scored.append((score, c))
+        scored.sort(key=lambda x: x[0], reverse=True)
+        dwell_each = max(20, payload.duration_minutes // max(payload.max_stops, 2))
+        stops: list[PersonalRouteStop] = []
+        for _, cand in scored[: payload.max_stops]:
+            stops.append(
+                PersonalRouteStop(
+                    order=len(stops) + 1,
+                    name=str(cand['name']),
+                    lat=float(cand['lat']),
+                    lng=float(cand['lng']),
+                    category=str(cand.get('category', '')),
+                    reason='İlgi alanlarına uygun durak',
+                    dwell_minutes=dwell_each,
+                    place_id=cand.get('place_id'),
+                    narration_snippet=str(cand.get('description', ''))[:300],
+                )
+            )
+        area = f'{payload.district}, {payload.city}' if payload.district else payload.city
+        lang = payload.preferred_language
+        if lang == 'en':
+            summary = f'A {payload.duration_minutes}-minute walk covering {len(stops)} stops in {area}.'
+            title = f'Personal route — {area}'
+        else:
+            summary = (
+                f'{area} için {len(stops)} duraklı, yaklaşık {payload.duration_minutes} dakikalık '
+                f'kişisel gezi planı.'
+            )
+            title = f'Kişisel rota — {area}'
+        return PersonalRouteGenerateResponse(
+            title=title,
+            summary=summary,
+            city=payload.city,
+            district=payload.district,
+            total_minutes=dwell_each * len(stops),
+            estimated_cost=round(min(payload.budget, len(stops) * 25.0), 2),
+            stops=stops,
+            source='rules',
+        )
+
+    @staticmethod
+    def _resolve_generate_coords(payload: PersonalRouteGenerateRequest) -> tuple[float, float]:
+        if payload.location_lat is not None and payload.location_lng is not None:
+            return float(payload.location_lat), float(payload.location_lng)
+        dc = district_coords(payload.district)
+        if dc:
+            return dc
+        key = payload.city.strip().lower()
+        for name, coords in _CITY_POI.items():
+            if name.lower() in key or key in name.lower():
+                return coords
+        return 41.0082, 28.9784
+
     async def check_geofence(self, payload: GeofenceCheckRequest) -> GeofenceCheckResponse:
         if not self.stop_service:
             return GeofenceCheckResponse(
@@ -382,7 +624,12 @@ class AIService:
 
         if intent in ('specific_venue', 'food') and settings.google_places_enabled:
             venue_reply = await self._assistant_food_reply(
-                lat=lat, lng=lng, where=where, last_user=last_user, intent=intent
+                lat=lat,
+                lng=lng,
+                where=where,
+                last_user=last_user,
+                intent=intent,
+                locale=payload.preferred_language,
             )
             if venue_reply:
                 return venue_reply
@@ -463,6 +710,7 @@ class AIService:
         where: str,
         last_user: str,
         intent: str,
+        locale: str = 'tr',
     ) -> AssistantChatResponse | None:
         query = f'restoran {where}'
         lower = last_user.lower()
@@ -482,17 +730,21 @@ class AIService:
         if not places:
             try:
                 places, _ = await google_places_service.search_nearby(
-                    lat=lat, lng=lng, radius_m=3000, category='restaurant', client_key='assistant'
+                    lat=lat, lng=lng, radius_m=2500, category='restaurant', client_key='assistant'
                 )
             except Exception as exc:
                 logger.debug('Assistant nearby food: %s', exc)
+
+        area_district = where.split(',')[0].strip() if ',' in where else ''
+        if area_district:
+            places = filter_by_district(places, area_district)
 
         if not places:
             return None
 
         if intent == 'specific_venue' or is_food_query(last_user):
             return AssistantChatResponse(
-                reply=format_venue_reply(places, where),
+                reply=format_venue_reply(places, where, locale=locale),
                 source='places',
             )
         return None

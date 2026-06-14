@@ -94,6 +94,7 @@ class AssistantChatRequest(BaseModel):
     district: str = Field(default='', max_length=120)
     interests: list[str] = Field(default_factory=list, max_length=12)
     messages: list[AssistantMessage] = Field(default_factory=list, max_length=20)
+    preferred_language: str = Field(default='tr', pattern='^(tr|en|de)$')
     location_lat: float | None = Field(default=None, ge=-90, le=90)
     location_lng: float | None = Field(default=None, ge=-180, le=180)
 
@@ -101,3 +102,40 @@ class AssistantChatRequest(BaseModel):
 class AssistantChatResponse(BaseModel):
     reply: str
     source: str = 'rules'
+
+
+class PersonalRouteStop(BaseModel):
+    order: int = Field(ge=1)
+    name: str = Field(min_length=1, max_length=200)
+    lat: float = Field(ge=-90, le=90)
+    lng: float = Field(ge=-180, le=180)
+    category: str = Field(default='', max_length=40)
+    reason: str = Field(default='', max_length=500)
+    dwell_minutes: int = Field(default=30, ge=5, le=240)
+    place_id: int | None = None
+    narration_snippet: str = Field(default='', max_length=600)
+
+
+class PersonalRouteGenerateRequest(BaseModel):
+    model_config = ConfigDict(str_strip_whitespace=True)
+
+    city: str = Field(default='Istanbul', max_length=120)
+    district: str = Field(default='', max_length=120)
+    interests: list[str] = Field(default_factory=list, max_length=12)
+    duration_minutes: int = Field(default=120, ge=30, le=720)
+    budget: float = Field(default=150.0, ge=0)
+    preferred_language: str = Field(default='tr', pattern='^(tr|en|de)$')
+    location_lat: float | None = Field(default=None, ge=-90, le=90)
+    location_lng: float | None = Field(default=None, ge=-180, le=180)
+    max_stops: int = Field(default=6, ge=2, le=12)
+
+
+class PersonalRouteGenerateResponse(BaseModel):
+    title: str
+    summary: str
+    city: str
+    district: str = ''
+    total_minutes: int
+    estimated_cost: float
+    stops: list[PersonalRouteStop]
+    source: str = Field(default='rules', description='llm | rules | hybrid')

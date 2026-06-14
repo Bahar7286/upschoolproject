@@ -105,26 +105,36 @@ def build_assistant_user(
     )
 
 
-def format_venue_reply(places: list[Any], where: str) -> str:
+def format_venue_reply(places: list[Any], where: str, *, locale: str = 'tr') -> str:
     """Google Places sonuçlarından doğrudan yanıt — LLM halüsinasyonu yok."""
     if not places:
+        if locale == 'en':
+            return (
+                f'No registered restaurants found for {where}. '
+                'Try the Map tab with the Food filter for live venues.'
+            )
         return (
             f'{where} için şu an kayıtlı restoran bulamadım. '
             'Harita sekmesinden "Yemek" filtresiyle canlı mekanlara bakabilirsin.'
         )
-    lines = [f'**{where}** bölgesinde önerdiğim lokantalar:\n']
+    if locale == 'en':
+        lines = [f'Restaurants I recommend in **{where}**:\n']
+        footer = '\nSee **Map → Food** in the app for details.'
+    else:
+        lines = [f'**{where}** bölgesinde önerdiğim lokantalar:\n']
+        footer = '\nDetay için uygulamada **Harita → Yemek** filtresine bakabilirsin.'
     for i, p in enumerate(places[:5], 1):
         name = getattr(p, 'name', '')
         addr = getattr(p, 'address', '') or ''
         rating = getattr(p, 'rating', None)
         count = getattr(p, 'user_rating_count', None)
         stars = f' ⭐ {rating}' if rating else ''
-        reviews = f' ({count} yorum)' if count else ''
+        reviews = f' ({count} reviews)' if count and locale == 'en' else (f' ({count} yorum)' if count else '')
         lines.append(f'{i}. **{name}**{stars}{reviews}')
         if addr:
             lines.append(f'   📍 {addr}')
-    lines.append('\nDetay için uygulamada **Harita → Yemek** filtresine bakabilirsin.')
-    return '\n'.join(lines)
+    lines.append(footer)
+    return '\n\n'.join(lines)
 
 
 # --- Sesli anlatım ---
@@ -133,8 +143,9 @@ SYSTEM_NARRATION = """Sen Historial-GO tarihî sesli rehbersin.
 
 KURALLAR:
 - Doğru tarih/kültür bilgisi ver; emin değilsen genel ifade kullan, uydurma tarih/sayı yazma.
-- Her istenen dil için 70–110 kelime; akıcı, dinlenebilir, rehber tonu.
-- Mekan adını ve 1 pratik ipucunu (ziyaret süresi veya dikkat) mutlaka ekle.
+- Her istenen dil için 150–250 kelime; akıcı, dinlenebilir, rehber tonu.
+- Yapı: kısa giriş → tarih/kültür → pratik ipucu (ziyaret süresi, dikkat) → kapanış.
+- Mekan adını mutlaka söyle.
 
 ÇIKTI: Sadece geçerli JSON:
 {"scripts":{"tr":"...","en":"...","de":"..."}}
@@ -144,3 +155,37 @@ Yalnızca istenen dil kodları için anahtar doldur."""
 def build_narration_user(*, stop_title: str, description: str, languages: list[str]) -> str:
     ctx = (description or 'Genel tarihî bilgi')[:1200]
     return f'mekan={stop_title}; baglam={ctx}; diller={languages}'
+
+
+# --- Kişisel rota üretimi ---
+
+SYSTEM_PERSONAL_ROUTE = """Sen Historial-GO kişisel gezi planlayıcısısın (Türkiye kültür turizmi).
+
+KURALLAR:
+- YALNIZCA aday_mekanlar listesindeki candidate_id değerlerinden durak seç; listede olmayan mekan uydurma.
+- Kullanıcının il/ilçe sınırına uy; farklı semt/ilçeden mekan ekleme.
+- Süre ve bütçe sınırlarına uy; toplam dwell_minutes <= hedef_dk.
+- Durakları mantıklı yürüyüş sırasına koy.
+- reason ve narration_snippet: seçilen dilde, kısa ve net.
+
+ÇIKTI: Sadece geçerli JSON:
+{"title":str,"summary":str,"total_minutes":int,"estimated_cost":float,"stops":[{"candidate_id":str,"order":int,"dwell_minutes":int,"reason":str,"narration_snippet":str}]}"""
+
+
+def build_personal_route_user(
+    *,
+    city: str,
+    district: str,
+    interests: list[str],
+    budget: float,
+    duration_minutes: int,
+    max_stops: int,
+    language: str,
+    candidates: list[dict[str, Any]],
+) -> str:
+    compact = json.dumps(candidates, ensure_ascii=False, separators=(',', ':'))
+    area = f'{district}, {city}' if district.strip() else city
+    return (
+        f'dil={language}; bolge={area}; ilgi={interests}; butce_try={budget}; '
+        f'hedef_dk={duration_minutes}; max_durak={max_stops}; aday_mekanlar={compact}'
+    )

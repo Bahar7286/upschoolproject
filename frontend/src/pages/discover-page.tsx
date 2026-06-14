@@ -2,7 +2,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { Clock, MapPin, Sparkles, Star } from 'lucide-react';
 import type { ReactElement } from 'react';
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 
 import { DiscoverLoading } from '../components/loading/discover-loading';
 import { ListSkeleton } from '../components/loading/page-skeleton';
@@ -11,7 +11,9 @@ import { ErrorAlert } from '../components/ui/error-alert';
 import { DEMO_ROUTES } from '../data/demo-routes';
 import { EMPTY_STATES } from '../content/empty-states';
 import { useI18n } from '../lib/i18n';
-import { recommendWithAi, type AIRecommendationItem } from '../services/ai-service';
+import { recommendWithAi, generatePersonalRoute, type AIRecommendationItem, type PersonalRouteGenerateResponse } from '../services/ai-service';
+import { useActiveRouteStore } from '../stores/active-route-store';
+import { PersonalRouteCard } from '../components/discover/personal-route-card';
 import { useRoutesQuery } from '../hooks/use-routes-query';
 import { mapError } from '../lib/user-errors';
 import { recommendRoutes } from '../services/route-service';
@@ -59,6 +61,47 @@ export default function DiscoverPage(): ReactElement {
     localStorage.setItem(key, String(used + 1));
     return true;
   };
+
+  const navigate = useNavigate();
+  const [personalRoute, setPersonalRoute] = useState<PersonalRouteGenerateResponse | null>(null);
+  const setActiveRoute = useActiveRouteStore((s) => s.setActiveRoute);
+
+  const openPersonalRouteOnMap = (route: PersonalRouteGenerateResponse) => {
+    const stops = route.stops.map((s, idx) => ({
+      stop_id: -(idx + 1),
+      route_id: 0,
+      title: s.name,
+      description: s.narration_snippet || s.reason,
+      latitude: s.lat,
+      longitude: s.lng,
+      order_index: s.order,
+      audio_url: null,
+    }));
+    setActiveRoute(0, route.title, stops);
+    navigate(`/map?city=${encodeURIComponent(route.city)}`);
+  };
+
+  const generateMutation = useMutation({
+    mutationFn: async () => {
+      setSlowRecommend(false);
+      const slowTimer = window.setTimeout(() => setSlowRecommend(true), 8000);
+      try {
+        const personal = await generatePersonalRoute({
+          city: effectiveCity,
+          interests: effectiveInterests,
+          duration_minutes: effectiveDuration,
+          budget: effectiveBudget,
+          preferred_language: 'tr',
+          max_stops: Math.min(8, Math.max(3, Math.round(effectiveDuration / 45))),
+        });
+        setPersonalRoute(personal);
+        return personal;
+      } finally {
+        window.clearTimeout(slowTimer);
+        setSlowRecommend(false);
+      }
+    },
+  });
 
   const recommendMutation = useMutation({
     mutationFn: async () => {
@@ -112,14 +155,15 @@ export default function DiscoverPage(): ReactElement {
     },
   });
 
-  const showAiPanel = searchParams.get('ai') === '1' || recommendMutation.data != null;
+  const showAiPanel = searchParams.get('ai') === '1' || personalRoute != null || recommendMutation.data != null;
 
   useEffect(() => {
-    if (searchParams.get('ai') !== '1' || routeSource.length === 0) return;
-    if (recommendMutation.isPending || recommendMutation.isSuccess) return;
-    recommendMutation.mutate();
+    if (searchParams.get('ai') !== '1') return;
+    if (generateMutation.isPending || generateMutation.isSuccess) return;
+    if (!canUseAi()) return;
+    generateMutation.mutate();
     // eslint-disable-next-line react-hooks/exhaustive-deps -- yalnızca landing ?ai=1 ile bir kez
-  }, [searchParams.get('ai'), routes.length]);
+  }, [searchParams.get('ai')]);
 
   const display = useMemo(() => {
     const base = recommendMutation.data?.length
@@ -219,7 +263,7 @@ export default function DiscoverPage(): ReactElement {
             <button
               className="tap-scale inline-flex min-h-[48px] w-full items-center justify-center rounded-xl bg-primary px-5 font-bold text-white shadow-md hover:bg-primary-dark disabled:opacity-60 sm:flex-1"
               type="button"
-              disabled={recommendMutation.isPending}
+              disabled={generateMutation.isPending}
               onClick={() => {
                 setPremiumMsg('');
                 setDismissRecommendError(false);
@@ -232,13 +276,25 @@ export default function DiscoverPage(): ReactElement {
                   );
                   return;
                 }
-                recommendMutation.mutate();
+                generateMutation.mutate();
               }}
             >
-              {recommendMutation.isPending
-                ? t('discover.aiLoading', 'Kişisel öneriler hazırlanıyor…')
+              {generateMutation.isPending
+                ? t('discover.aiLoading', 'Kişisel rota oluşturuluyor…')
                 : t('discover.aiCta', 'Kişisel Rotanı Oluştur')}
             </button>
+            {personalRoute ? (
+              <button
+                className="tap-scale min-h-[48px] rounded-xl border-2 border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600 sm:w-auto"
+                type="button"
+                onClick={() => {
+                  setPersonalRoute(null);
+                  generateMutation.reset();
+                }}
+              >
+                {t('discover.clearRoute', 'Temizle')}
+              </button>
+            ) : null}
             {recommendMutation.data ? (
               <button
                 className="tap-scale min-h-[48px] rounded-xl border-2 border-stone-300 px-4 text-sm font-semibold dark:border-zinc-600 sm:w-auto"
@@ -270,20 +326,33 @@ export default function DiscoverPage(): ReactElement {
         </div>
       ) : null}
 
-      {recommendMutation.isPending && routes.length === 0 ? <DiscoverLoading /> : null}
-      {recommendMutation.isPending && routes.length > 0 ? (
+      {generateMutation.isPending && routes.length === 0 ? <DiscoverLoading /> : null}
+      {generateMutation.isPending && routes.length > 0 ? (
         <p
           className="rounded-xl border border-primary/25 bg-primary/10 px-3 py-2 text-sm font-semibold text-primary-dark dark:text-primary"
           role="status"
         >
-          Kişisel öneriler hazırlanıyor… Mevcut rotalar aşağıda listeleniyor.
+          {t('discover.aiLoading', 'Kişisel rota oluşturuluyor…')}
         </p>
       ) : null}
-      {slowRecommend && recommendMutation.isPending ? (
+      {slowRecommend && generateMutation.isPending ? (
         <p className="rounded-xl border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-900 dark:border-amber-500/35 dark:bg-amber-950/40 dark:text-amber-100">
           Öneriler biraz uzun sürdü. Popüler rotaları aşağıda inceleyebilirsin.
         </p>
       ) : null}
+
+      {personalRoute && personalRoute.stops.length > 0 ? (
+        <PersonalRouteCard route={personalRoute} onOpenMap={() => openPersonalRouteOnMap(personalRoute)} />
+      ) : null}
+
+      {generateMutation.isError ? (
+        <ErrorAlert
+          error={mapError(generateMutation.error, 'route-recommendations')}
+          onRetry={() => generateMutation.mutate()}
+        />
+      ) : null}
+
+      {recommendMutation.isPending && routes.length === 0 ? null : null}
 
       {listError && display.length === 0 && !dismissListError && !usingOfflineDemo ? (
         <ErrorAlert
