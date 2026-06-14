@@ -27,6 +27,8 @@ from app.services.assistant_intent import (
     detect_query_category,
     district_coords,
     extract_area_from_messages,
+    extract_city_from_messages,
+    extract_trip_params,
     is_food_query,
     needs_travel_plan,
     quick_assistant_reply,
@@ -43,6 +45,7 @@ from app.services.ai_prompts import (
     build_personal_route_user,
     build_route_recommend_user,
     format_places_detail,
+    format_places_reply,
     format_venue_reply,
 )
 from app.services.llm_service import LLMServiceError, llm_service
@@ -682,17 +685,18 @@ class AIService:
         if not last_user:
             last_user = 'Merhaba'
 
-        area = extract_area_from_messages(payload.messages, payload.city, payload.district)
-        where = payload.city if not area else f'{area}, {payload.city}'
+        resolved_city = extract_city_from_messages(payload.messages, payload.city)
+        area = extract_area_from_messages(payload.messages, resolved_city, payload.district)
+        where = resolved_city if not area else f'{area}, {resolved_city}'
 
-        quick = quick_assistant_reply(last_user, payload.city, area or payload.district)
+        quick = quick_assistant_reply(last_user, resolved_city, area or payload.district)
         if quick:
             return AssistantChatResponse(reply=quick, source='rules')
 
         interests = ', '.join(payload.interests) if payload.interests else 'genel'
         history = build_conversation_history(payload.messages)
         intent = resolve_intent(last_user, recent_user)
-        lat, lng = self._resolve_assistant_coords(payload, area)
+        lat, lng = self._resolve_assistant_coords(payload, area, resolved_city)
 
         if intent in ('specific_venue', 'food') and settings.google_places_enabled:
             venue_reply = await self._assistant_food_reply(
@@ -702,24 +706,48 @@ class AIService:
                 last_user=last_user,
                 intent=intent,
                 locale=payload.preferred_language,
+                city=resolved_city,
             )
             if venue_reply:
                 return venue_reply
 
         places_hint = ''
+        places_formatted_reply = ''
         if needs_travel_plan(last_user) and settings.google_places_enabled:
+            days, budget = extract_trip_params(last_user)
             cat = detect_query_category(last_user, payload.interests)
+            nearby: list = []
             try:
-                nearby, _ = await google_places_service.search_nearby(
+                nearby, _ = await google_places_service.search_text(
+                    query=f'turistik yerler {resolved_city}',
                     lat=float(lat),
                     lng=float(lng),
-                    radius_m=5000,
-                    category=cat,
+                    radius_m=15000,
+                    client_key='assistant',
                 )
-                if nearby:
-                    places_hint = format_places_detail(nearby[:10])
             except Exception as exc:
-                logger.debug('Assistant places lookup: %s', exc)
+                logger.debug('Assistant text search: %s', exc)
+            if not nearby:
+                try:
+                    nearby, _ = await google_places_service.search_nearby(
+                        lat=float(lat),
+                        lng=float(lng),
+                        radius_m=8000,
+                        category=cat,
+                    )
+                except Exception as exc:
+                    logger.debug('Assistant places lookup: %s', exc)
+            if nearby:
+                filtered = filter_by_city(nearby, resolved_city)
+                picks = (filtered or nearby)[:10]
+                places_hint = format_places_detail(picks)
+                places_formatted_reply = format_places_reply(
+                    picks[:8],
+                    resolved_city,
+                    days=days,
+                    budget=budget,
+                    locale=payload.preferred_language,
+                )
 
         prompt_intent = 'rota' if intent == 'route_plan' else intent
         user = build_assistant_user(
@@ -747,7 +775,7 @@ class AIService:
             return self._assistant_rules_fallback(
                 where=where,
                 last_user=last_user,
-                places_hint=places_hint,
+                places_formatted_reply=places_formatted_reply,
             )
 
     @staticmethod
@@ -755,16 +783,10 @@ class AIService:
         *,
         where: str,
         last_user: str,
-        places_hint: str,
+        places_formatted_reply: str = '',
     ) -> AssistantChatResponse:
-        if places_hint and places_hint != 'yok':
-            return AssistantChatResponse(
-                reply=(
-                    f'{where} için yakın mekan önerileri:\n\n{places_hint}\n\n'
-                    'Detay ve harita için **Harita** sekmesine bakabilirsin.'
-                ),
-                source='rules',
-            )
+        if places_formatted_reply.strip():
+            return AssistantChatResponse(reply=places_formatted_reply.strip(), source='rules')
         return AssistantChatResponse(
             reply=(
                 f'Şu an AI yanıtı gecikiyor; kısa özet: {where} bölgesinde gezi planı için '
@@ -783,6 +805,7 @@ class AIService:
         last_user: str,
         intent: str,
         locale: str = 'tr',
+        city: str = '',
     ) -> AssistantChatResponse | None:
         query = f'restoran {where}'
         lower = last_user.lower()
@@ -810,6 +833,8 @@ class AIService:
         area_district = where.split(',')[0].strip() if ',' in where else ''
         if area_district:
             places = filter_by_district(places, area_district)
+        elif city.strip():
+            places = filter_by_city(places, city)
 
         if not places:
             return None
@@ -822,20 +847,24 @@ class AIService:
         return None
 
     @staticmethod
-    def _resolve_assistant_coords(payload: AssistantChatRequest, area: str) -> tuple[float, float]:
-        if payload.location_lat is not None and payload.location_lng is not None:
-            return float(payload.location_lat), float(payload.location_lng)
+    def _resolve_assistant_coords(
+        payload: AssistantChatRequest,
+        area: str,
+        resolved_city: str,
+    ) -> tuple[float, float]:
         dc = district_coords(area)
         if dc:
             return dc
-        key = payload.city.strip().lower()
-        for name, coords in _CITY_POI.items():
+        coords = resolve_city_coords(resolved_city)
+        if coords:
+            return coords
+        key = resolved_city.strip().lower()
+        for name, city_coords in _CITY_POI.items():
             if name.lower() in key or key in name.lower():
-                return coords
-        resolved = resolve_city_coords(payload.city)
-        if resolved:
-            return resolved
-        return 41.0082, 28.9784
+                return city_coords
+        if payload.location_lat is not None and payload.location_lng is not None:
+            return float(payload.location_lat), float(payload.location_lng)
+        return 39.9208, 32.8541  # Ankara — nötr merkez, İstanbul varsayımı yok
 
     async def _llm_narration(self, payload: StopNarrationRequest) -> StopNarrationResponse:
         langs = payload.languages or ['tr', 'en', 'de']

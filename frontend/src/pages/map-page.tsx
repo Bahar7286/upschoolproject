@@ -33,7 +33,7 @@ import { ActiveRoutePlanner, useAddPlaceToActiveRoute } from '../features/active
 import { listTripExtraStops } from '../services/trip-extra-stop-service';
 import { useActiveRouteStore } from '../stores/active-route-store';
 
-import { filterGoogleByDistrict } from '../utils/district-filter';
+import { filterGoogleByCity, filterGoogleByDistrict } from '../utils/district-filter';
 
 import {
 
@@ -71,6 +71,8 @@ const ALL_CATEGORIES: PlaceCategory[] = [
 
 export default function MapPage(): ReactElement {
   const { t } = useI18n();
+  const user = useAuthStore((s) => s.user);
+  const preferredCity = useOnboardingStore((s) => s.preferredCity);
 
   const { data: routes = [], isPending, isError, error } = useRoutesQuery();
 
@@ -79,7 +81,9 @@ export default function MapPage(): ReactElement {
   const [showPlaces, setShowPlaces] = useState(true);
 
   const [searchParams, setSearchParams] = useSearchParams();
-  const city = searchParams.get('city') ?? 'Istanbul';
+  const effectiveCityName =
+    searchParams.get('city') ?? user?.preferred_city ?? preferredCity ?? 'İstanbul';
+  const city = effectiveCityName;
   const district = searchParams.get('district');
   const cityIdParam = Number(searchParams.get('cityId'));
   const districtIdParam = Number(searchParams.get('districtId'));
@@ -170,7 +174,7 @@ export default function MapPage(): ReactElement {
 
   const effectiveCategory = categoryFilter ?? categoryParam;
 
-  const { data: googleNearby, isFetching: googleLoading } = useQuery({
+  const { data: googleNearby, isFetching: googleLoading, isError: googleIsError, error: googleQueryError } = useQuery({
     queryKey: ['google-nearby', mapCenter.lat, mapCenter.lng, effectiveCategory, placesRadius],
     queryFn: () =>
       fetchGooglePlacesNearby({
@@ -185,6 +189,20 @@ export default function MapPage(): ReactElement {
   });
 
   useEffect(() => {
+    if (googleIsError) {
+      setGooglePlacesError(formatApiError(googleQueryError));
+      return;
+    }
+    if (!googleLoading && googleNearby && googleNearby.places.length === 0) {
+      setGooglePlacesError(
+        `${effectiveCityName} için canlı Google pini bulunamadı. Veritabanındaki mekanlar haritada gösteriliyor.`,
+      );
+      return;
+    }
+    setGooglePlacesError('');
+  }, [googleIsError, googleQueryError, googleNearby, googleLoading, effectiveCityName]);
+
+  useEffect(() => {
     if (!googleNearby || districtIdParam > 0) return;
     if (googleNearby.places.length === 0 && placesRadius < 20000) {
       setPlacesRadius((r) => Math.min(r + 5000, 20000));
@@ -195,13 +213,16 @@ export default function MapPage(): ReactElement {
     let list = googleNearby?.places ?? [];
     if (resolvedDistrictName) {
       list = filterGoogleByDistrict(list, resolvedDistrictName);
+    } else if (effectiveCityName) {
+      const byCity = filterGoogleByCity(list, effectiveCityName);
+      list = byCity.length > 0 ? byCity : list;
     }
-    return [...list].sort(
+    return [...list].filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng) && p.lat !== 0 && p.lng !== 0).sort(
       (a, b) =>
         (b.user_rating_count ?? 0) - (a.user_rating_count ?? 0) ||
         (b.rating ?? 0) - (a.rating ?? 0),
     );
-  }, [googleNearby, resolvedDistrictName]);
+  }, [googleNearby, resolvedDistrictName, effectiveCityName]);
 
   const routePolyline = useMemo(() => {
     if (!polylineParam) return null;

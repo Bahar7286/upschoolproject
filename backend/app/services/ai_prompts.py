@@ -105,6 +105,61 @@ def build_assistant_user(
     )
 
 
+def format_places_reply(
+    places: list[Any],
+    city: str,
+    *,
+    days: int | None = None,
+    budget: float | None = None,
+    locale: str = 'tr',
+) -> str:
+    """Gezi planı / mekan önerisi — okunabilir numaralı liste."""
+    if not places:
+        if locale == 'en':
+            return (
+                f'No live venues found for **{city}**. '
+                'Try the **Map** tab or pick another city.'
+            )
+        return (
+            f'**{city}** için şu an canlı mekan bulamadım. '
+            '**Harita** sekmesinden veya **Keşfet → İller** üzerinden bakabilirsin.'
+        )
+
+    if locale == 'en':
+        header_parts = [f'**{city}** — suggested places']
+        if days:
+            header_parts.append(f'({days}-day trip)')
+        if budget:
+            header_parts.append(f'budget ~{budget:.0f} TRY')
+        lines = [' '.join(header_parts) + '\n']
+        footer = '\nSee **Map** in the app for live pins and details.'
+    else:
+        header_parts = [f'**{city}** için önerilen mekanlar']
+        if days:
+            header_parts.append(f'({days} günlük gezi)')
+        if budget:
+            header_parts.append(f'bütçe ~{budget:.0f} TL')
+        lines = [' — '.join(header_parts) + '\n']
+        footer = '\nDetay ve harita pinleri için **Harita** sekmesine bakabilirsin.'
+
+    for i, p in enumerate(places[:8], 1):
+        name = getattr(p, 'name', '')
+        addr = getattr(p, 'address', '') or getattr(p, 'formatted_address', '') or ''
+        rating = getattr(p, 'rating', None)
+        count = getattr(p, 'user_rating_count', None)
+        stars = f' ⭐ {rating}' if rating else ''
+        reviews = (
+            f' ({count} reviews)' if count and locale == 'en'
+            else (f' ({count} yorum)' if count else '')
+        )
+        lines.append(f'{i}. **{name}**{stars}{reviews}')
+        if addr:
+            lines.append(f'   📍 {addr}')
+
+    lines.append(footer)
+    return '\n\n'.join(lines)
+
+
 def format_venue_reply(places: list[Any], where: str, *, locale: str = 'tr') -> str:
     """Google Places sonuçlarından doğrudan yanıt — LLM halüsinasyonu yok."""
     if not places:

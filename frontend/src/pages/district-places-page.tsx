@@ -13,9 +13,9 @@ import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { formatApiError } from '../lib/api';
 import { googlePlaceDetailPath } from '../lib/routes';
-import { filterGoogleByDistrict } from '../utils/district-filter';
 import { listCities, listDistrictsByCity } from '../services/city-service';
-import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
+import { fetchGeoCenter } from '../services/google-service';
+import { fetchRegionGooglePlaces } from '../services/region-venues-service';
 import { listPlaces } from '../services/place-service';
 import type { GooglePlaceSummary } from '../types/google';
 import type { PlaceCategory, PlaceResponse } from '../types/place';
@@ -133,17 +133,18 @@ export default function DistrictPlacesPage(): ReactElement {
     isError: googleError,
     error: googleErr,
   } = useQuery({
-    queryKey: ['district-google', center?.lat, center?.lng, category],
+    queryKey: ['district-google', center?.lat, center?.lng, category, city?.name_tr, district?.name_tr],
     queryFn: () =>
-      fetchGooglePlacesNearby({
+      fetchRegionGooglePlaces({
         lat: center!.lat,
         lng: center!.lng,
-        radius_m: 4000,
-        category,
-      }).then((r) => filterGoogleByDistrict(r.places, district?.name_tr ?? '')),
-    enabled: Boolean(center && category),
+        cityName: city!.name_tr,
+        districtName: district!.name_tr,
+        category: category!,
+      }),
+    enabled: Boolean(center && category && city && district),
     staleTime: 10 * 60 * 1000,
-    retry: false,
+    retry: 1,
   });
 
   const merged = useMemo(

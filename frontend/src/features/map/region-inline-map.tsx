@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 import { formatApiError } from '../../lib/api';
-import { fetchGeoCenter, fetchGooglePlacesNearby } from '../../services/google-service';
+import { fetchGeoCenter } from '../../services/google-service';
+import { fetchRegionGooglePlaces } from '../../services/region-venues-service';
 import { listPlaces } from '../../services/place-service';
 import type { PlaceCategory } from '../../types/place';
 import { GoogleExploreMap } from './google-explore-map';
@@ -34,7 +35,6 @@ export function RegionInlineMap({
   const googleKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
   const isDistrict = Boolean(districtId && districtId > 0);
   const zoom = isDistrict ? 14 : 11;
-  const radius_m = isDistrict ? 6000 : 12000;
 
   const { data: geoCenter, isLoading: geoLoading } = useQuery({
     queryKey: ['geo-center', cityId, districtId ?? 0],
@@ -71,20 +71,22 @@ export function RegionInlineMap({
   });
 
   const {
-    data: nearby,
+    data: nearbyPlaces = [],
     isFetching: placesLoading,
     error: placesError,
   } = useQuery({
-    queryKey: ['google-nearby-inline', center.lat, center.lng, category, radius_m],
+    queryKey: ['google-nearby-inline', center.lat, center.lng, category, cityName, districtName],
     queryFn: () =>
-      fetchGooglePlacesNearby({
+      fetchRegionGooglePlaces({
         lat: center.lat,
         lng: center.lng,
-        radius_m,
-        category: category ?? undefined,
+        cityName: cityName ?? geoCenter?.city_name ?? '',
+        districtName: districtName ?? geoCenter?.district_name,
+        category: category ?? 'museum',
       }),
+    enabled: Boolean(cityName || geoCenter?.city_name),
     staleTime: 30 * 60 * 1000,
-    retry: false,
+    retry: 1,
     throwOnError: false,
   });
 
@@ -110,7 +112,7 @@ export function RegionInlineMap({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <p className="text-sm font-semibold text-stone-600 dark:text-stone-400">
           {geoLoading ? 'Harita yükleniyor…' : regionLabel}
-          {nearby?.places.length != null ? ` · ${nearby.places.length} yer` : ''}
+          {nearbyPlaces.length > 0 ? ` · ${nearbyPlaces.length} yer` : ''}
           {import.meta.env.DEV && showDbCount && dbPlaces.length > 0
             ? ` · ${dbPlaces.length} katalog`
             : ''}
@@ -127,7 +129,7 @@ export function RegionInlineMap({
         </p>
       ) : null}
 
-      {placesLoading && !nearby ? (
+      {placesLoading && nearbyPlaces.length === 0 ? (
         <div className="h-[min(42vh,360px)] animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" aria-busy="true" />
       ) : null}
 
@@ -137,14 +139,14 @@ export function RegionInlineMap({
           apiKey={googleKey}
           center={center}
           zoom={zoom}
-          googlePlaces={nearby?.places ?? []}
+          googlePlaces={nearbyPlaces}
           compact
         />
       ) : (
         <LeafletRegionMap
           center={center}
           zoom={zoom}
-          places={nearby?.places ?? []}
+          places={nearbyPlaces}
         />
       )}
 

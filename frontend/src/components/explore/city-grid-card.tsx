@@ -3,7 +3,6 @@ import type { ReactElement } from 'react';
 import { Link } from 'react-router-dom';
 
 import { resolveCityImage } from '../../lib/region-images';
-import { isSvgPlaceholder } from '../../lib/wikipedia-thumb';
 import { useRegionImage } from '../../hooks/use-region-image';
 import { RegionThumb } from '../ui/region-thumb';
 
@@ -24,9 +23,10 @@ export function CityGridCard({
   imageUrl?: string | null;
   to: string;
 }): ReactElement {
-  const img = resolveCityImage(slug, cityId, imageUrl);
-  const displayImg = useRegionImage(img, name, isSvgPlaceholder(img), slug);
   const displayName = name.charAt(0).toUpperCase() + name.slice(1);
+  const img = resolveCityImage(slug, cityId, imageUrl, displayName);
+  const needsWiki = !imageUrl?.trim();
+  const displayImg = useRegionImage(img, name, needsWiki, slug);
 
   return (
     <Link

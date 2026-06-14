@@ -43,6 +43,32 @@ def _city_index() -> dict[str, tuple[float, float, str]]:
     return index
 
 
+@lru_cache(maxsize=1)
+def _canonical_cities() -> list[tuple[str, str]]:
+    """(normalized_name, canonical_name) — uzun eşleşmeler önce."""
+    index = _city_index()
+    seen: set[str] = set()
+    rows: list[tuple[str, str]] = []
+    for _lat, _lng, canonical in index.values():
+        if canonical in seen:
+            continue
+        seen.add(canonical)
+        rows.append((_norm(canonical), canonical))
+    return sorted(rows, key=lambda x: len(x[0]), reverse=True)
+
+
+def extract_city_name_from_text(text: str) -> str:
+    """Metinden 81 il adından birini çıkar; bulunamazsa ''."""
+    raw = (text or '').strip()
+    if not raw:
+        return ''
+    compact = _norm(raw).replace(' ', '')
+    for n, canonical in _canonical_cities():
+        if len(n) >= 3 and n in compact:
+            return canonical
+    return ''
+
+
 def resolve_city_coords(city: str) -> tuple[float, float] | None:
     raw = (city or '').strip()
     if not raw:

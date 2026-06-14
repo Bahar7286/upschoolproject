@@ -35,17 +35,18 @@ export default function AssistantPage(): ReactElement {
     [interests, user],
   );
 
+  const preferredCity = useOnboardingStore((s) => s.preferredCity);
   const { data: cities = [] } = useQuery({
     queryKey: ['cities'],
     queryFn: listCities,
     staleTime: 60 * 60 * 1000,
   });
 
-  const initialCity = searchParams.get('city') ?? 'İstanbul';
+  const defaultCity =
+    searchParams.get('city') ?? user?.preferred_city ?? preferredCity ?? 'İstanbul';
   const initialDistrict = searchParams.get('district') ?? '';
-  const [city, setCity] = useState(initialCity);
+  const [city, setCity] = useState(defaultCity);
   const [district, setDistrict] = useState(initialDistrict);
-  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [input, setInput] = useState('');
   const [msgs, setMsgs] = useState<AssistantMessage[]>(() => [
     {
@@ -64,13 +65,11 @@ export default function AssistantPage(): ReactElement {
   }, []);
 
   useEffect(() => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition(
-      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => undefined,
-      { enableHighAccuracy: false, timeout: 8000 },
-    );
-  }, []);
+    const fromPrefs = user?.preferred_city ?? preferredCity;
+    if (!searchParams.get('city') && fromPrefs && fromPrefs !== city) {
+      setCity(fromPrefs);
+    }
+  }, [user?.preferred_city, preferredCity, searchParams, city]);
 
   const { run, loading: sendLoading } = useSubmitLock();
 
@@ -110,8 +109,6 @@ export default function AssistantPage(): ReactElement {
           interests: effectiveInterests,
           messages: apiMessages,
           preferred_language: preferredLanguage,
-          location_lat: coords?.lat,
-          location_lng: coords?.lng,
         });
         setMsgs((prev) => [...prev, { role: 'assistant', content: data.reply }]);
       } catch (err) {
@@ -174,13 +171,13 @@ export default function AssistantPage(): ReactElement {
           </label>
           <select
             id="asst-city"
-            className="mt-1 w-full bg-transparent text-base outline-none sm:text-sm"
+            className="mt-1 w-full rounded-lg border border-stone-900/12 bg-white px-2 py-2 text-base text-stone-900 outline-none focus:ring-2 focus:ring-primary/40 dark:border-white/15 dark:bg-zinc-900 dark:text-stone-100 sm:text-sm"
             value={city}
             onChange={(e) => setCity(e.target.value)}
           >
             {cities.length ? (
               cities.map((c) => (
-                <option key={c.city_id} value={c.name_tr}>
+                <option key={c.city_id} value={c.name_tr} className="bg-white text-stone-900 dark:bg-zinc-900 dark:text-stone-100">
                   {c.name_tr}
                 </option>
               ))
@@ -195,7 +192,7 @@ export default function AssistantPage(): ReactElement {
           </label>
           <input
             id="asst-district"
-            className="mt-1 w-full bg-transparent text-base outline-none sm:text-sm"
+            className="mt-1 w-full rounded-lg border border-stone-900/12 bg-white px-2 py-2 text-base text-stone-900 outline-none placeholder:text-stone-400 focus:ring-2 focus:ring-primary/40 dark:border-white/15 dark:bg-zinc-900 dark:text-stone-100 dark:placeholder:text-stone-500 sm:text-sm"
             value={district}
             onChange={(e) => setDistrict(e.target.value)}
             placeholder="Örn. Eminönü"

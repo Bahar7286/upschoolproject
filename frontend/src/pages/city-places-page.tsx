@@ -9,7 +9,8 @@ import { VenuePlaceCard } from '../components/explore/venue-place-card';
 import { RegionInlineMap } from '../features/map/region-inline-map';
 import { googlePlaceDetailPath } from '../lib/routes';
 import { listCities } from '../services/city-service';
-import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
+import { fetchGeoCenter } from '../services/google-service';
+import { fetchRegionGooglePlaces } from '../services/region-venues-service';
 import { listPlaces } from '../services/place-service';
 import type { PlaceCategory } from '../types/place';
 import { PLACE_CATEGORY_LABELS } from '../types/place';
@@ -48,18 +49,18 @@ export default function CityPlacesPage(): ReactElement {
     staleTime: 2 * 60 * 1000,
   });
 
-  const { data: googlePlaces = [] } = useQuery({
-    queryKey: ['city-google', center?.lat, center?.lng, category],
+  const { data: googlePlaces = [], isPending: googlePending } = useQuery({
+    queryKey: ['city-google', center?.lat, center?.lng, category, city?.name_tr],
     queryFn: () =>
-      fetchGooglePlacesNearby({
+      fetchRegionGooglePlaces({
         lat: center!.lat,
         lng: center!.lng,
-        radius_m: 12000,
-        category: category ?? 'museum',
-      }).then((r) => r.places),
-    enabled: Boolean(center && category),
+        cityName: city!.name_tr,
+        category: category!,
+      }),
+    enabled: Boolean(center && category && city),
     staleTime: 10 * 60 * 1000,
-    retry: false,
+    retry: 1,
   });
 
   const dbNames = new Set(places.map((p) => p.name.toLowerCase()));
@@ -93,7 +94,7 @@ export default function CityPlacesPage(): ReactElement {
         />
       </div>
 
-      {isPending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
+      {isPending || googlePending ? <div className="h-40 animate-pulse rounded-2xl bg-stone-200 dark:bg-zinc-800" /> : null}
       {isError ? (
         <p className="alert-error rounded-xl px-3 py-2 text-sm" role="alert">
           Mekanlar yüklenemedi.

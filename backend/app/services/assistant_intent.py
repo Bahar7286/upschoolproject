@@ -5,6 +5,8 @@ from __future__ import annotations
 import re
 import unicodedata
 
+from app.utils.city_coords import extract_city_name_from_text
+
 _GREETING = re.compile(
     r'^(selam|slm|slmm|merhaba|mrb|hey|hi|hello|günaydın|gunaydin|iyi günler|'
     r'iyi akşamlar|iyi aksamlar|naber|nbr|hoşgeldin|hosgeldin|sa)\s*[!.?]*$',
@@ -132,6 +134,30 @@ def resolve_intent(text: str, recent_user_text: str = '') -> str:
     if needs_travel_plan(text):
         return 'route_plan'
     return 'general'
+
+
+def extract_trip_params(text: str) -> tuple[int | None, float | None]:
+    """Mesajdan gün sayısı ve bütçe (TL) çıkar."""
+    days: int | None = None
+    budget: float | None = None
+    day_match = re.search(r'(\d+)\s*g[uü]n', text, re.IGNORECASE)
+    if day_match:
+        days = int(day_match.group(1))
+    budget_match = re.search(r'(\d+(?:[.,]\d+)?)\s*tl\b', text, re.IGNORECASE)
+    if budget_match:
+        budget = float(budget_match.group(1).replace(',', '.'))
+    return days, budget
+
+
+def extract_city_from_messages(messages: list, fallback_city: str) -> str:
+    """Kullanıcı mesajlarından il adı; yoksa fallback."""
+    for msg in reversed(messages):
+        if getattr(msg, 'role', '') != 'user':
+            continue
+        found = extract_city_name_from_text(str(getattr(msg, 'content', '')))
+        if found:
+            return found
+    return (fallback_city or '').strip() or 'İstanbul'
 
 
 def extract_area_from_text(text: str) -> str:
