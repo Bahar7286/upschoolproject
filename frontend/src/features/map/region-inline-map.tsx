@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 
 import { formatApiError } from '../../lib/api';
+import { isValidMapCenter } from '../../utils/map-coords';
 import { fetchGeoCenter } from '../../services/google-service';
 import { fetchRegionGooglePlaces } from '../../services/region-venues-service';
 import { listPlaces } from '../../services/place-service';
@@ -48,13 +49,13 @@ export function RegionInlineMap({
   });
 
   const center = useMemo(() => {
-    if (geoCenter && geoCenter.lat && geoCenter.lng) {
+    if (geoCenter && isValidMapCenter(geoCenter)) {
       return { lat: geoCenter.lat, lng: geoCenter.lng };
     }
-    if (fallbackCenter && fallbackCenter.lat && fallbackCenter.lng) {
+    if (fallbackCenter && isValidMapCenter(fallbackCenter)) {
       return fallbackCenter;
     }
-    return { lat: 39.0, lng: 35.0 };
+    return { lat: 39.9208, lng: 32.8541 };
   }, [geoCenter, fallbackCenter]);
 
   const { data: dbPlaces = [] } = useQuery({
@@ -84,7 +85,7 @@ export function RegionInlineMap({
         districtName: districtName ?? geoCenter?.district_name,
         category: category ?? 'museum',
       }),
-    enabled: Boolean(cityName || geoCenter?.city_name),
+    enabled: Boolean(cityName || geoCenter?.city_name) && isValidMapCenter(center),
     staleTime: 30 * 60 * 1000,
     retry: 1,
     throwOnError: false,

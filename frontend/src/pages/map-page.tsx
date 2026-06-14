@@ -11,7 +11,9 @@ import { useQuery } from '@tanstack/react-query';
 import { BackButton } from '../components/ui/back-button';
 import { ExploreMap } from '../features/map/explore-map';
 import { decodePolyline } from '../utils/polyline';
+import { isValidMapCenter, parseOptionalCoord } from '../utils/map-coords';
 import { fetchGeoCenter, fetchGooglePlacesNearby } from '../services/google-service';
+import { fetchRegionGooglePlaces } from '../services/region-venues-service';
 import { listCities, listDistrictsByCity } from '../services/city-service';
 
 import { usePlacesQuery } from '../hooks/use-places-query';
@@ -89,8 +91,8 @@ export default function MapPage(): ReactElement {
   const districtIdParam = Number(searchParams.get('districtId'));
   const categoryParam = (searchParams.get('category') as PlaceCategory | null) ?? null;
   const polylineParam = searchParams.get('polyline');
-  const destLatParam = Number(searchParams.get('destLat'));
-  const destLngParam = Number(searchParams.get('destLng'));
+  const destLat = parseOptionalCoord(searchParams.get('destLat'));
+  const destLng = parseOptionalCoord(searchParams.get('destLng'));
   const [placesRadius, setPlacesRadius] = useState(() => (districtIdParam > 0 ? 4000 : 10000));
   const [googlePlacesError, setGooglePlacesError] = useState('');
 
@@ -127,8 +129,9 @@ export default function MapPage(): ReactElement {
   const cityFallbackCenter = useMemo(() => {
     if (!resolvedCityId) return null;
     const c = cities.find((x) => x.city_id === resolvedCityId);
-    if (c?.center_lat && c.center_lng) return { lat: c.center_lat, lng: c.center_lng };
-    return null;
+    if (!c) return null;
+    const center = { lat: c.center_lat, lng: c.center_lng };
+    return isValidMapCenter(center) ? center : null;
   }, [cities, resolvedCityId]);
 
   const { data: districts = [] } = useQuery({
@@ -158,32 +161,46 @@ export default function MapPage(): ReactElement {
   });
 
   const mapCenter = useMemo(() => {
-    if (Number.isFinite(destLatParam) && Number.isFinite(destLngParam)) {
-      return { lat: destLatParam, lng: destLngParam };
+    if (destLat != null && destLng != null) {
+      const dest = { lat: destLat, lng: destLng };
+      if (isValidMapCenter(dest)) return dest;
     }
-    if (geoCenter?.lat && geoCenter.lng) return { lat: geoCenter.lat, lng: geoCenter.lng };
+    if (geoCenter && isValidMapCenter(geoCenter)) {
+      return { lat: geoCenter.lat, lng: geoCenter.lng };
+    }
     if (cityFallbackCenter) return cityFallbackCenter;
     return { lat: 41.015137, lng: 28.97953 };
-  }, [geoCenter, destLatParam, destLngParam, cityFallbackCenter]);
+  }, [geoCenter, destLat, destLng, cityFallbackCenter]);
 
   const mapZoom = useMemo(() => {
-    if (Number.isFinite(destLatParam)) return 15;
+    if (destLat != null) return 15;
     if (districtIdParam > 0) return 14;
     return 12;
-  }, [destLatParam, districtIdParam]);
+  }, [destLat, districtIdParam]);
 
   const effectiveCategory = categoryFilter ?? categoryParam;
 
   const { data: googleNearby, isFetching: googleLoading, isError: googleIsError, error: googleQueryError } = useQuery({
-    queryKey: ['google-nearby', mapCenter.lat, mapCenter.lng, effectiveCategory, placesRadius],
-    queryFn: () =>
-      fetchGooglePlacesNearby({
+    queryKey: ['google-nearby', mapCenter.lat, mapCenter.lng, effectiveCategory, placesRadius, effectiveCityName],
+    queryFn: async () => {
+      if (effectiveCategory) {
+        const places = await fetchRegionGooglePlaces({
+          lat: mapCenter.lat,
+          lng: mapCenter.lng,
+          cityName: effectiveCityName,
+          districtName: resolvedDistrictName || undefined,
+          category: effectiveCategory,
+        });
+        return { places, cached: false, radius_m: placesRadius };
+      }
+      return fetchGooglePlacesNearby({
         lat: mapCenter.lat,
         lng: mapCenter.lng,
         radius_m: placesRadius,
-        category: effectiveCategory,
-      }),
-    enabled: showPlaces,
+        category: null,
+      });
+    },
+    enabled: showPlaces && isValidMapCenter(mapCenter),
     staleTime: 30 * 60 * 1000,
     retry: 1,
   });

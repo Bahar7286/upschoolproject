@@ -425,9 +425,9 @@ export default function DiscoverPage(): ReactElement {
 
       {isPending && routes.length === 0 ? (
         <ListSkeleton count={6} />
-      ) : display.length === 0 ? (
+      ) : display.length === 0 && !personalRoute ? (
         <EmptyState {...EMPTY_STATES.search} />
-      ) : (
+      ) : display.length > 0 ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {display.map((route) => (
             <article
@@ -481,7 +481,7 @@ export default function DiscoverPage(): ReactElement {
             </article>
           ))}
         </div>
-      )}
+      ) : null}
 
       <p className="text-center text-sm text-stone-500">
         <Link className="font-bold text-primary hover:underline" to="/rehberler">

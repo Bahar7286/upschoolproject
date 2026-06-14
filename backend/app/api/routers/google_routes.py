@@ -36,6 +36,11 @@ async def places_nearby(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail='Google Places API yapılandırılmamış (GOOGLE_PLACES_API_KEY)',
         )
+    if abs(lat) < 0.01 and abs(lng) < 0.01:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='Geçersiz koordinat. Şehir veya ilçe seçerek haritayı yenileyin.',
+        )
     try:
         places, cached = await google_places_service.search_nearby(
             lat=lat,

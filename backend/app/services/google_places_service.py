@@ -21,8 +21,8 @@ CATEGORY_TO_GOOGLE_TYPES: dict[str, list[str]] = {
     'historical': ['tourist_attraction', 'museum', 'church', 'historical_landmark'],
     'mosque': ['mosque', 'place_of_worship'],
     'bazaar': ['shopping_mall', 'market', 'department_store'],
-    'street': ['tourist_attraction', 'point_of_interest'],
-    'restaurant': ['restaurant', 'cafe', 'bakery', 'meal_takeaway', 'food'],
+    'street': ['tourist_attraction', 'park'],
+    'restaurant': ['restaurant', 'cafe', 'bakery', 'meal_takeaway'],
     'accommodation': ['lodging', 'hotel', 'hostel', 'guest_house', 'bed_and_breakfast'],
 }
 
@@ -154,7 +154,7 @@ _NEARBY_MULTI_TYPE_GROUPS: list[list[str]] = [
     ['restaurant', 'cafe', 'bakery'],
     ['lodging', 'hotel', 'shopping_mall'],
     ['mosque', 'church', 'art_gallery'],
-    ['market', 'point_of_interest'],
+    ['market', 'tourist_attraction'],
 ]
 
 
@@ -271,6 +271,8 @@ class GooglePlacesService:
     ) -> tuple[list[GooglePlaceSummary], bool]:
         if not google_places_enabled():
             return [], False
+        if abs(lat) < 0.01 and abs(lng) < 0.01:
+            raise ValueError('Geçersiz harita koordinatı (0,0)')
         if not _rate_ok(client_key):
             raise ValueError('Çok fazla istek. Lütfen biraz bekleyin.')
 

@@ -24,6 +24,18 @@ async def test_places_nearby_without_key_returns_503(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_places_nearby_rejects_zero_coords(monkeypatch):
+    monkeypatch.setattr('app.core.config.settings.google_places_api_key', 'test-key')
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url='http://test') as client:
+        resp = await client.get(
+            '/google/places/nearby',
+            params={'lat': 0, 'lng': 0, 'category': 'museum'},
+        )
+    assert resp.status_code == 400
+
+
+@pytest.mark.asyncio
 async def test_places_nearby_mocked(monkeypatch):
     monkeypatch.setattr('app.core.config.settings.google_places_api_key', 'test-key')
     from app.schemas.google_schema import GooglePlaceSummary
